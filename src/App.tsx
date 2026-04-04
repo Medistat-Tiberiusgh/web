@@ -28,7 +28,7 @@ export default function App() {
             />
           </aside>
           <main className="flex-1 overflow-hidden">
-            <MapView />
+            <MapView regions={regions} />
           </main>
           <aside className="w-80 border-l border-gray-200 bg-white flex flex-col overflow-hidden shrink-0">
             <RegionalRanking regions={regions} />
