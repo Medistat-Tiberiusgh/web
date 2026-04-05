@@ -12,7 +12,7 @@ export default function App() {
   // TODO: replace with real JWT parsing after login
   const [user] = useState<User>(mockUser)
 
-  const { medications, loadingList, selectedIndex, regions, selectMedication } = useMedications()
+  const { medications, loading, selectedIndex, regions, selectMedication } = useMedications()
 
   return (
     <UserContext.Provider value={user}>
@@ -22,7 +22,7 @@ export default function App() {
           <aside className="w-72 border-r border-gray-200 bg-white flex flex-col overflow-hidden shrink-0">
             <MedicationList
               medications={medications}
-              loading={loadingList}
+              loading={loading}
               selectedIndex={selectedIndex}
               onSelect={selectMedication}
             />

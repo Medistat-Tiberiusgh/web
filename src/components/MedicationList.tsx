@@ -1,8 +1,8 @@
 import { Button, Skeleton, Chip } from '@heroui/react'
-import type { Medication } from '../types'
+import type { UserMedication } from '../types'
 
 interface Props {
-  medications: Medication[]
+  medications: UserMedication[]
   loading: boolean
   selectedIndex: number | null
   onSelect: (index: number) => void

@@ -1,9 +1,9 @@
 import { ProgressBar, Chip, Card } from '@heroui/react'
-import type { Region } from '../types'
+import type { RegionalStat } from '../types'
 import { useUser } from '../context/UserContext'
 
 interface Props {
-  regions: Region[]
+  regions: RegionalStat[]
 }
 
 export default function RegionalRanking({ regions }: Props) {

@@ -1,17 +1,18 @@
-export interface Region {
-  regionName: string
+export interface RegionalStat {
   regionId: number
+  regionName: string
   per1000: number
 }
 
-export interface Medication {
+export interface UserMedication {
   notes: string | null
+  addedAt: string
   drugData: {
-    name: string
     atcCode: string
+    name: string
     narcoticClass: string | null
   }
-  insights: {
-    regionalPopularity: Region[]
+  insights?: {
+    regionalPopularity: RegionalStat[]
   }
 }

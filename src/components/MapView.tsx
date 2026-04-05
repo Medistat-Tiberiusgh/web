@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { geoMercator, geoPath } from 'd3-geo'
 import { useUser } from '../context/UserContext'
-import type { Region } from '../types'
+import type { RegionalStat } from '../types'
 import type { FeatureCollection } from 'geojson'
 
 interface Props {
-  regions: Region[]
+  regions: RegionalStat[]
 }
 
 // Interpolate from light blue (#dbeafe = rgb(219,234,254)) to dark blue (#1e40af = rgb(30,64,175))
@@ -20,7 +20,7 @@ function getColor(value: number, min: number, max: number): string {
 interface TooltipState {
   x: number
   y: number
-  region: Region
+  region: RegionalStat
 }
 
 const WIDTH = 500
