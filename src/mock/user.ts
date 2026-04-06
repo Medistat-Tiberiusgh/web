@@ -5,5 +5,5 @@ export const mockUser: User = {
   username: 'dr.Tiberius',
   regionId: 8,
   genderId: 1,
-  ageGroupId: 3
+  ageGroupId: 7
 }
