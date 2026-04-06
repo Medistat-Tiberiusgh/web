@@ -13,7 +13,7 @@ interface Props {
 
 const W = 600
 const H = 260
-const PAD = { top: 20, right: 20, bottom: 40, left: 60 }
+const PAD = { top: 20, right: 16, bottom: 40, left: 48 }
 const INNER_W = W - PAD.left - PAD.right
 const INNER_H = H - PAD.top - PAD.bottom
 
@@ -90,11 +90,10 @@ export default function TrendChart({ data }: Props) {
   const colWidth = INNER_W / data.length
 
   return (
-    <div className="relative flex flex-col h-full">
+    <div className="relative">
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="w-full flex-1"
-        style={{ minHeight: 0 }}
+        className="w-full"
         onMouseLeave={() => setTooltip(null)}
       >
         <defs>
