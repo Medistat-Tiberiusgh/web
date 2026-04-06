@@ -1,8 +1,14 @@
+import { useState } from 'react'
 import type { TrendPoint } from '../types'
+
+interface TooltipState {
+  x: number
+  y: number
+  point: TrendPoint
+}
 
 interface Props {
   data: TrendPoint[]
-  drugName: string
 }
 
 const W = 600
@@ -16,7 +22,9 @@ function scaleX(year: number, minYear: number, maxYear: number) {
 }
 
 function scaleY(value: number, minVal: number, maxVal: number) {
-  return PAD.top + INNER_H - ((value - minVal) / (maxVal - minVal || 1)) * INNER_H
+  return (
+    PAD.top + INNER_H - ((value - minVal) / (maxVal - minVal || 1)) * INNER_H
+  )
 }
 
 function buildPath(points: { x: number; y: number }[]) {
@@ -26,7 +34,15 @@ function buildPath(points: { x: number; y: number }[]) {
     .join(' ')
 }
 
-export default function TrendChart({ data, drugName }: Props) {
+function fmt(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`
+  return `${n}`
+}
+
+export default function TrendChart({ data }: Props) {
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-gray-400">
@@ -39,71 +55,47 @@ export default function TrendChart({ data, drugName }: Props) {
   const minYear = Math.min(...years)
   const maxYear = Math.max(...years)
 
-  const prescValues = data.map((d) => d.totalPrescriptions)
-  const patientValues = data.map((d) => d.totalPatients)
-  const maxVal = Math.max(...prescValues, ...patientValues)
+  const maxVal = Math.max(
+    ...data.map((d) => d.totalPrescriptions),
+    ...data.map((d) => d.totalPatients)
+  )
   const minVal = 0
 
   const prescPoints = data.map((d) => ({
     x: scaleX(d.year, minYear, maxYear),
     y: scaleY(d.totalPrescriptions, minVal, maxVal),
-    data: d,
+    data: d
   }))
 
   const patientPoints = data.map((d) => ({
     x: scaleX(d.year, minYear, maxYear),
     y: scaleY(d.totalPatients, minVal, maxVal),
-    data: d,
+    data: d
   }))
 
   const prescPath = buildPath(prescPoints)
   const patientPath = buildPath(patientPoints)
 
-  // Area fill under prescriptions line
   const areaPath =
     prescPath +
     ` L ${prescPoints[prescPoints.length - 1].x.toFixed(1)} ${(PAD.top + INNER_H).toFixed(1)}` +
     ` L ${prescPoints[0].x.toFixed(1)} ${(PAD.top + INNER_H).toFixed(1)} Z`
 
-  // Y-axis tick labels (4 ticks)
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = (maxVal / 4) * i
-    const y = scaleY(val, minVal, maxVal)
-    return { val, y }
+    return { val, y: scaleY(val, minVal, maxVal) }
   })
 
-  // X-axis ticks: show every 3rd year
   const xTicks = data.filter((_, i) => i % 3 === 0 || data[i].year === maxYear)
-
-  function fmt(n: number) {
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-    if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`
-    return `${n}`
-  }
+  const colWidth = INNER_W / data.length
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
-          <h3 className="font-semibold text-gray-900">19-Year Prescription Velocity</h3>
-          <p className="text-xs text-gray-400 mt-0.5">{drugName} · national totals 2006–2024</p>
-        </div>
-        <div className="flex items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5">
-            <span className="w-5 h-0.5 bg-blue-700 inline-block rounded" />
-            Prescriptions
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-5 h-0.5 bg-gray-400 inline-block rounded border-dashed border-t border-gray-400" />
-            Patients
-          </span>
-        </div>
-      </div>
-
+    <div className="relative flex flex-col h-full">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full flex-1"
         style={{ minHeight: 0 }}
+        onMouseLeave={() => setTooltip(null)}
       >
         <defs>
           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -112,7 +104,6 @@ export default function TrendChart({ data, drugName }: Props) {
           </linearGradient>
         </defs>
 
-        {/* Grid lines */}
         {yTicks.map(({ val, y }) => (
           <g key={val}>
             <line
@@ -136,10 +127,7 @@ export default function TrendChart({ data, drugName }: Props) {
           </g>
         ))}
 
-        {/* Area fill */}
         <path d={areaPath} fill="url(#areaGradient)" />
-
-        {/* Patients dashed line */}
         <path
           d={patientPath}
           fill="none"
@@ -147,16 +135,59 @@ export default function TrendChart({ data, drugName }: Props) {
           strokeWidth={1.5}
           strokeDasharray="4 3"
         />
+        <path
+          d={prescPath}
+          fill="none"
+          stroke="#1d4ed8"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
-        {/* Prescriptions line */}
-        <path d={prescPath} fill="none" stroke="#1d4ed8" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {tooltip && (
+          <line
+            x1={scaleX(tooltip.point.year, minYear, maxYear)}
+            y1={PAD.top}
+            x2={scaleX(tooltip.point.year, minYear, maxYear)}
+            y2={PAD.top + INNER_H}
+            stroke="#1d4ed8"
+            strokeWidth={1}
+            strokeDasharray="3 2"
+            opacity={0.4}
+          />
+        )}
 
-        {/* Dots on prescriptions line */}
-        {prescPoints.map(({ x, y, data: d }) => (
-          <circle key={d.year} cx={x} cy={y} r={3} fill="#1d4ed8" />
+        {prescPoints.map(({ x, y, data: d }, i) => (
+          <g key={d.year}>
+            <circle
+              cx={x}
+              cy={y}
+              r={tooltip?.point.year === d.year ? 5 : 3}
+              fill="#1d4ed8"
+            />
+            <circle
+              cx={patientPoints[i].x}
+              cy={patientPoints[i].y}
+              r={tooltip?.point.year === d.year ? 4 : 2.5}
+              fill="#9ca3af"
+            />
+            <rect
+              x={x - colWidth / 2}
+              y={PAD.top}
+              width={colWidth}
+              height={INNER_H}
+              fill="transparent"
+              style={{ cursor: 'crosshair' }}
+              onMouseEnter={(e) =>
+                setTooltip({ x: e.clientX, y: e.clientY, point: d })
+              }
+              onMouseMove={(e) =>
+                setTooltip({ x: e.clientX, y: e.clientY, point: d })
+              }
+            />
+          </g>
         ))}
 
-        {/* X-axis labels */}
         {xTicks.map((d) => (
           <text
             key={d.year}
@@ -170,10 +201,36 @@ export default function TrendChart({ data, drugName }: Props) {
           </text>
         ))}
 
-        {/* Axes */}
-        <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={PAD.top + INNER_H} stroke="#e5e7eb" />
-        <line x1={PAD.left} y1={PAD.top + INNER_H} x2={PAD.left + INNER_W} y2={PAD.top + INNER_H} stroke="#e5e7eb" />
+        <line
+          x1={PAD.left}
+          y1={PAD.top}
+          x2={PAD.left}
+          y2={PAD.top + INNER_H}
+          stroke="#e5e7eb"
+        />
+        <line
+          x1={PAD.left}
+          y1={PAD.top + INNER_H}
+          x2={PAD.left + INNER_W}
+          y2={PAD.top + INNER_H}
+          stroke="#e5e7eb"
+        />
       </svg>
+
+      {tooltip && (
+        <div
+          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm"
+          style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
+        >
+          <p className="font-semibold text-gray-900">{tooltip.point.year}</p>
+          <p className="text-blue-700">
+            {tooltip.point.totalPrescriptions.toLocaleString()} dispensings
+          </p>
+          <p className="text-gray-500">
+            {tooltip.point.totalPatients.toLocaleString()} patients
+          </p>
+        </div>
+      )}
     </div>
   )
 }
