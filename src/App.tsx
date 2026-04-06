@@ -66,13 +66,13 @@ export default function App() {
           </aside>
 
           {/* Main dashboard */}
-          <main className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+          <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {/* KPI cards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3">
               {insightsLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <Card key={i}>
-                    <Card.Content className="p-5 flex flex-col gap-2">
+                    <Card.Content className="p-4 flex flex-col gap-2">
                       <Skeleton className="h-3 w-1/3 rounded" />
                       <Skeleton className="h-8 w-1/2 rounded" />
                       <Skeleton className="h-3 w-2/3 rounded" />
@@ -100,12 +100,13 @@ export default function App() {
                       <>
                         <p>
                           Number of unique patients who received at least one
-                          prescription for this drug in the most recent year of
+                          dispensing for this drug in the most recent year of
                           available data
                           {latestTrend ? ` (${latestTrend.year})` : ''}.
                         </p>
                         <p className="mt-2">
-                          Total prescriptions that year:{' '}
+                          Total dispensings
+                          {latestTrend ? ` (${latestTrend.year})` : ''}:{' '}
                           {latestTrend
                             ? latestTrend.totalPrescriptions.toLocaleString()
                             : '—'}
@@ -125,7 +126,7 @@ export default function App() {
                           }
                         : undefined
                     }
-                    info="Average number of dispensed prescriptions per 1,000 inhabitants, averaged across all Swedish regions. Used to compare drug use relative to population size."
+                    info="Number of dispensings per 1,000 inhabitants across all Swedish regions."
                   />
                   <KpiCard
                     label="Chronic Use Ratio"
@@ -142,7 +143,7 @@ export default function App() {
                           }
                         : undefined
                     }
-                    info="Total prescriptions divided by total patients. A value above 1 means patients received more than one prescription on average, which is typical for chronic or recurring conditions."
+                    info="Total dispensings divided by total patients. A value above 1 means patients dispensed the drug more than once on average, which is typical for chronic or recurring conditions."
                   />
                 </>
               )}
@@ -152,44 +153,68 @@ export default function App() {
             {!selectedMed ? (
               <Card>
                 <Card.Content className="flex items-center justify-center h-64 text-gray-400 text-sm">
-                  Select a medication from the sidebar to explore prescription
+                  Select a medication from the sidebar to explore dispensing
                   data
                 </Card.Content>
               </Card>
             ) : (
               <>
-                <div className="grid grid-cols-5 gap-4">
-                  {/* Trend chart */}
-                  <Card className="col-span-3">
-                    <Card.Content className="p-5 h-72">
+                {/* Chart (left) + Map & Ranking (right) */}
+                <div className="flex flex-col md:flex-row gap-3">
+                  {/* Left: chart */}
+                  <Card className="flex-1 min-w-0">
+                    <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+                      <div>
+                        <Card.Title>Year-by-Year Dispensing Changes</Card.Title>
+                        <Card.Description>
+                          {selectedMed.drugData.name} · national totals 2006–2024
+                        </Card.Description>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-5 h-0.5 bg-blue-700 inline-block rounded" />
+                          Dispensings
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-5 h-0.5 bg-gray-400 inline-block rounded" style={{ borderTop: '2px dashed' }} />
+                          Patients
+                        </span>
+                      </div>
+                    </Card.Header>
+                    <Card.Content className="px-4 pb-4 pt-2 h-64">
                       {insightsLoading ? (
                         <div className="flex flex-col gap-3 h-full">
                           <Skeleton className="h-4 w-1/3 rounded" />
                           <Skeleton className="flex-1 rounded" />
                         </div>
                       ) : (
-                        <TrendChart
-                          data={insights?.trend ?? []}
-                          drugName={selectedMed.drugData.name}
-                        />
+                        <TrendChart data={insights?.trend ?? []} />
                       )}
                     </Card.Content>
                   </Card>
 
-                  {/* Map */}
-                  <Card className="col-span-2">
-                    <Card.Content className="p-0 h-72 overflow-hidden">
-                      <MapView regions={regions} />
-                    </Card.Content>
-                  </Card>
+                  {/* Right: map + ranking stacked */}
+                  <div className="flex flex-col gap-3 w-full md:w-72 shrink-0">
+                    <Card>
+                      <Card.Header className="px-4 pt-4 pb-0">
+                        <Card.Title>Dispensing Intensity Map</Card.Title>
+                        <Card.Description>per 1,000 inhabitants</Card.Description>
+                      </Card.Header>
+                      <Card.Content className="p-0 h-140 overflow-hidden">
+                        <MapView regions={regions} />
+                      </Card.Content>
+                    </Card>
+                    <Card>
+                      <Card.Header className="px-4 pt-4 pb-0">
+                        <Card.Title>Regional Ranking</Card.Title>
+                        <Card.Description>Dispensings per 1,000 residents · descending</Card.Description>
+                      </Card.Header>
+                      <Card.Content className="p-0">
+                        <RegionalRanking regions={regions} />
+                      </Card.Content>
+                    </Card>
+                  </div>
                 </div>
-
-                {/* Regional ranking */}
-                <Card>
-                  <Card.Content className="p-0">
-                    <RegionalRanking regions={regions} />
-                  </Card.Content>
-                </Card>
               </>
             )}
           </main>
