@@ -21,6 +21,14 @@ export interface DrugInsights {
   regionalPopularity: RegionalStat[]
   trend: TrendPoint[]
   genderSplit: GenderSplitPoint[]
+  ageSplit: AgeSplitPoint[]
+}
+
+export interface AgeSplitPoint {
+  year: number
+  ageGroupId: number
+  ageGroupName: string
+  per1000: number
 }
 
 export interface Drug {
