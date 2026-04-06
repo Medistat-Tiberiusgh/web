@@ -43,6 +43,12 @@ export const DRUG_INSIGHTS_QUERY = `
         gender
         per1000
       }
+      ageSplit {
+        year
+        ageGroupId
+        ageGroupName
+        per1000
+      }
     }
   }
 `
