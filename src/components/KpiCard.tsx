@@ -17,7 +17,7 @@ export default function KpiCard({
 }: Props) {
   return (
     <Card>
-      <Card.Content className="p-5">
+      <Card.Content className="p-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
