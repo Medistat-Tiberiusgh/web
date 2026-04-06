@@ -4,15 +4,33 @@ export interface RegionalStat {
   per1000: number
 }
 
+export interface TrendPoint {
+  year: number
+  totalPrescriptions: number
+  totalPatients: number
+  per1000: number
+}
+
+export interface GenderSplitPoint {
+  year: number
+  gender: string
+  per1000: number
+}
+
+export interface DrugInsights {
+  regionalPopularity: RegionalStat[]
+  trend: TrendPoint[]
+  genderSplit: GenderSplitPoint[]
+}
+
+export interface Drug {
+  atcCode: string
+  name: string
+  narcoticClass: string | null
+}
+
 export interface UserMedication {
   notes: string | null
   addedAt: string
-  drugData: {
-    atcCode: string
-    name: string
-    narcoticClass: string | null
-  }
-  insights?: {
-    regionalPopularity: RegionalStat[]
-  }
+  drugData: Drug
 }
