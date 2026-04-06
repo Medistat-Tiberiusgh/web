@@ -26,11 +26,26 @@ export default function App() {
   )
 
   const latestTrend = insights?.trend.at(-1) ?? null
+  const prevTrend = insights?.trend.at(-2) ?? null
+
   const chronicUseRatio =
     latestTrend && latestTrend.totalPatients > 0
       ? latestTrend.totalPrescriptions / latestTrend.totalPatients
       : null
   const nationalPer1000 = latestTrend ? latestTrend.per1000.toFixed(1) : null
+
+  const patientsPct =
+    latestTrend && prevTrend
+      ? ((latestTrend.totalPatients - prevTrend.totalPatients) /
+          prevTrend.totalPatients) *
+        100
+      : null
+  const per1000Diff =
+    latestTrend && prevTrend ? latestTrend.per1000 - prevTrend.per1000 : null
+  const ratioDiff =
+    chronicUseRatio != null && prevTrend && prevTrend.totalPatients > 0
+      ? chronicUseRatio - prevTrend.totalPrescriptions / prevTrend.totalPatients
+      : null
 
   const regions = insights?.regionalPopularity ?? []
 
@@ -73,17 +88,43 @@ export default function App() {
                         ? latestTrend.totalPatients.toLocaleString()
                         : '—'
                     }
-                    subValue={
-                      latestTrend
-                        ? `${latestTrend.totalPrescriptions.toLocaleString()} prescriptions`
+                    delta={
+                      patientsPct != null
+                        ? {
+                            value: `${patientsPct >= 0 ? '+' : ''}${patientsPct.toFixed(1)}%`,
+                            positive: patientsPct >= 0
+                          }
                         : undefined
                     }
-                    info={`Number of unique patients who received at least one prescription for this drug in the most recent year of available data${latestTrend ? ` (${latestTrend.year})` : ''}.`}
+                    info={
+                      <>
+                        <p>
+                          Number of unique patients who received at least one
+                          prescription for this drug in the most recent year of
+                          available data
+                          {latestTrend ? ` (${latestTrend.year})` : ''}.
+                        </p>
+                        <p className="mt-2">
+                          Total prescriptions that year:{' '}
+                          {latestTrend
+                            ? latestTrend.totalPrescriptions.toLocaleString()
+                            : '—'}
+                          .
+                        </p>
+                      </>
+                    }
                   />
                   <KpiCard
                     label="Per 1,000 Inhabitants"
                     value={nationalPer1000 ?? '—'}
-                    subValue="average across all regions"
+                    delta={
+                      per1000Diff != null
+                        ? {
+                            value: `${per1000Diff >= 0 ? '+' : ''}${per1000Diff.toFixed(1)}`,
+                            positive: per1000Diff >= 0
+                          }
+                        : undefined
+                    }
                     info="Average number of dispensed prescriptions per 1,000 inhabitants, averaged across all Swedish regions. Used to compare drug use relative to population size."
                   />
                   <KpiCard
@@ -93,7 +134,14 @@ export default function App() {
                         ? `${chronicUseRatio.toFixed(2)}x`
                         : '—'
                     }
-                    subValue="prescriptions per patient"
+                    delta={
+                      ratioDiff != null
+                        ? {
+                            value: `${ratioDiff >= 0 ? '+' : ''}${ratioDiff.toFixed(2)}x`,
+                            positive: ratioDiff >= 0
+                          }
+                        : undefined
+                    }
                     info="Total prescriptions divided by total patients. A value above 1 means patients received more than one prescription on average, which is typical for chronic or recurring conditions."
                   />
                 </>
