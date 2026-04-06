@@ -23,7 +23,7 @@ interface TooltipState {
   region: RegionalStat
 }
 
-const WIDTH = 500
+const WIDTH = 320
 const HEIGHT = 700
 
 export default function MapView({ regions }: Props) {
@@ -43,32 +43,31 @@ export default function MapView({ regions }: Props) {
   const min = Math.min(...values)
   const max = Math.max(...values)
 
-  const userRegion = user ? filtered.find((r) => r.regionId === user.regionId) : null
+  const userRegion = user
+    ? filtered.find((r) => r.regionId === user.regionId)
+    : null
   const userPer1000 = userRegion?.per1000 ?? null
   const regionById = new Map(filtered.map((r) => [r.regionId, r]))
 
   const projection = geoJson
-    ? geoMercator().fitExtent([[10, 10], [WIDTH - 10, HEIGHT - 10]], geoJson)
+    ? geoMercator().fitExtent(
+        [
+          [0, 4],
+          [WIDTH, HEIGHT - 4]
+        ],
+        geoJson
+      )
     : geoMercator()
   const pathGenerator = geoPath().projection(projection)
 
   return (
-    <div className="flex flex-col h-full p-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-900">
-          Prescription Intensity Index
-        </h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Regional distribution of prescriptions per 1,000 inhabitants
-        </p>
-      </div>
-
+    <div className="flex flex-col h-full">
       {filtered.length === 0 ? (
         <div className="flex-1 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
           {geoJson ? 'Select a medication to see the map' : 'Loading map…'}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 relative flex justify-center">
+        <div className="flex-1 min-h-0 relative">
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             style={{ width: '100%', height: '100%' }}
@@ -92,8 +91,12 @@ export default function MapView({ regions }: Props) {
                   stroke="white"
                   strokeWidth={0.5}
                   style={{ cursor: 'pointer' }}
-                  onMouseEnter={(e) => region && setTooltip({ x: e.clientX, y: e.clientY, region })}
-                  onMouseMove={(e) => region && setTooltip({ x: e.clientX, y: e.clientY, region })}
+                  onMouseEnter={(e) =>
+                    region && setTooltip({ x: e.clientX, y: e.clientY, region })
+                  }
+                  onMouseMove={(e) =>
+                    region && setTooltip({ x: e.clientX, y: e.clientY, region })
+                  }
                   onMouseLeave={() => setTooltip(null)}
                 />
               )
@@ -105,14 +108,27 @@ export default function MapView({ regions }: Props) {
               className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm"
               style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
             >
-              <p className="font-semibold text-gray-900">{tooltip.region.regionName}</p>
+              <p className="font-semibold text-gray-900">
+                {tooltip.region.regionName}
+              </p>
               <p className="text-gray-600">
                 {tooltip.region.per1000.toLocaleString()} per 1 000
               </p>
               {userPer1000 !== null && (
-                <p className={tooltip.region.per1000 >= userPer1000 ? 'text-red-500' : 'text-green-600'}>
+                <p
+                  className={
+                    tooltip.region.per1000 >= userPer1000
+                      ? 'text-red-500'
+                      : 'text-green-600'
+                  }
+                >
                   {tooltip.region.per1000 >= userPer1000 ? '+' : ''}
-                  {(((tooltip.region.per1000 - userPer1000) / (userPer1000 || 1)) * 100).toFixed(1)}% vs your region
+                  {(
+                    ((tooltip.region.per1000 - userPer1000) /
+                      (userPer1000 || 1)) *
+                    100
+                  ).toFixed(1)}
+                  % vs your region
                 </p>
               )}
             </div>
