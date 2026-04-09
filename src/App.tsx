@@ -253,26 +253,19 @@ export default function App() {
                     <Card>
                       <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                         <div>
-                          <Card.Title>
-                            Year-by-Year Dispensing Changes
-                          </Card.Title>
-                          <Card.Description>
-                            {selectedMed.drugData.name} · national totals
-                            2006–2024
-                          </Card.Description>
+                          <Card.Title>Dispensing Trend · 2006–2024</Card.Title>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                           <span className="flex items-center gap-1.5">
                             <span className="w-5 h-0.5 bg-blue-700 inline-block rounded" />
-                            Dispensings
+                            National
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className="w-5 h-0.5 bg-gray-400 inline-block rounded"
-                              style={{ borderTop: '2px dashed' }}
-                            />
-                            Patients
-                          </span>
+                          {regionName && (
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-5 h-0.5 bg-teal-600 inline-block rounded" />
+                              {regionName}
+                            </span>
+                          )}
                         </div>
                       </Card.Header>
                       <Card.Content className="p-0">
@@ -282,7 +275,11 @@ export default function App() {
                             <Skeleton className="flex-1 rounded" />
                           </div>
                         ) : (
-                          <TrendChart data={nationalInsights?.trend ?? []} />
+                          <TrendChart
+                            data={nationalInsights?.trend ?? []}
+                            regionalData={regionalInsights?.trend}
+                            regionName={regionName}
+                          />
                         )}
                       </Card.Content>
                     </Card>

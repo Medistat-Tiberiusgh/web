@@ -4,11 +4,15 @@ import type { TrendPoint } from '../types'
 interface TooltipState {
   x: number
   y: number
-  point: TrendPoint
+  year: number
+  national: number | null
+  regional: number | null
 }
 
 interface Props {
   data: TrendPoint[]
+  regionalData?: TrendPoint[]
+  regionName?: string | null
 }
 
 const W = 600
@@ -27,20 +31,34 @@ function scaleY(value: number, minVal: number, maxVal: number) {
   )
 }
 
-function buildPath(points: { x: number; y: number }[]) {
+// Smooth cubic bezier path through points
+function buildSmoothedPath(points: { x: number; y: number }[]) {
   if (points.length === 0) return ''
-  return points
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(' ')
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]
+    const curr = points[i]
+    const cpx = (prev.x + curr.x) / 2
+    d += ` C ${cpx.toFixed(1)} ${prev.y.toFixed(1)}, ${cpx.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`
+  }
+  return d
 }
 
-function fmt(n: number) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`
-  return `${n}`
+function buildAreaPath(
+  linePath: string,
+  points: { x: number; y: number }[],
+  baseY: number
+) {
+  if (!linePath || points.length === 0) return ''
+  return (
+    linePath +
+    ` L ${points[points.length - 1].x.toFixed(1)} ${baseY.toFixed(1)}` +
+    ` L ${points[0].x.toFixed(1)} ${baseY.toFixed(1)} Z`
+  )
 }
 
-export default function TrendChart({ data }: Props) {
+export default function TrendChart({ data, regionalData, regionName }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   if (data.length === 0) {
@@ -55,31 +73,32 @@ export default function TrendChart({ data }: Props) {
   const minYear = Math.min(...years)
   const maxYear = Math.max(...years)
 
-  const maxVal = Math.max(
-    ...data.map((d) => d.totalPrescriptions),
-    ...data.map((d) => d.totalPatients)
-  )
+  const allPer1000 = [
+    ...data.map((d) => d.per1000),
+    ...(regionalData ?? []).map((d) => d.per1000),
+  ]
+  const maxVal = Math.max(...allPer1000) * 1.08
   const minVal = 0
+  const baseY = PAD.top + INNER_H
 
-  const prescPoints = data.map((d) => ({
+  const natPoints = data.map((d) => ({
     x: scaleX(d.year, minYear, maxYear),
-    y: scaleY(d.totalPrescriptions, minVal, maxVal),
-    data: d
+    y: scaleY(d.per1000, minVal, maxVal),
+    year: d.year,
+    per1000: d.per1000,
   }))
 
-  const patientPoints = data.map((d) => ({
+  const regPoints = (regionalData ?? []).map((d) => ({
     x: scaleX(d.year, minYear, maxYear),
-    y: scaleY(d.totalPatients, minVal, maxVal),
-    data: d
+    y: scaleY(d.per1000, minVal, maxVal),
+    year: d.year,
+    per1000: d.per1000,
   }))
 
-  const prescPath = buildPath(prescPoints)
-  const patientPath = buildPath(patientPoints)
-
-  const areaPath =
-    prescPath +
-    ` L ${prescPoints[prescPoints.length - 1].x.toFixed(1)} ${(PAD.top + INNER_H).toFixed(1)}` +
-    ` L ${prescPoints[0].x.toFixed(1)} ${(PAD.top + INNER_H).toFixed(1)} Z`
+  const natPath = buildSmoothedPath(natPoints)
+  const regPath = buildSmoothedPath(regPoints)
+  const natAreaPath = buildAreaPath(natPath, natPoints, baseY)
+  const regAreaPath = buildAreaPath(regPath, regPoints, baseY)
 
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = (maxVal / 4) * i
@@ -89,6 +108,8 @@ export default function TrendChart({ data }: Props) {
   const xTicks = data.filter((_, i) => i % 3 === 0 || data[i].year === maxYear)
   const colWidth = INNER_W / data.length
 
+  const regByYear = new Map((regionalData ?? []).map((d) => [d.year, d.per1000]))
+
   return (
     <div className="relative">
       <svg
@@ -97,101 +118,93 @@ export default function TrendChart({ data }: Props) {
         onMouseLeave={() => setTooltip(null)}
       >
         <defs>
-          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.01" />
+          <linearGradient id="natGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="regGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0d9488" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#0d9488" stopOpacity="0" />
           </linearGradient>
         </defs>
 
+        {/* Grid lines */}
         {yTicks.map(({ val, y }) => (
           <g key={val}>
-            <line
-              x1={PAD.left}
-              y1={y}
-              x2={PAD.left + INNER_W}
-              y2={y}
-              stroke="#e5e7eb"
-              strokeWidth={1}
-            />
-            <text
-              x={PAD.left - 8}
-              y={y}
-              textAnchor="end"
-              dominantBaseline="middle"
-              fontSize={10}
-              fill="#9ca3af"
-            >
-              {fmt(val)}
+            <line x1={PAD.left} y1={y} x2={PAD.left + INNER_W} y2={y} stroke="#f3f4f6" strokeWidth={1} />
+            <text x={PAD.left - 8} y={y} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="#9ca3af">
+              {val.toFixed(1)}
             </text>
           </g>
         ))}
 
-        <path d={areaPath} fill="url(#areaGradient)" />
-        <path
-          d={patientPath}
-          fill="none"
-          stroke="#9ca3af"
-          strokeWidth={1.5}
-          strokeDasharray="4 3"
-        />
-        <path
-          d={prescPath}
-          fill="none"
-          stroke="#1d4ed8"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        {/* Area fills — drawn before lines so lines sit on top */}
+        {regAreaPath && <path d={regAreaPath} fill="url(#regGrad)" />}
+        <path d={natAreaPath} fill="url(#natGrad)" />
 
+        {/* Lines */}
+        <path d={natPath} fill="none" stroke="#1d4ed8" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        {regPath && (
+          <path d={regPath} fill="none" stroke="#0d9488" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        )}
+
+        {/* Hover crosshair */}
         {tooltip && (
           <line
-            x1={scaleX(tooltip.point.year, minYear, maxYear)}
+            x1={scaleX(tooltip.year, minYear, maxYear)}
             y1={PAD.top}
-            x2={scaleX(tooltip.point.year, minYear, maxYear)}
-            y2={PAD.top + INNER_H}
-            stroke="#1d4ed8"
+            x2={scaleX(tooltip.year, minYear, maxYear)}
+            y2={baseY}
+            stroke="#9ca3af"
             strokeWidth={1}
             strokeDasharray="3 2"
-            opacity={0.4}
           />
         )}
 
-        {prescPoints.map(({ x, y, data: d }, i) => (
-          <g key={d.year}>
-            <circle
-              cx={x}
-              cy={y}
-              r={tooltip?.point.year === d.year ? 5 : 3}
-              fill="#1d4ed8"
-            />
-            <circle
-              cx={patientPoints[i].x}
-              cy={patientPoints[i].y}
-              r={tooltip?.point.year === d.year ? 4 : 2.5}
-              fill="#9ca3af"
-            />
-            <rect
-              x={x - colWidth / 2}
-              y={PAD.top}
-              width={colWidth}
-              height={INNER_H}
-              fill="transparent"
-              style={{ cursor: 'crosshair' }}
-              onMouseEnter={(e) =>
-                setTooltip({ x: e.clientX, y: e.clientY, point: d })
-              }
-              onMouseMove={(e) =>
-                setTooltip({ x: e.clientX, y: e.clientY, point: d })
-              }
-            />
-          </g>
-        ))}
+        {/* Dots — only visible on hovered year */}
+        {natPoints.map(({ x, y, year, per1000 }) => {
+          const hovered = tooltip?.year === year
+          return (
+            <g key={year}>
+              {hovered && (
+                <>
+                  <circle cx={x} cy={y} r={6} fill="white" stroke="#1d4ed8" strokeWidth={2} />
+                  {regByYear.has(year) && (
+                    <circle
+                      cx={x}
+                      cy={scaleY(regByYear.get(year)!, minVal, maxVal)}
+                      r={6}
+                      fill="white"
+                      stroke="#0d9488"
+                      strokeWidth={2}
+                    />
+                  )}
+                </>
+              )}
+              <rect
+                x={x - colWidth / 2}
+                y={PAD.top}
+                width={colWidth}
+                height={INNER_H}
+                fill="transparent"
+                style={{ cursor: 'crosshair' }}
+                onMouseEnter={(e) =>
+                  setTooltip({ x: e.clientX, y: e.clientY, year, national: per1000, regional: regByYear.get(year) ?? null })
+                }
+                onMouseMove={(e) =>
+                  setTooltip({ x: e.clientX, y: e.clientY, year, national: per1000, regional: regByYear.get(year) ?? null })
+                }
+              />
+            </g>
+          )
+        })}
 
+        {/* X axis labels */}
         {xTicks.map((d) => (
           <text
             key={d.year}
             x={scaleX(d.year, minYear, maxYear)}
-            y={PAD.top + INNER_H + 20}
+            y={baseY + 20}
             textAnchor="middle"
             fontSize={10}
             fill="#9ca3af"
@@ -200,34 +213,50 @@ export default function TrendChart({ data }: Props) {
           </text>
         ))}
 
-        <line
-          x1={PAD.left}
-          y1={PAD.top}
-          x2={PAD.left}
-          y2={PAD.top + INNER_H}
-          stroke="#e5e7eb"
-        />
-        <line
-          x1={PAD.left}
-          y1={PAD.top + INNER_H}
-          x2={PAD.left + INNER_W}
-          y2={PAD.top + INNER_H}
-          stroke="#e5e7eb"
-        />
+        {/* Y axis label */}
+        <text
+          x={10}
+          y={PAD.top + INNER_H / 2}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={9}
+          fill="#9ca3af"
+          transform={`rotate(-90, 10, ${PAD.top + INNER_H / 2})`}
+        >
+          per 1,000 inhabitants
+        </text>
+
+        {/* Axes */}
+        <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={baseY} stroke="#e5e7eb" />
+        <line x1={PAD.left} y1={baseY} x2={PAD.left + INNER_W} y2={baseY} stroke="#e5e7eb" />
       </svg>
 
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm"
+          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm min-w-40"
           style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
         >
-          <p className="font-semibold text-gray-900">{tooltip.point.year}</p>
-          <p className="text-blue-700">
-            {tooltip.point.totalPrescriptions.toLocaleString()} dispensings
-          </p>
-          <p className="text-gray-500">
-            {tooltip.point.totalPatients.toLocaleString()} patients
-          </p>
+          <p className="font-semibold text-gray-800 mb-1.5">{tooltip.year}</p>
+          <div className="flex items-center gap-1.5 text-blue-700">
+            <span className="w-2 h-2 rounded-full bg-blue-700 shrink-0" />
+            <span>National: <span className="font-semibold">{tooltip.national?.toFixed(1)}</span></span>
+          </div>
+          {tooltip.regional != null && (
+            <>
+              <div className="flex items-center gap-1.5 text-teal-700 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-teal-600 shrink-0" />
+                <span>{regionName ?? 'Region'}: <span className="font-semibold">{tooltip.regional.toFixed(1)}</span></span>
+              </div>
+              {tooltip.national != null && (
+                <p className="text-gray-400 text-xs mt-1.5 border-t border-gray-100 pt-1.5">
+                  {(() => {
+                    const diff = tooltip.regional - tooltip.national
+                    return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)} vs national`
+                  })()}
+                </p>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
