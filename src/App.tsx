@@ -361,14 +361,30 @@ export default function App() {
                   {/* Right column: map at natural height, ranking fills remaining */}
                   <div className="flex flex-col gap-3 w-full lg:w-80 xl:w-96 lg:shrink-0">
                     <Card>
-                      <Card.Header className="px-4 pt-4 pb-0">
-                        <Card.Title>Dispensing Intensity Map</Card.Title>
-                        <Card.Description>
-                          per 1,000 inhabitants
-                        </Card.Description>
+                      <Card.Header className="px-4 pt-4 pb-0 flex-row items-start justify-between">
+                        <div>
+                          <Card.Title>Dispensing Intensity Map</Card.Title>
+                          <Card.Description>per 1,000 inhabitants</Card.Description>
+                        </div>
+                        <div className="flex flex-col items-start gap-1 pt-0.5 shrink-0 text-[10px]">
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className="h-1.5 w-16 rounded-full shrink-0"
+                              style={{ background: 'linear-gradient(to right, #bfdbfe, #1d4ed8)' }}
+                            />
+                            <span className="text-blue-700 whitespace-nowrap">Less than yours</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div
+                              className="h-1.5 w-16 rounded-full shrink-0"
+                              style={{ background: 'linear-gradient(to right, #fed7aa, #c2410c)' }}
+                            />
+                            <span className="text-orange-700 whitespace-nowrap">More than yours</span>
+                          </div>
+                        </div>
                       </Card.Header>
                       <Card.Content
-                        className="p-0 overflow-hidden"
+                        className="pt-3 px-0 pb-0 overflow-hidden"
                         style={{ height: '630px' }}
                       >
                         <MapView regions={regions} />
