@@ -325,7 +325,10 @@ export default function App() {
                     <Card>
                       <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                         <div>
-                          <Card.Title>Patient Gender Gap{regionName ? ` · ${regionName}` : ''}</Card.Title>
+                          <Card.Title>
+                            Patient Gender Gap
+                            {regionName ? ` · ${regionName}` : ''}
+                          </Card.Title>
                           <Card.Description>
                             per 1,000 inhabitants · {latestTrend?.year ?? '—'}
                           </Card.Description>
@@ -364,22 +367,34 @@ export default function App() {
                       <Card.Header className="px-4 pt-4 pb-0 flex-row items-start justify-between">
                         <div>
                           <Card.Title>Dispensing Intensity Map</Card.Title>
-                          <Card.Description>per 1,000 inhabitants</Card.Description>
+                          <Card.Description>
+                            per 1,000 inhabitants
+                          </Card.Description>
                         </div>
                         <div className="flex flex-col items-start gap-1 pt-0.5 shrink-0 text-[10px]">
                           <div className="flex items-center gap-1.5">
                             <div
                               className="h-1.5 w-16 rounded-full shrink-0"
-                              style={{ background: 'linear-gradient(to right, #bfdbfe, #1d4ed8)' }}
+                              style={{
+                                background:
+                                  'linear-gradient(to right, #bfdbfe, #1d4ed8)'
+                              }}
                             />
-                            <span className="text-blue-700 whitespace-nowrap">Less than yours</span>
+                            <span className="text-blue-700 whitespace-nowrap">
+                              Less than yours
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div
                               className="h-1.5 w-16 rounded-full shrink-0"
-                              style={{ background: 'linear-gradient(to right, #fed7aa, #c2410c)' }}
+                              style={{
+                                background:
+                                  'linear-gradient(to right, #fed7aa, #c2410c)'
+                              }}
                             />
-                            <span className="text-orange-700 whitespace-nowrap">More than yours</span>
+                            <span className="text-orange-700 whitespace-nowrap">
+                              More than yours
+                            </span>
                           </div>
                         </div>
                       </Card.Header>
@@ -397,7 +412,10 @@ export default function App() {
                           Dispensings per 1,000 residents · descending
                         </Card.Description>
                       </Card.Header>
-                      <Card.Content className="p-0 flex-1 min-h-0 overflow-y-auto">
+                      <Card.Content
+                        className="p-0 overflow-hidden"
+                        style={{ height: '560px' }}
+                      >
                         <RegionalRanking regions={regions} />
                       </Card.Content>
                     </Card>
