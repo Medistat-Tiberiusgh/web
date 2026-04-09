@@ -136,11 +136,15 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
         <line x1={centerX + CENTER_W / 2} y1={PAD.top - 4} x2={centerX + CENTER_W / 2} y2={H - PAD.bottom} stroke="#e5e7eb" strokeWidth={1} />
       </svg>
 
-      {tooltip && (
-        <div
-          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs min-w-64"
-          style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
-        >
+      {tooltip && (() => {
+        const tooltipWidth = 260
+        const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
+        const leftPos = flipLeft ? tooltip.x - tooltipWidth - 8 : tooltip.x + 14
+        return (
+          <div
+            className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
+            style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
+          >
           {/* Header */}
           <div className="px-3 py-2 border-b border-gray-100">
             <span className="font-semibold text-gray-800">{tooltip.year}</span>
@@ -239,8 +243,9 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
               </div>
             )
           })()}
-        </div>
-      )}
+          </div>
+        )
+      })()}
     </div>
   )
 }

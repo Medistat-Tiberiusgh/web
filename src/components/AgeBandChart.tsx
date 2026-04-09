@@ -109,11 +109,15 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
         ))}
       </div>
 
-      {tooltip && (
-        <div
-          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs min-w-56 max-w-64"
-          style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
-        >
+      {tooltip && (() => {
+        const tooltipWidth = 240
+        const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
+        const leftPos = flipLeft ? tooltip.x - tooltipWidth - 8 : tooltip.x + 14
+        return (
+          <div
+            className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
+            style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
+          >
           {/* Header */}
           <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
             <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
@@ -167,8 +171,9 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
               )
             })()}
           </div>
-        </div>
-      )}
+          </div>
+        )
+      })()}
     </>
   )
 }
