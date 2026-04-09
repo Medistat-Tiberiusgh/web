@@ -14,6 +14,12 @@ import { UserContext } from './context/UserContext'
 import { mockUser } from './mock/user'
 import type { User } from './context/UserContext'
 
+// Formats a number to 1 decimal place with sign, avoiding "-0.0"
+function fmtDelta1(n: number, suffix = '') {
+  const v = parseFloat(n.toFixed(1))
+  return `${v >= 0 ? '+' : ''}${v.toFixed(1)}${suffix}`
+}
+
 export default function App() {
   const [user] = useState<User>(mockUser)
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
@@ -21,41 +27,73 @@ export default function App() {
   const { medications, loading: medsLoading } = useMedications()
 
   const selectedMed = selectedIndex !== null ? medications[selectedIndex] : null
-  const { insights, loading: insightsLoading } = useDrugInsights(
+  const { insights: nationalInsights, loading: insightsLoading } =
+    useDrugInsights(selectedMed?.drugData?.atcCode ?? null, null, null)
+  const { insights: regionalInsights } = useDrugInsights(
     selectedMed?.drugData?.atcCode ?? null,
     null,
-    null
+    user.regionId
   )
 
-  const latestTrend =
-    (insights?.trend.at(-1)?.totalPatients ?? 0) > 0
-      ? insights!.trend.at(-1)!
+  // National trend points
+  const natLatest =
+    (nationalInsights?.trend.at(-1)?.totalPatients ?? 0) > 0
+      ? nationalInsights!.trend.at(-1)!
       : null
-  const prevTrend =
-    (insights?.trend.at(-2)?.totalPatients ?? 0) > 0
-      ? insights!.trend.at(-2)!
+  // Regional trend points
+  const regLatest =
+    (regionalInsights?.trend.at(-1)?.totalPatients ?? 0) > 0
+      ? regionalInsights!.trend.at(-1)!
       : null
+  const regPrev =
+    (regionalInsights?.trend.at(-2)?.totalPatients ?? 0) > 0
+      ? regionalInsights!.trend.at(-2)!
+      : null
+
+  // Use regional as headline where available, fall back to national
+  const latestTrend = regLatest ?? natLatest
 
   const chronicUseRatio =
     latestTrend && latestTrend.totalPatients > 0
       ? latestTrend.totalPrescriptions / latestTrend.totalPatients
       : null
-  const nationalPer1000 = latestTrend ? latestTrend.per1000.toFixed(1) : null
 
+  // YoY deltas (regional)
   const patientsPct =
-    latestTrend && prevTrend && prevTrend.totalPatients > 0
-      ? ((latestTrend.totalPatients - prevTrend.totalPatients) /
-          prevTrend.totalPatients) *
+    regLatest && regPrev && regPrev.totalPatients > 0
+      ? ((regLatest.totalPatients - regPrev.totalPatients) /
+          regPrev.totalPatients) *
         100
       : null
   const per1000Diff =
-    latestTrend && prevTrend ? latestTrend.per1000 - prevTrend.per1000 : null
+    regLatest && regPrev ? regLatest.per1000 - regPrev.per1000 : null
   const ratioDiff =
-    chronicUseRatio != null && prevTrend && prevTrend.totalPatients > 0
-      ? chronicUseRatio - prevTrend.totalPrescriptions / prevTrend.totalPatients
+    chronicUseRatio != null && regPrev && regPrev.totalPatients > 0
+      ? chronicUseRatio - regPrev.totalPrescriptions / regPrev.totalPatients
       : null
 
-  const regions = insights?.regionalPopularity ?? []
+  // National-vs-regional deltas
+  const natChronicRatio =
+    natLatest && natLatest.totalPatients > 0
+      ? natLatest.totalPrescriptions / natLatest.totalPatients
+      : null
+
+  const per1000DeltaVsNat =
+    regLatest && natLatest
+      ? ((regLatest.per1000 - natLatest.per1000) / natLatest.per1000) * 100
+      : null
+  const ratioDeltaVsNat =
+    chronicUseRatio != null && natChronicRatio != null && natChronicRatio > 0
+      ? ((chronicUseRatio - natChronicRatio) / natChronicRatio) * 100
+      : null
+
+  // Region name from the national regional popularity list
+  const regionName =
+    nationalInsights?.regionalPopularity.find(
+      (r) => r.regionId === user.regionId
+    )?.regionName ?? null
+
+  const regions = nationalInsights?.regionalPopularity ?? []
 
   return (
     <UserContext.Provider value={user}>
@@ -90,33 +128,54 @@ export default function App() {
               ) : (
                 <>
                   <KpiCard
-                    label="Total Patients"
+                    label={`Total Patients${regionName ? ` · ${regionName}` : ''}`}
                     value={
-                      latestTrend
-                        ? latestTrend.totalPatients.toLocaleString()
-                        : '—'
+                      regLatest ? regLatest.totalPatients.toLocaleString() : '—'
                     }
                     delta={
                       patientsPct != null
                         ? {
-                            value: `${patientsPct >= 0 ? '+' : ''}${patientsPct.toFixed(1)}%`,
-                            positive: patientsPct >= 0
+                            value: fmtDelta1(patientsPct, '%'),
+                            subLabel:
+                              regPrev != null
+                                ? `(${regPrev.totalPatients.toLocaleString()})`
+                                : undefined
                           }
                         : undefined
                     }
+                    nationalDelta={(() => {
+                      if (!natLatest || !regLatest) return null
+                      const natAvgPerRegion = natLatest.totalPatients / 21
+                      const pct =
+                        ((regLatest.totalPatients - natAvgPerRegion) /
+                          natAvgPerRegion) *
+                        100
+                      return {
+                        value: fmtDelta1(pct, '%'),
+                        pct,
+                        avgLabel: Math.round(natAvgPerRegion).toLocaleString()
+                      }
+                    })()}
                     info={
                       <>
                         <p>
                           Number of unique patients who received at least one
                           dispensing for this drug in the most recent year of
                           available data
-                          {latestTrend ? ` (${latestTrend.year})` : ''}.
+                          {regLatest ? ` (${regLatest.year})` : ''}.
                         </p>
                         <p className="mt-2">
-                          Total dispensings
-                          {latestTrend ? ` (${latestTrend.year})` : ''}:{' '}
-                          {latestTrend
-                            ? latestTrend.totalPrescriptions.toLocaleString()
+                          National total:{' '}
+                          {natLatest
+                            ? natLatest.totalPatients.toLocaleString()
+                            : '—'}{' '}
+                          patients.
+                        </p>
+                        <p className="mt-2">
+                          Total dispensings in {regionName ?? 'your region'}
+                          {regLatest ? ` (${regLatest.year})` : ''}:{' '}
+                          {regLatest
+                            ? regLatest.totalPrescriptions.toLocaleString()
                             : '—'}
                           .
                         </p>
@@ -124,32 +183,53 @@ export default function App() {
                     }
                   />
                   <KpiCard
-                    label="Per 1,000 Inhabitants"
-                    value={nationalPer1000 ?? '—'}
+                    label={`Per 1,000 Inhabitants${regionName ? ` · ${regionName}` : ''}`}
+                    value={regLatest ? regLatest.per1000.toFixed(1) : '—'}
                     delta={
                       per1000Diff != null
                         ? {
-                            value: `${per1000Diff >= 0 ? '+' : ''}${per1000Diff.toFixed(1)}`,
-                            positive: per1000Diff >= 0
+                            value: fmtDelta1(per1000Diff),
+                            subLabel:
+                              regPrev != null
+                                ? `(${regPrev.per1000.toFixed(1)})`
+                                : undefined
                           }
                         : undefined
                     }
-                    info="Number of dispensings per 1,000 inhabitants across all Swedish regions."
+                    nationalDelta={
+                      per1000DeltaVsNat != null && natLatest
+                        ? {
+                            value: fmtDelta1(per1000DeltaVsNat, '%'),
+                            pct: per1000DeltaVsNat,
+                            avgLabel: natLatest.per1000.toFixed(1)
+                          }
+                        : null
+                    }
+                    info={`Dispensings per 1,000 inhabitants in ${regionName ?? 'your region'}. The national average is ${natLatest ? natLatest.per1000.toFixed(1) : '—'}.`}
                   />
                   <KpiCard
-                    label="Chronic Use Ratio"
+                    label={`Chronic Use Ratio${regionName ? ` · ${regionName}` : ''}`}
                     value={
                       chronicUseRatio != null
                         ? `${chronicUseRatio.toFixed(2)}x`
                         : '—'
                     }
                     delta={
-                      ratioDiff != null
+                      ratioDiff != null && regPrev != null
                         ? {
-                            value: `${ratioDiff >= 0 ? '+' : ''}${ratioDiff.toFixed(2)}x`,
-                            positive: ratioDiff >= 0
+                            value: `${fmtDelta1(ratioDiff)}x`,
+                            subLabel: `(${(regPrev.totalPrescriptions / regPrev.totalPatients).toFixed(2)}x)`
                           }
                         : undefined
+                    }
+                    nationalDelta={
+                      ratioDeltaVsNat != null && natChronicRatio != null
+                        ? {
+                            value: fmtDelta1(ratioDeltaVsNat, '%'),
+                            pct: ratioDeltaVsNat,
+                            avgLabel: `${natChronicRatio.toFixed(2)}x`
+                          }
+                        : null
                     }
                     info="Total dispensings divided by total patients. A value above 1 means patients dispensed the drug more than once on average, which is typical for chronic or recurring conditions."
                   />
@@ -202,7 +282,7 @@ export default function App() {
                             <Skeleton className="flex-1 rounded" />
                           </div>
                         ) : (
-                          <TrendChart data={insights?.trend ?? []} />
+                          <TrendChart data={nationalInsights?.trend ?? []} />
                         )}
                       </Card.Content>
                     </Card>
@@ -224,7 +304,7 @@ export default function App() {
                           </div>
                         ) : (
                           <AgeBandChart
-                            data={insights?.ageSplit ?? []}
+                            data={nationalInsights?.ageSplit ?? []}
                             latestYear={latestTrend?.year ?? null}
                             columns={2}
                           />
@@ -239,21 +319,23 @@ export default function App() {
                           Dispensings per 1,000 inhabitants · by gender
                         </Card.Description>
                       </Card.Header>
-                      <Card.Content className="px-4 pb-4 pt-2">
+                      <Card.Content className="p-0">
                         {insightsLoading ? (
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-2 px-4 pb-4 pt-2">
                             <Skeleton className="h-4 w-1/3 rounded" />
                             <Skeleton className="h-48 rounded" />
                           </div>
                         ) : (
-                          <GenderGapChart data={insights?.genderSplit ?? []} />
+                          <GenderGapChart
+                            data={nationalInsights?.genderSplit ?? []}
+                          />
                         )}
                       </Card.Content>
                     </Card>
                   </div>
 
                   {/* Right column: map at natural height, ranking fills remaining */}
-                  <div className="flex flex-col gap-3 w-full lg:w-72 lg:shrink-0">
+                  <div className="flex flex-col gap-3 w-full lg:w-80 xl:w-96 lg:shrink-0">
                     <Card>
                       <Card.Header className="px-4 pt-4 pb-0">
                         <Card.Title>Dispensing Intensity Map</Card.Title>

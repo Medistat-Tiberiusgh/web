@@ -4,8 +4,16 @@ interface Props {
   label: string
   value: string
   subValue?: string
-  delta?: { value: string; positive: boolean }
+  delta?: { value: string; subLabel?: string }
+  nationalDelta?: { value: string; pct: number; avgLabel: string } | null
   info: React.ReactNode
+}
+
+function nationalDeltaColor(pct: number) {
+  const abs = Math.abs(pct)
+  if (abs < 15) return 'text-indigo-500'
+  if (abs < 30) return 'text-amber-500'
+  return 'text-red-500'
 }
 
 export default function KpiCard({
@@ -13,11 +21,12 @@ export default function KpiCard({
   value,
   subValue,
   delta,
+  nationalDelta,
   info
 }: Props) {
   return (
     <Card>
-      <Card.Content className="p-4">
+      <Card.Content className="p-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
@@ -39,24 +48,32 @@ export default function KpiCard({
             </Popover>
           </div>
 
-          <span className="text-3xl font-bold text-gray-900 tracking-tight">
-            {value}
-          </span>
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-3xl font-bold text-gray-900 tracking-tight leading-none pt-0.5">
+              {value}
+            </span>
 
-          {(delta || subValue) && (
-            <div className="flex items-center gap-2 mt-0.5">
-              {delta && (
-                <span
-                  className={`text-xs font-semibold ${delta.positive ? 'text-green-600' : 'text-red-500'}`}
-                >
-                  {delta.value} vs prior year
-                </span>
-              )}
-              {subValue && (
-                <span className="text-xs text-gray-400">{subValue}</span>
-              )}
-            </div>
-          )}
+            {(delta || subValue || nationalDelta) && (
+              <div className="flex flex-col items-end gap-0.5">
+                {delta && (
+                  <span className="text-xs font-semibold text-gray-500">
+                    {delta.value} vs prior year{delta.subLabel ? ` ${delta.subLabel}` : ''}
+                  </span>
+                )}
+                {subValue && (
+                  <span className="text-xs text-gray-400">{subValue}</span>
+                )}
+                {nationalDelta && (
+                  <span className={`text-xs font-semibold ${nationalDeltaColor(nationalDelta.pct)}`}>
+                    {nationalDelta.value} vs national avg{' '}
+                    <span className="font-normal opacity-75">
+                      ({nationalDelta.avgLabel})
+                    </span>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </Card.Content>
     </Card>
