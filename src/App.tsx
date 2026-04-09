@@ -183,7 +183,7 @@ export default function App() {
                     }
                   />
                   <KpiCard
-                    label={`Per 1,000 Inhabitants${regionName ? ` · ${regionName}` : ''}`}
+                    label={`Dispensings per 1,000 Inhabitants${regionName ? ` · ${regionName}` : ''}`}
                     value={regLatest ? regLatest.per1000.toFixed(1) : '—'}
                     delta={
                       per1000Diff != null
@@ -256,16 +256,16 @@ export default function App() {
                           <Card.Title>Dispensing Trend · 2006–2024</Card.Title>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-5 h-0.5 bg-blue-700 inline-block rounded" />
-                            National
-                          </span>
                           {regionName && (
                             <span className="flex items-center gap-1.5">
-                              <span className="w-5 h-0.5 bg-teal-600 inline-block rounded" />
+                              <span className="w-4 h-1.5 rounded-full bg-teal-500 inline-block" />
                               {regionName}
                             </span>
                           )}
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-4 h-1.5 rounded-full bg-blue-700 inline-block" />
+                            National
+                          </span>
                         </div>
                       </Card.Header>
                       <Card.Content className="p-0">
@@ -285,12 +285,24 @@ export default function App() {
                     </Card>
 
                     <Card>
-                      <Card.Header className="px-4 pt-4 pb-0">
-                        <Card.Title>Age Band Distribution</Card.Title>
-                        <Card.Description>
-                          Dispensings per 1,000 inhabitants ·{' '}
-                          {latestTrend?.year ?? '—'}
-                        </Card.Description>
+                      <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+                        <div>
+                          <Card.Title>
+                            Age Band Distribution · {latestTrend?.year ?? '—'}
+                          </Card.Title>
+                        </div>
+                        {regionName && (
+                          <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-4 h-1.5 rounded-full bg-teal-500 inline-block" />
+                              {regionName}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-4 h-1.5 rounded-full bg-blue-700 inline-block" />
+                              National
+                            </span>
+                          </div>
+                        )}
                       </Card.Header>
                       <Card.Content className="p-0">
                         {insightsLoading ? (
@@ -302,8 +314,9 @@ export default function App() {
                         ) : (
                           <AgeBandChart
                             data={nationalInsights?.ageSplit ?? []}
+                            regionalData={regionalInsights?.ageSplit}
                             latestYear={latestTrend?.year ?? null}
-                            columns={2}
+                            regionName={regionName}
                           />
                         )}
                       </Card.Content>
