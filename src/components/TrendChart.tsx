@@ -233,30 +233,51 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
 
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm min-w-40"
+          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs min-w-56 max-w-64"
           style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
         >
-          <p className="font-semibold text-gray-800 mb-1.5">{tooltip.year}</p>
-          <div className="flex items-center gap-1.5 text-blue-700">
-            <span className="w-2 h-2 rounded-full bg-blue-700 shrink-0" />
-            <span>National: <span className="font-semibold">{tooltip.national?.toFixed(1)}</span></span>
+          {/* Header */}
+          <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
+            <span className="font-semibold text-gray-800">{tooltip.year}</span>
+            <span className="text-gray-400 ml-auto">per 1,000 inhabitants</span>
           </div>
-          {tooltip.regional != null && (
-            <>
-              <div className="flex items-center gap-1.5 text-teal-700 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-teal-600 shrink-0" />
-                <span>{regionName ?? 'Region'}: <span className="font-semibold">{tooltip.regional.toFixed(1)}</span></span>
+
+          {/* Two-column body */}
+          <div className="flex divide-x divide-gray-100">
+            <div className="flex-1 px-3 py-2 bg-teal-50/60">
+              <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
+                {regionName ?? 'Region'}
+              </p>
+              <span className="text-lg font-bold text-gray-800">
+                {tooltip.regional != null ? tooltip.regional.toFixed(1) : '—'}
+              </span>
+            </div>
+            <div className="flex-1 px-3 py-2">
+              <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
+                National
+              </p>
+              <span className="text-lg font-bold text-gray-600">
+                {tooltip.national != null ? tooltip.national.toFixed(1) : '—'}
+              </span>
+            </div>
+          </div>
+
+          {/* Footer */}
+          {tooltip.regional != null && tooltip.national != null && (() => {
+            const diff = tooltip.regional - tooltip.national
+            const pct = tooltip.national > 0 ? (diff / tooltip.national) * 100 : null
+            const absPct = pct !== null ? Math.abs(pct) : null
+            const direction = diff > 0 ? 'higher' : 'lower'
+            const text = absPct === null ? null : absPct < 5
+              ? `${regionName ?? 'Region'}: about the same as national avg.`
+              : `${regionName ?? 'Region'}: dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
+            if (!text) return null
+            return (
+              <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
+                <p className="text-[10px] text-teal-600">{text}</p>
               </div>
-              {tooltip.national != null && (
-                <p className="text-gray-400 text-xs mt-1.5 border-t border-gray-100 pt-1.5">
-                  {(() => {
-                    const diff = tooltip.regional - tooltip.national
-                    return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)} vs national`
-                  })()}
-                </p>
-              )}
-            </>
-          )}
+            )
+          })()}
         </div>
       )}
     </div>

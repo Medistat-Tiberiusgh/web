@@ -10,6 +10,9 @@ interface TooltipState {
   regional: number
   national: number | null
   isUser: boolean
+  regRank: number
+  natRank: number | null
+  total: number
 }
 
 interface Props {
@@ -64,9 +67,14 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
                   className={`rounded-md px-2 py-1.5 -mx-2 cursor-default ${
                     isUser ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-100'
                   }`}
-                  onMouseEnter={(e) =>
-                    setTooltip({ x: e.clientX, y: e.clientY, ageGroupName: row.ageGroupName, regional: row.per1000, national: natVal, isUser })
-                  }
+                  onMouseEnter={(e) => {
+                    const regSorted = [...primaryRows].sort((a, b) => b.per1000 - a.per1000)
+                    const regRank = regSorted.findIndex((r) => r.ageGroupId === row.ageGroupId) + 1
+                    const natSorted = [...natRows].sort((a, b) => b.per1000 - a.per1000)
+                    const natRankIdx = natSorted.findIndex((r) => r.ageGroupId === row.ageGroupId)
+                    const natRank = natRankIdx >= 0 ? natRankIdx + 1 : null
+                    setTooltip({ x: e.clientX, y: e.clientY, ageGroupName: row.ageGroupName, regional: row.per1000, national: natVal, isUser, regRank, natRank, total: primaryRows.length })
+                  }}
                   onMouseMove={(e) =>
                     setTooltip((t) => t ? { ...t, x: e.clientX, y: e.clientY } : null)
                   }
@@ -103,50 +111,62 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
 
       {tooltip && (
         <div
-          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm min-w-44"
+          className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs min-w-56 max-w-64"
           style={{ left: tooltip.x + 14, top: tooltip.y - 10 }}
         >
-          <div className="flex items-center gap-1.5 font-semibold text-gray-800 mb-1.5">
-            {tooltip.ageGroupName}
+          {/* Header */}
+          <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
+            <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
             {tooltip.isUser && (
-              <span className="text-xs font-normal text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded-full">You</span>
+              <span className="text-[10px] font-medium text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded-full">You</span>
             )}
+            <span className="text-gray-400 ml-auto">per 1,000 people</span>
           </div>
-          <p className="text-gray-400 text-xs mb-1.5">dispensings per 1,000 people</p>
-          {hasRegional && (
-            <div className="flex items-center gap-1.5 text-teal-700">
-              <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0" />
-              <span>{regionName ?? 'Region'}: <span className="font-semibold">{tooltip.regional.toFixed(1)}</span></span>
+
+          {/* Two-column body */}
+          <div className="flex divide-x divide-gray-100">
+            <div className="flex-1 px-3 py-2 bg-teal-50/60">
+              <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
+                {regionName ?? 'Region'}
+              </p>
+              <span className="text-lg font-bold text-gray-800">{tooltip.regional.toFixed(1)}</span>
             </div>
-          )}
-          {tooltip.national !== null && (
-            <div className="flex items-center gap-1.5 text-blue-700 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-blue-700 shrink-0" />
-              <span>National: <span className="font-semibold">{tooltip.national.toFixed(1)}</span></span>
+            <div className="flex-1 px-3 py-2">
+              <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
+                National
+              </p>
+              <span className="text-lg font-bold text-gray-600">
+                {tooltip.national !== null ? tooltip.national.toFixed(1) : '—'}
+              </span>
             </div>
-          )}
-          {hasRegional && tooltip.national !== null && (() => {
-            const diff = tooltip.regional - tooltip.national
-            const pct = tooltip.national > 0 ? (diff / tooltip.national) * 100 : 0
-            const absPct = Math.abs(pct)
-            const direction = diff > 0 ? 'higher' : 'lower'
-            const magnitude = absPct < 5 ? 'about the same as' : absPct < 20 ? `${absPct.toFixed(0)}% ${direction} than` : `${absPct.toFixed(0)}% ${direction} than`
-            return (
-              <div className="mt-1.5 border-t border-gray-100 pt-1.5 flex flex-col gap-1">
-                <p className="text-gray-500 text-xs">
-                  {absPct < 5
-                    ? `${regionName ?? 'This region'} is about the same as the national average.`
-                    : `${regionName ?? 'This region'} is ${magnitude} the national average.`
-                  }
-                </p>
-                {tooltip.isUser && (
-                  <p className="text-teal-600 text-xs font-medium">
-                    This is your age group.
+          </div>
+
+          {/* Footer */}
+          <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50 flex flex-col gap-0.5">
+            {(() => {
+              const s = (r: number) => r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'
+              const reg = regionName ?? 'Region'
+              const diff = hasRegional && tooltip.national !== null ? tooltip.regional - tooltip.national : null
+              const pct = diff !== null && tooltip.national! > 0 ? (diff / tooltip.national!) * 100 : null
+              const absPct = pct !== null ? Math.abs(pct) : null
+              const direction = diff !== null && diff > 0 ? 'higher' : 'lower'
+              const vsNat = absPct === null ? '' : absPct < 5
+                ? 'about the same as national avg.'
+                : `dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
+              return (
+                <>
+                  <p className="text-[10px] text-teal-600">
+                    {reg}: {tooltip.regRank}{s(tooltip.regRank)} highest among age groups{vsNat ? `. ${vsNat}` : '.'}
                   </p>
-                )}
-              </div>
-            )
-          })()}
+                  {tooltip.natRank !== null && (
+                    <p className="text-[10px] text-blue-500">
+                      National: {tooltip.natRank}{s(tooltip.natRank)} highest among all age groups.
+                    </p>
+                  )}
+                </>
+              )
+            })()}
+          </div>
         </div>
       )}
     </>

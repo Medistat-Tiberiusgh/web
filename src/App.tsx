@@ -323,11 +323,23 @@ export default function App() {
                     </Card>
 
                     <Card>
-                      <Card.Header className="px-4 pt-4 pb-0">
-                        <Card.Title>Patient Gender Gap</Card.Title>
-                        <Card.Description>
-                          Dispensings per 1,000 inhabitants · by gender
-                        </Card.Description>
+                      <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+                        <div>
+                          <Card.Title>Patient Gender Gap{regionName ? ` · ${regionName}` : ''}</Card.Title>
+                          <Card.Description>
+                            per 1,000 inhabitants · {latestTrend?.year ?? '—'}
+                          </Card.Description>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
+                            Men
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
+                            Women
+                          </span>
+                        </div>
                       </Card.Header>
                       <Card.Content className="p-0">
                         {insightsLoading ? (
@@ -338,6 +350,8 @@ export default function App() {
                         ) : (
                           <GenderGapChart
                             data={nationalInsights?.genderSplit ?? []}
+                            regionalData={regionalInsights?.genderSplit}
+                            regionName={regionName}
                           />
                         )}
                       </Card.Content>
