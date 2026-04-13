@@ -53,6 +53,22 @@ export const DRUG_INSIGHTS_QUERY = `
   }
 `
 
+export const DRUG_INFO_QUERY = `
+  query DrugInfo($atcCode: String!) {
+    drugInfo(atcCode: $atcCode) {
+      atcCode
+      indication
+      howToUse
+      otherUses
+      precautions
+      sideEffects
+      otherInfo
+      sourceUrl
+      cachedAt
+    }
+  }
+`
+
 export const ADD_MEDICATION_MUTATION = `
   mutation AddMedication($atc: String!, $notes: String) {
     addMedication(atc: $atc, notes: $notes) {

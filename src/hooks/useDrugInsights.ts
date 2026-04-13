@@ -9,16 +9,19 @@ export function useDrugInsights(
   region: number | null
 ) {
   const [insights, setInsights] = useState<DrugInsights | null>(null)
+  // true only when fetching with no data yet (first load or deselect)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!atcCode) {
       setInsights(null)
+      setLoading(false)
       return
     }
 
-    setLoading(true)
+    // Only show skeleton when we have nothing to display yet
+    setLoading((prev) => insights === null ? true : prev)
     setError(null)
 
     const variables: Record<string, unknown> = { atcCode }

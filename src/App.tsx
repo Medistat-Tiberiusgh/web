@@ -8,6 +8,7 @@ import RegionalRanking from './components/RegionalRanking'
 import GenderGapChart from './components/GenderGapChart'
 import AgeBandChart from './components/AgeBandChart'
 import MedicationList from './components/MedicationList'
+import DrugInfoCard from './components/DrugInfoCard'
 import { useMedications } from './hooks/useMedications'
 import { useDrugInsights } from './hooks/useDrugInsights'
 import { UserContext } from './context/UserContext'
@@ -322,43 +323,50 @@ export default function App() {
                       </Card.Content>
                     </Card>
 
-                    <Card>
-                      <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
-                        <div>
-                          <Card.Title>
-                            Patient Gender Gap
-                            {regionName ? ` · ${regionName}` : ''}
-                          </Card.Title>
-                          <Card.Description>
-                            per 1,000 inhabitants · {latestTrend?.year ?? '—'}
-                          </Card.Description>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
-                            Men
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
-                            Women
-                          </span>
-                        </div>
-                      </Card.Header>
-                      <Card.Content className="p-0">
-                        {insightsLoading ? (
-                          <div className="flex flex-col gap-2 px-4 pb-4 pt-2">
-                            <Skeleton className="h-4 w-1/3 rounded" />
-                            <Skeleton className="h-48 rounded" />
+                    <div className="grid grid-cols-[2fr_3fr] gap-3 items-stretch">
+                      <DrugInfoCard
+                        atcCode={selectedMed.drugData.atcCode}
+                        drugName={selectedMed.drugData.name}
+                        narcoticClass={selectedMed.drugData.narcoticClass}
+                      />
+                      <Card>
+                        <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+                          <div>
+                            <Card.Title>
+                              Patient Gender Gap
+                              {regionName ? ` · ${regionName}` : ''}
+                            </Card.Title>
+                            <Card.Description>
+                              per 1,000 inhabitants · {latestTrend?.year ?? '—'}
+                            </Card.Description>
                           </div>
-                        ) : (
-                          <GenderGapChart
-                            data={nationalInsights?.genderSplit ?? []}
-                            regionalData={regionalInsights?.genderSplit}
-                            regionName={regionName}
-                          />
-                        )}
-                      </Card.Content>
-                    </Card>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
+                              Men
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
+                              Women
+                            </span>
+                          </div>
+                        </Card.Header>
+                        <Card.Content className="p-0">
+                          {insightsLoading ? (
+                            <div className="flex flex-col gap-2 px-4 pb-4 pt-2">
+                              <Skeleton className="h-4 w-1/3 rounded" />
+                              <Skeleton className="h-48 rounded" />
+                            </div>
+                          ) : (
+                            <GenderGapChart
+                              data={nationalInsights?.genderSplit ?? []}
+                              regionalData={regionalInsights?.genderSplit}
+                              regionName={regionName}
+                            />
+                          )}
+                        </Card.Content>
+                      </Card>
+                    </div>
                   </div>
 
                   {/* Right column: map at natural height, ranking fills remaining */}
