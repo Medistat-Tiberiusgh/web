@@ -6,6 +6,7 @@ export interface User {
   regionId: number
   genderId: number
   ageGroupId: number
+  avatarUrl: string | null
 }
 
 export const UserContext = createContext<User | null>(null)

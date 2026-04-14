@@ -1,5 +1,6 @@
+import { getToken } from './auth'
+
 const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL as string
-const API_TOKEN = import.meta.env.VITE_API_TOKEN as string
 
 export async function gqlFetch<T>(
   query: string,
@@ -9,7 +10,7 @@ export async function gqlFetch<T>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${API_TOKEN}`
+      Authorization: `Bearer ${getToken()}`
     },
     body: JSON.stringify({ query, variables })
   })

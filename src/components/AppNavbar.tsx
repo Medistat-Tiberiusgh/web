@@ -1,7 +1,7 @@
 import { SearchField } from '@heroui/react'
 import { useUser } from '../context/UserContext'
 
-export default function AppNavbar() {
+export default function AppNavbar({ onLogout }: { onLogout: () => void }) {
   const user = useUser()
 
   return (
@@ -19,10 +19,19 @@ export default function AppNavbar() {
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        <div className="w-9 h-9 rounded-full bg-blue-600" />
+        {user?.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={user.username}
+            className="w-9 h-9 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-blue-600" />
+        )}
         <p className="text-sm font-medium text-gray-900">{user?.username ?? 'Guest'}</p>
         <button
           title="Log out"
+          onClick={onLogout}
           className="p-2 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
