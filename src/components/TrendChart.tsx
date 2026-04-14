@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { TrendPoint } from '../types'
+import ChartTooltip from './ChartTooltip'
 
 interface TooltipState {
   x: number
@@ -232,30 +233,27 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
       </svg>
 
       {tooltip && (() => {
-        const tooltipWidth = 240
-        const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
-        const leftPos = flipLeft ? tooltip.x - tooltipWidth - 8 : tooltip.x + 14
+        const hasRegional = tooltip.regional != null
         return (
-          <div
-            className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
-            style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
-          >
+          <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 240 : 180}>
           {/* Header */}
           <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
             <span className="font-semibold text-gray-800">{tooltip.year}</span>
             <span className="text-gray-400 ml-auto">per 1,000 inhabitants</span>
           </div>
 
-          {/* Two-column body */}
+          {/* Body — two columns when regional data exists, single national column otherwise */}
           <div className="flex divide-x divide-gray-100">
-            <div className="flex-1 px-3 py-2 bg-teal-50/60">
-              <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
-                {regionName ?? 'Region'}
-              </p>
-              <span className="text-lg font-bold text-gray-800">
-                {tooltip.regional != null ? tooltip.regional.toFixed(1) : '—'}
-              </span>
-            </div>
+            {hasRegional && (
+              <div className="flex-1 px-3 py-2 bg-teal-50/60">
+                <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
+                  {regionName}
+                </p>
+                <span className="text-lg font-bold text-gray-800">
+                  {tooltip.regional!.toFixed(1)}
+                </span>
+              </div>
+            )}
             <div className="flex-1 px-3 py-2">
               <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
                 National
@@ -266,15 +264,15 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
             </div>
           </div>
 
-          {/* Footer */}
-          {tooltip.regional != null && tooltip.national != null && (() => {
-            const diff = tooltip.regional - tooltip.national
+          {/* Footer — only when both values present */}
+          {hasRegional && tooltip.national != null && (() => {
+            const diff = tooltip.regional! - tooltip.national
             const pct = tooltip.national > 0 ? (diff / tooltip.national) * 100 : null
             const absPct = pct !== null ? Math.abs(pct) : null
             const direction = diff > 0 ? 'higher' : 'lower'
             const text = absPct === null ? null : absPct < 5
-              ? `${regionName ?? 'Region'}: about the same as national avg.`
-              : `${regionName ?? 'Region'}: dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
+              ? `${regionName}: about the same as national avg.`
+              : `${regionName}: dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
             if (!text) return null
             return (
               <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
@@ -282,7 +280,7 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
               </div>
             )
           })()}
-          </div>
+          </ChartTooltip>
         )
       })()}
     </div>

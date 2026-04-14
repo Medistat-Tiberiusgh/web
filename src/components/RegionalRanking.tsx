@@ -27,7 +27,7 @@ export default function RegionalRanking({ regions }: Props) {
     <div className="flex flex-col h-full">
       <ul className="flex-1 overflow-y-auto px-3 py-1 flex flex-col">
         {ranked.map((region, i) => {
-          const isHome = region.regionId === user?.regionId
+          const isHome = user?.regionId != null && region.regionId === user.regionId
           const fillPct = (region.per1000 / maxValue) * 100
           const showLabel = hoveredMarkerId === region.regionId
 

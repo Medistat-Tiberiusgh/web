@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { GenderSplitPoint } from '../types'
 import { useUser } from '../context/UserContext'
+import ChartTooltip from './ChartTooltip'
 
 interface Props {
   data: GenderSplitPoint[]
@@ -64,7 +65,8 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
   const maleLabel = displayLabel(uniqueGenders.find(isMaleLike) ?? uniqueGenders[0])
   const femaleLabel = displayLabel(uniqueGenders.find((g) => !isMaleLike(g)) ?? uniqueGenders[1])
 
-  const userIsMale = user ? user.genderId === 1 : false
+  // null = gender unknown; true = male; false = female
+  const userIsMale: boolean | null = user?.genderId != null ? user.genderId === 1 : null
 
   const natByYear = buildYearMap(data)
   const regByYear = buildYearMap(regionalData ?? [])
@@ -82,9 +84,9 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
   const H = PAD.top + years.length * (BAR_H + BAR_GAP) - BAR_GAP + PAD.bottom
   const centerX = PAD.left + BAR_AREA + CENTER_W / 2
 
-  // Fixed gender colors — independent of regional/national scheme
-  const menColor = userIsMale ? '#3b82f6' : '#93c5fd'
-  const womenColor = !userIsMale ? '#f43f5e' : '#fda4af'
+  // Highlighted color for the user's gender, muted for the other (or both muted if unknown)
+  const menColor = userIsMale === true ? '#3b82f6' : '#93c5fd'
+  const womenColor = userIsMale === false ? '#f43f5e' : '#fda4af'
 
   return (
     <div className="relative pt-1">
@@ -94,10 +96,10 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
         onMouseLeave={() => setTooltip(null)}
       >
         <text x={centerX - CENTER_W / 2 - 4} y={PAD.top - 4} textAnchor="end" fontSize={9} fill="#9ca3af">
-          ← {maleLabel}{userIsMale ? ' (you)' : ''}
+          ← {maleLabel}{userIsMale === true ? ' (you)' : ''}
         </text>
         <text x={centerX + CENTER_W / 2 + 4} y={PAD.top - 4} textAnchor="start" fontSize={9} fill="#9ca3af">
-          {femaleLabel}{!userIsMale ? ' (you)' : ''} →
+          {femaleLabel}{userIsMale === false ? ' (you)' : ''} →
         </text>
 
         {years.map((year, i) => {
@@ -137,50 +139,44 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
       </svg>
 
       {tooltip && (() => {
-        const tooltipWidth = 260
-        const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
-        const leftPos = flipLeft ? tooltip.x - tooltipWidth - 8 : tooltip.x + 14
         return (
-          <div
-            className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
-            style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
-          >
+          <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 260 : 180}>
           {/* Header */}
           <div className="px-3 py-2 border-b border-gray-100">
             <span className="font-semibold text-gray-800">{tooltip.year}</span>
             <span className="text-gray-400 ml-1.5">per 1,000 people</span>
           </div>
 
-          {/* Two-column body */}
+          {/* Body — two columns when regional data exists, single national column otherwise */}
           <div className="flex divide-x divide-gray-100">
-            {/* Left — regional */}
-            <div className="flex-1 px-3 py-2 bg-teal-50/60">
-              <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
-                {regionName ?? 'Region'}
-              </p>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: menColor }} />
-                    {maleLabel}{userIsMale ? ' · you' : ''}
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    {tooltip.regMen != null ? tooltip.regMen.toFixed(1) : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: womenColor }} />
-                    {femaleLabel}{!userIsMale ? ' · you' : ''}
-                  </span>
-                  <span className="font-semibold text-gray-800">
-                    {tooltip.regWomen != null ? tooltip.regWomen.toFixed(1) : '—'}
-                  </span>
+            {hasRegional && (
+              <div className="flex-1 px-3 py-2 bg-teal-50/60">
+                <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
+                  {regionName}
+                </p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: menColor }} />
+                      {maleLabel}{userIsMale === true ? ' · you' : ''}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {tooltip.regMen != null ? tooltip.regMen.toFixed(1) : '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: womenColor }} />
+                      {femaleLabel}{userIsMale === false ? ' · you' : ''}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {tooltip.regWomen != null ? tooltip.regWomen.toFixed(1) : '—'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Right — national */}
             <div className="flex-1 px-3 py-2">
               <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
                 National
@@ -188,8 +184,8 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
-                    {maleLabel}
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#60a5fa' : menColor }} />
+                    {maleLabel}{!hasRegional && userIsMale === true ? ' · you' : ''}
                   </span>
                   <span className="font-semibold text-gray-700">
                     {tooltip.natMen != null ? tooltip.natMen.toFixed(1) : '—'}
@@ -197,8 +193,8 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full bg-rose-300 shrink-0" />
-                    {femaleLabel}
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#fda4af' : womenColor }} />
+                    {femaleLabel}{!hasRegional && userIsMale === false ? ' · you' : ''}
                   </span>
                   <span className="font-semibold text-gray-700">
                     {tooltip.natWomen != null ? tooltip.natWomen.toFixed(1) : '—'}
@@ -243,7 +239,7 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
               </div>
             )
           })()}
-          </div>
+          </ChartTooltip>
         )
       })()}
     </div>

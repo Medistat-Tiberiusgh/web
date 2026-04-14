@@ -3,6 +3,7 @@ import { geoMercator, geoPath } from 'd3-geo'
 import { useUser } from '../context/UserContext'
 import type { RegionalStat } from '../types'
 import type { FeatureCollection } from 'geojson'
+import ChartTooltip from './ChartTooltip'
 
 interface Props {
   regions: RegionalStat[]
@@ -59,10 +60,15 @@ export default function MapView({ regions }: Props) {
   const min = Math.min(...values)
   const max = Math.max(...values)
 
-  const userRegion = user
-    ? filtered.find((r) => r.regionId === user.regionId)
-    : null
+  const userRegion =
+    user?.regionId != null
+      ? filtered.find((r) => r.regionId === user.regionId) ?? null
+      : null
   const userPer1000 = userRegion?.per1000 ?? null
+
+  // When the user has no region, center the color scale on the national average
+  const natPer1000 = regions.find((r) => r.regionId === 0)?.per1000 ?? null
+  const centerPer1000 = userPer1000 ?? natPer1000 ?? (min + max) / 2
   const regionById = new Map(filtered.map((r) => [r.regionId, r]))
 
   // Rank: 1 = highest per1000
@@ -95,14 +101,12 @@ export default function MapView({ regions }: Props) {
             {geoJson?.features.map((feature) => {
               const id = feature.id as number
               const region = regionById.get(id)
-              const isUserRegion = id === user?.regionId
+              const isUserRegion = user?.regionId != null && id === user.regionId
               const fill = isUserRegion
                 ? '#0d9488' // teal-600
-                : region && userPer1000 !== null
-                  ? getDivergingColor(region.per1000, userPer1000, min, max)
-                  : region
-                    ? '#dbeafe'
-                    : '#e5e7eb'
+                : region
+                  ? getDivergingColor(region.per1000, centerPer1000, min, max)
+                  : '#e5e7eb'
               const d = pathGenerator(feature) ?? ''
 
               return (
@@ -128,18 +132,19 @@ export default function MapView({ regions }: Props) {
           {tooltip &&
             (() => {
               const hovered = tooltip.region
-              const isUserRegion = hovered.regionId === user?.regionId
+              const isUserRegion = user?.regionId != null && hovered.regionId === user.regionId
               const rank = rankById.get(hovered.regionId)
               const total = filtered.length
+              const hasUserRegion = userPer1000 !== null
 
-              // delta vs user's region
+              // delta vs user's region (only when user has a region and it's not the hovered one)
               const diff =
-                userPer1000 !== null ? hovered.per1000 - userPer1000 : null
+                hasUserRegion && !isUserRegion ? hovered.per1000 - userPer1000! : null
               const pct =
-                diff !== null && userPer1000 ? (diff / userPer1000) * 100 : null
+                diff !== null && userPer1000! > 0 ? (diff / userPer1000!) * 100 : null
 
               let footerText: string | null = null
-              if (!isUserRegion && pct !== null) {
+              if (pct !== null) {
                 const absPct = Math.abs(pct)
                 const dir = pct > 0 ? 'higher' : 'lower'
                 footerText =
@@ -148,18 +153,10 @@ export default function MapView({ regions }: Props) {
                     : `${hovered.regionName}: dispensed ${absPct.toFixed(0)}% ${dir} than your region.`
               }
 
-              // Flip tooltip to the left if it would overflow the right edge
               const tooltipWidth = 224
-              const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
-              const leftPos = flipLeft
-                ? tooltip.x - tooltipWidth - 8
-                : tooltip.x + 14
 
               return (
-                <div
-                  className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
-                  style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
-                >
+                <ChartTooltip x={tooltip.x} y={tooltip.y} width={tooltipWidth}>
                   {/* Header */}
                   <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
                     <span className="font-semibold text-gray-800">
@@ -174,22 +171,8 @@ export default function MapView({ regions }: Props) {
 
                   {/* Two-column body */}
                   <div className="flex divide-x divide-gray-100">
-                    {/* Hovered region */}
-                    <div
-                      className={`flex-1 px-3 py-2 ${isUserRegion ? 'bg-teal-50/60' : ''}`}
-                    >
-                      <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
-                        per 1,000
-                      </p>
-                      <span
-                        className={`text-lg font-bold ${isUserRegion ? 'text-teal-700' : 'text-gray-800'}`}
-                      >
-                        {hovered.per1000.toFixed(1)}
-                      </span>
-                    </div>
-
-                    {/* User's region (only if different) */}
-                    {!isUserRegion && userRegion && (
+                    {/* Left: Your region (teal) when hovering a different region */}
+                    {!isUserRegion && hasUserRegion && userRegion && (
                       <div className="flex-1 px-3 py-2 bg-teal-50/60">
                         <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
                           Your region
@@ -200,8 +183,32 @@ export default function MapView({ regions }: Props) {
                       </div>
                     )}
 
-                    {/* If user's region — show rank */}
-                    {isUserRegion && rank && (
+                    {/* Left (own region or no region): hovered value, teal-tinted when it's the user's own */}
+                    {(isUserRegion || !hasUserRegion) && (
+                      <div className={`flex-1 px-3 py-2 ${isUserRegion ? 'bg-teal-50/60' : ''}`}>
+                        <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
+                          per 1,000
+                        </p>
+                        <span className={`text-lg font-bold ${isUserRegion ? 'text-teal-700' : 'text-gray-800'}`}>
+                          {hovered.per1000.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Right: hovered value (plain) when comparing to user's region */}
+                    {!isUserRegion && hasUserRegion && (
+                      <div className="flex-1 px-3 py-2">
+                        <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
+                          per 1,000
+                        </p>
+                        <span className="text-lg font-bold text-gray-800">
+                          {hovered.per1000.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Right: rank when hovering own region or when user has no region */}
+                    {(isUserRegion || !hasUserRegion) && rank && (
                       <div className="flex-1 px-3 py-2">
                         <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
                           Rank
@@ -225,7 +232,7 @@ export default function MapView({ regions }: Props) {
                       </p>
                     </div>
                   )}
-                </div>
+                </ChartTooltip>
               )
             })()}
         </div>

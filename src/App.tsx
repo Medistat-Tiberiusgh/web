@@ -32,7 +32,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const { insights: nationalInsights, loading: insightsLoading } =
     useDrugInsights(selectedMed?.drugData?.atcCode ?? null, null, null)
   const { insights: regionalInsights } = useDrugInsights(
-    selectedMed?.drugData?.atcCode ?? null,
+    user.regionId != null ? (selectedMed?.drugData?.atcCode ?? null) : null,
     null,
     user.regionId
   )
@@ -41,6 +41,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const natLatest =
     (nationalInsights?.trend.at(-1)?.totalPatients ?? 0) > 0
       ? nationalInsights!.trend.at(-1)!
+      : null
+  const natPrev =
+    (nationalInsights?.trend.at(-2)?.totalPatients ?? 0) > 0
+      ? nationalInsights!.trend.at(-2)!
       : null
   // Regional trend points
   const regLatest =
@@ -54,27 +58,28 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   // Use regional as headline where available, fall back to national
   const latestTrend = regLatest ?? natLatest
+  const prevTrend = regPrev ?? natPrev
 
   const chronicUseRatio =
     latestTrend && latestTrend.totalPatients > 0
       ? latestTrend.totalPrescriptions / latestTrend.totalPatients
       : null
 
-  // YoY deltas (regional)
+  // YoY deltas — regional when available, national otherwise
   const patientsPct =
-    regLatest && regPrev && regPrev.totalPatients > 0
-      ? ((regLatest.totalPatients - regPrev.totalPatients) /
-          regPrev.totalPatients) *
+    latestTrend && prevTrend && prevTrend.totalPatients > 0
+      ? ((latestTrend.totalPatients - prevTrend.totalPatients) /
+          prevTrend.totalPatients) *
         100
       : null
   const per1000Diff =
-    regLatest && regPrev ? regLatest.per1000 - regPrev.per1000 : null
+    latestTrend && prevTrend ? latestTrend.per1000 - prevTrend.per1000 : null
   const ratioDiff =
-    chronicUseRatio != null && regPrev && regPrev.totalPatients > 0
-      ? chronicUseRatio - regPrev.totalPrescriptions / regPrev.totalPatients
+    chronicUseRatio != null && prevTrend && prevTrend.totalPatients > 0
+      ? chronicUseRatio - prevTrend.totalPrescriptions / prevTrend.totalPatients
       : null
 
-  // National-vs-regional deltas
+  // National-vs-regional deltas (only meaningful when we have regional data)
   const natChronicRatio =
     natLatest && natLatest.totalPatients > 0
       ? natLatest.totalPrescriptions / natLatest.totalPatients
@@ -85,15 +90,17 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       ? ((regLatest.per1000 - natLatest.per1000) / natLatest.per1000) * 100
       : null
   const ratioDeltaVsNat =
-    chronicUseRatio != null && natChronicRatio != null && natChronicRatio > 0
+    regLatest != null && chronicUseRatio != null && natChronicRatio != null && natChronicRatio > 0
       ? ((chronicUseRatio - natChronicRatio) / natChronicRatio) * 100
       : null
 
   // Region name from the national regional popularity list
   const regionName =
-    nationalInsights?.regionalPopularity.find(
-      (r) => r.regionId === user.regionId
-    )?.regionName ?? null
+    user.regionId != null
+      ? (nationalInsights?.regionalPopularity.find(
+          (r) => r.regionId === user.regionId
+        )?.regionName ?? null)
+      : null
 
   const regions = nationalInsights?.regionalPopularity ?? []
 
@@ -131,15 +138,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 <KpiCard
                   label={`Total Patients${regionName ? ` · ${regionName}` : ''}`}
                   value={
-                    regLatest ? regLatest.totalPatients.toLocaleString() : '—'
+                    latestTrend ? latestTrend.totalPatients.toLocaleString() : '—'
                   }
                   delta={
                     patientsPct != null
                       ? {
                           value: fmtDelta1(patientsPct, '%'),
                           subLabel:
-                            regPrev != null
-                              ? `(${regPrev.totalPatients.toLocaleString()})`
+                            prevTrend != null
+                              ? `(${prevTrend.totalPatients.toLocaleString()})`
                               : undefined
                         }
                       : undefined
@@ -163,7 +170,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         Number of unique patients who received at least one
                         dispensing for this drug in the most recent year of
                         available data
-                        {regLatest ? ` (${regLatest.year})` : ''}.
+                        {latestTrend ? ` (${latestTrend.year})` : ''}.
                       </p>
                       <p className="mt-2">
                         National total:{' '}
@@ -172,27 +179,26 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           : '—'}{' '}
                         patients.
                       </p>
-                      <p className="mt-2">
-                        Total dispensings in {regionName ?? 'your region'}
-                        {regLatest ? ` (${regLatest.year})` : ''}:{' '}
-                        {regLatest
-                          ? regLatest.totalPrescriptions.toLocaleString()
-                          : '—'}
-                        .
-                      </p>
+                      {regLatest && (
+                        <p className="mt-2">
+                          Total dispensings in {regionName ?? 'your region'}
+                          {` (${regLatest.year})`}:{' '}
+                          {regLatest.totalPrescriptions.toLocaleString()}.
+                        </p>
+                      )}
                     </>
                   }
                 />
                 <KpiCard
                   label={`Dispensings per 1,000 Inhabitants${regionName ? ` · ${regionName}` : ''}`}
-                  value={regLatest ? regLatest.per1000.toFixed(1) : '—'}
+                  value={latestTrend ? latestTrend.per1000.toFixed(1) : '—'}
                   delta={
                     per1000Diff != null
                       ? {
                           value: fmtDelta1(per1000Diff),
                           subLabel:
-                            regPrev != null
-                              ? `(${regPrev.per1000.toFixed(1)})`
+                            prevTrend != null
+                              ? `(${prevTrend.per1000.toFixed(1)})`
                               : undefined
                         }
                       : undefined
@@ -216,10 +222,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       : '—'
                   }
                   delta={
-                    ratioDiff != null && regPrev != null
+                    ratioDiff != null && prevTrend != null
                       ? {
                           value: `${fmtDelta1(ratioDiff)}x`,
-                          subLabel: `(${(regPrev.totalPrescriptions / regPrev.totalPatients).toFixed(2)}x)`
+                          subLabel: `(${(prevTrend.totalPrescriptions / prevTrend.totalPatients).toFixed(2)}x)`
                         }
                       : undefined
                   }
@@ -389,7 +395,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             }}
                           />
                           <span className="text-blue-700 whitespace-nowrap">
-                            Less than yours
+                            {user.regionId != null ? 'Less than yours' : 'Below average'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -401,7 +407,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             }}
                           />
                           <span className="text-orange-700 whitespace-nowrap">
-                            More than yours
+                            {user.regionId != null ? 'More than yours' : 'Above average'}
                           </span>
                         </div>
                       </div>

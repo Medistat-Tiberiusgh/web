@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Chip } from '@heroui/react'
 import type { AgeSplitPoint } from '../types'
 import { useUser } from '../context/UserContext'
+import ChartTooltip from './ChartTooltip'
 
 interface TooltipState {
   x: number
@@ -56,7 +57,7 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
         {cols.map((col, colIdx) => (
           <ul key={colIdx} className="flex-1 flex flex-col gap-1">
             {col.map((row) => {
-              const isUser = row.ageGroupId === user?.ageGroupId
+              const isUser = user?.ageGroupId != null && row.ageGroupId === user.ageGroupId
               const natVal = natByGroup.get(row.ageGroupId) ?? null
               const regPct = (row.per1000 / maxValue) * 100
               const natPct = natVal !== null ? (natVal / maxValue) * 100 : null
@@ -110,14 +111,8 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
       </div>
 
       {tooltip && (() => {
-        const tooltipWidth = 240
-        const flipLeft = tooltip.x + 14 + tooltipWidth > window.innerWidth
-        const leftPos = flipLeft ? tooltip.x - tooltipWidth - 8 : tooltip.x + 14
         return (
-          <div
-            className="fixed z-50 pointer-events-none bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs"
-            style={{ left: leftPos, top: tooltip.y - 10, width: tooltipWidth }}
-          >
+          <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 240 : 180}>
           {/* Header */}
           <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
             <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
@@ -127,20 +122,24 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
             <span className="text-gray-400 ml-auto">per 1,000 people</span>
           </div>
 
-          {/* Two-column body */}
+          {/* Body — two columns when regional data exists, single national column otherwise */}
           <div className="flex divide-x divide-gray-100">
-            <div className="flex-1 px-3 py-2 bg-teal-50/60">
-              <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
-                {regionName ?? 'Region'}
-              </p>
-              <span className="text-lg font-bold text-gray-800">{tooltip.regional.toFixed(1)}</span>
-            </div>
+            {hasRegional && (
+              <div className="flex-1 px-3 py-2 bg-teal-50/60">
+                <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
+                  {regionName}
+                </p>
+                <span className="text-lg font-bold text-gray-800">{tooltip.regional.toFixed(1)}</span>
+              </div>
+            )}
             <div className="flex-1 px-3 py-2">
               <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
                 National
               </p>
               <span className="text-lg font-bold text-gray-600">
-                {tooltip.national !== null ? tooltip.national.toFixed(1) : '—'}
+                {(hasRegional ? tooltip.national : tooltip.regional) !== null
+                  ? (hasRegional ? tooltip.national! : tooltip.regional).toFixed(1)
+                  : '—'}
               </span>
             </div>
           </div>
@@ -149,8 +148,14 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
           <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50 flex flex-col gap-0.5">
             {(() => {
               const s = (r: number) => r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'
-              const reg = regionName ?? 'Region'
-              const diff = hasRegional && tooltip.national !== null ? tooltip.regional - tooltip.national : null
+              if (!hasRegional) {
+                return (
+                  <p className="text-[10px] text-gray-500">
+                    National: {tooltip.regRank}{s(tooltip.regRank)} highest among all age groups.
+                  </p>
+                )
+              }
+              const diff = tooltip.national !== null ? tooltip.regional - tooltip.national : null
               const pct = diff !== null && tooltip.national! > 0 ? (diff / tooltip.national!) * 100 : null
               const absPct = pct !== null ? Math.abs(pct) : null
               const direction = diff !== null && diff > 0 ? 'higher' : 'lower'
@@ -160,7 +165,7 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
               return (
                 <>
                   <p className="text-[10px] text-teal-600">
-                    {reg}: {tooltip.regRank}{s(tooltip.regRank)} highest among age groups{vsNat ? `. ${vsNat}` : '.'}
+                    {regionName}: {tooltip.regRank}{s(tooltip.regRank)} highest among age groups{vsNat ? `. ${vsNat}` : '.'}
                   </p>
                   {tooltip.natRank !== null && (
                     <p className="text-[10px] text-blue-500">
@@ -171,7 +176,7 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
               )
             })()}
           </div>
-          </div>
+          </ChartTooltip>
         )
       })()}
     </>
