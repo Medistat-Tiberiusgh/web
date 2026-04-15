@@ -8,6 +8,25 @@ export const DRUGS_QUERY = `
   }
 `
 
+export const SEARCH_DRUGS_QUERY = `
+  query SearchDrugs($query: String!) {
+    searchDrugs(query: $query) {
+      atcCode
+      name
+      narcoticClass
+    }
+  }
+`
+
+export const REGIONS_QUERY = `
+  query Regions {
+    regions {
+      id
+      regionName
+    }
+  }
+`
+
 export const MY_MEDICATIONS_QUERY = `
   query Me {
     me {
