@@ -21,9 +21,10 @@ interface Props {
   regionalData?: AgeSplitPoint[]
   latestYear: number | null
   regionName?: string | null
+  filterAgeBand?: string | null
 }
 
-export default function AgeBandChart({ data, regionalData, latestYear, regionName }: Props) {
+export default function AgeBandChart({ data, regionalData, latestYear, regionName, filterAgeBand }: Props) {
   const user = useUser()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -58,6 +59,8 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
           <ul key={colIdx} className="flex-1 flex flex-col gap-1">
             {col.map((row) => {
               const isUser = user?.ageGroupId != null && row.ageGroupId === user.ageGroupId
+              const isFiltered = !!filterAgeBand && row.ageGroupName === filterAgeBand
+              const isDimmed = !!filterAgeBand && !isFiltered
               const natVal = natByGroup.get(row.ageGroupId) ?? null
               const regPct = (row.per1000 / maxValue) * 100
               const natPct = natVal !== null ? (natVal / maxValue) * 100 : null
@@ -65,9 +68,9 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
               return (
                 <li
                   key={row.ageGroupId}
-                  className={`rounded-md px-2 py-1.5 -mx-2 cursor-default ${
-                    isUser ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-100'
-                  }`}
+                  className={`rounded-md px-2 py-1.5 -mx-2 cursor-default transition-opacity ${
+                    isDimmed ? 'opacity-30' : ''
+                  } ${isUser || isFiltered ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-100'}`}
                   onMouseEnter={(e) => {
                     const regSorted = [...primaryRows].sort((a, b) => b.per1000 - a.per1000)
                     const regRank = regSorted.findIndex((r) => r.ageGroupId === row.ageGroupId) + 1
@@ -82,10 +85,11 @@ export default function AgeBandChart({ data, regionalData, latestYear, regionNam
                   onMouseLeave={() => setTooltip(null)}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className={`text-xs ${isUser ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
+                    <span className={`text-xs ${isUser || isFiltered ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
                       {row.ageGroupName}
                     </span>
                     {isUser && <Chip size="sm" variant="soft" color="accent">You</Chip>}
+                    {isFiltered && !isUser && <Chip size="sm" variant="soft" color="warning">Filter</Chip>}
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <div className="relative h-1.5 w-full rounded-full bg-gray-200">

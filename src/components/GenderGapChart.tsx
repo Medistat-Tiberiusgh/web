@@ -7,11 +7,12 @@ interface Props {
   data: GenderSplitPoint[]
   regionalData?: GenderSplitPoint[]
   regionName?: string | null
+  filterGender?: string | null
 }
 
 function isMaleLike(g: string) {
   const l = g.toLowerCase()
-  return l === 'men' || l === 'män' || l === 'male' || l === 'man' || l === 'm'
+  return l === 'men' || l === 'man' || l === 'male' || l === 'män' || l === 'm'
 }
 
 function displayLabel(g: string) {
@@ -49,7 +50,7 @@ function buildYearMap(data: GenderSplitPoint[]) {
   return map
 }
 
-export default function GenderGapChart({ data, regionalData, regionName }: Props) {
+export default function GenderGapChart({ data, regionalData, regionName, filterGender }: Props) {
   const user = useUser()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -112,11 +113,15 @@ export default function GenderGapChart({ data, regionalData, regionName }: Props
           const regMenLen = (primary.men / maxVal) * BAR_AREA
           const regWomenLen = (primary.women / maxVal) * BAR_AREA
 
+          const filterIsMale = filterGender != null ? isMaleLike(filterGender) : null
+          const menOpacity = filterIsMale === false ? 0.12 : (isHovered ? 1 : 0.75)
+          const womenOpacity = filterIsMale === true ? 0.12 : (isHovered ? 1 : 0.75)
+
           return (
             <g key={year}>
               {/* Regional bars (primary) */}
-              <rect x={centerX - CENTER_W / 2 - regMenLen} y={y} width={regMenLen} height={BAR_H} rx={2} fill={menColor} opacity={isHovered ? 1 : 0.75} />
-              <rect x={centerX + CENTER_W / 2} y={y} width={regWomenLen} height={BAR_H} rx={2} fill={womenColor} opacity={isHovered ? 1 : 0.75} />
+              <rect x={centerX - CENTER_W / 2 - regMenLen} y={y} width={regMenLen} height={BAR_H} rx={2} fill={menColor} opacity={menOpacity} />
+              <rect x={centerX + CENTER_W / 2} y={y} width={regWomenLen} height={BAR_H} rx={2} fill={womenColor} opacity={womenOpacity} />
 
               {/* Year label */}
               <text x={centerX} y={y + BAR_H / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize={8} fill={isHovered ? '#111827' : '#9ca3af'} fontWeight={isHovered ? 'bold' : 'normal'}>
