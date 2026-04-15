@@ -4,7 +4,8 @@ const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL as string
 
 export async function gqlFetch<T>(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
+  signal?: AbortSignal
 ): Promise<T> {
   const res = await fetch(GRAPHQL_URL, {
     method: 'POST',
@@ -12,7 +13,8 @@ export async function gqlFetch<T>(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${getToken()}`
     },
-    body: JSON.stringify({ query, variables })
+    body: JSON.stringify({ query, variables }),
+    signal,
   })
 
   if (!res.ok) {
