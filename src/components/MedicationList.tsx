@@ -1,14 +1,14 @@
 import { Button, Skeleton, Chip } from '@heroui/react'
-import type { UserMedication } from '../types'
+import type { Drug, UserMedication } from '../types'
 
 interface Props {
   medications: UserMedication[]
   loading: boolean
-  selectedIndex: number | null
-  onSelect: (index: number) => void
+  activeDrugAtcCode: string | null
+  onSelect: (drug: Drug) => void
 }
 
-export default function MedicationList({ medications, loading, selectedIndex, onSelect }: Props) {
+export default function MedicationList({ medications, loading, activeDrugAtcCode, onSelect }: Props) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-4 pt-4 pb-2 shrink-0">
@@ -23,12 +23,12 @@ export default function MedicationList({ medications, loading, selectedIndex, on
                 <Skeleton className="h-4 w-2/3 rounded" />
               </li>
             ))
-          : medications.map((med, i) => {
-              const active = i === selectedIndex
+          : medications.map((med) => {
+              const active = med.drugData.atcCode === activeDrugAtcCode
               return (
                 <li
                   key={med.drugData.atcCode}
-                  onClick={() => onSelect(i)}
+                  onClick={() => onSelect(med.drugData)}
                   className={`p-3 rounded-lg cursor-pointer transition-colors ${
                     active ? 'bg-blue-600' : 'hover:bg-gray-50'
                   }`}

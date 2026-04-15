@@ -12,37 +12,43 @@ const GENDER_OPTIONS = [
   { key: 'women', label: 'Women' },
 ]
 
-type TagType = 'region' | 'drug' | 'gender' | 'ageBand'
-
 interface Props {
   onLogout: () => void
+  // Controlled values — owned by Dashboard, not by this component
+  activeDrug: Drug | null
+  activeRegion: Region | null
+  activeYear: number | null
+  activeGender: string | null
+  activeAgeBand: string | null
+  availableAgeBands: string[]
+  // Callbacks to request state changes
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: string | null) => void
-  availableAgeBands: string[]
 }
 
 export default function AppNavbar({
   onLogout,
+  activeDrug,
+  activeRegion,
+  activeYear,
+  activeGender,
+  activeAgeBand,
+  availableAgeBands,
   onDrugChange,
   onRegionChange,
   onYearChange,
   onGenderChange,
   onAgeBandChange,
-  availableAgeBands,
 }: Props) {
   const user = useUser()
+  const { regions } = useRegions()
 
+  // Pure UI state — not shared with Dashboard
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
-  const [selectedYear, setSelectedYear] = useState<number | null>(null)
-  const [selectedGender, setSelectedGender] = useState<string | null>(null)
-  const [selectedAgeBand, setSelectedAgeBand] = useState<string | null>(null)
-  const [tagOrder, setTagOrder] = useState<TagType[]>([])
   const [drugResults, setDrugResults] = useState<Drug[]>([])
   const [searching, setSearching] = useState(false)
 
@@ -50,21 +56,14 @@ export default function AppNavbar({
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { regions } = useRegions()
-
-  const hasRegion = tagOrder.includes('region')
-  const hasDrug = tagOrder.includes('drug')
-  const hasGender = tagOrder.includes('gender')
-  const hasAgeBand = tagOrder.includes('ageBand')
-  const allFilled = hasRegion && hasDrug && hasGender && hasAgeBand && availableAgeBands.length > 0
-
+  // Search results derived from query + current active state
   const regionResults =
-    !hasRegion && query.length >= 2
+    !activeRegion && query.length >= 2
       ? regions.filter((r) => r.regionName.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
       : []
 
   const genderResults =
-    !hasGender && query.length >= 1
+    !activeGender && query.length >= 1
       ? GENDER_OPTIONS.filter(
           (g) =>
             g.label.toLowerCase().startsWith(query.toLowerCase()) ||
@@ -73,12 +72,27 @@ export default function AppNavbar({
       : []
 
   const ageBandResults =
-    !hasAgeBand && query.length >= 1
+    !activeAgeBand && query.length >= 1
       ? availableAgeBands
           .filter((ab) => ab.toLowerCase().includes(query.toLowerCase()))
           .slice(0, 8)
       : []
 
+  const hasResults =
+    regionResults.length > 0 ||
+    drugResults.length > 0 ||
+    genderResults.length > 0 ||
+    ageBandResults.length > 0 ||
+    searching
+
+  const allFilled =
+    !!activeRegion &&
+    !!activeDrug &&
+    !!activeGender &&
+    !!activeAgeBand &&
+    availableAgeBands.length > 0
+
+  // Debounced drug search — only fires when no drug is active yet
   const searchDrugs = useCallback((q: string) => {
     setSearching(true)
     gqlFetch<{ searchDrugs: Drug[] }>(SEARCH_DRUGS_QUERY, { query: q })
@@ -89,7 +103,7 @@ export default function AppNavbar({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (hasDrug || query.length < 2) {
+    if (activeDrug || query.length < 2) {
       setDrugResults([])
       return
     }
@@ -97,117 +111,66 @@ export default function AppNavbar({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [query, hasDrug, searchDrugs])
+  }, [query, activeDrug, searchDrugs])
 
+  // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    function handleOutsideClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [])
-
-  const hasResults =
-    regionResults.length > 0 ||
-    drugResults.length > 0 ||
-    genderResults.length > 0 ||
-    ageBandResults.length > 0 ||
-    searching
 
   function handleQueryChange(val: string) {
     setQuery(val)
     if (!allFilled) setOpen(val.length >= 1)
   }
 
-  function handleClear() {
+  function handleClearQuery() {
     setQuery('')
     setDrugResults([])
     setOpen(false)
   }
 
   function selectDrug(drug: Drug) {
-    setSelectedDrug(drug)
     onDrugChange(drug)
-    setTagOrder((prev) => [...prev.filter((t) => t !== 'drug'), 'drug'])
     setQuery('')
     setDrugResults([])
     setOpen(false)
   }
 
   function selectRegion(region: Region) {
-    setSelectedRegion(region)
     onRegionChange(region)
-    setTagOrder((prev) => [...prev.filter((t) => t !== 'region'), 'region'])
     setQuery('')
-    setDrugResults([])
     setOpen(false)
   }
 
   function selectGender(key: string) {
-    setSelectedGender(key)
     onGenderChange(key)
-    setTagOrder((prev) => [...prev.filter((t) => t !== 'gender'), 'gender'])
     setQuery('')
     setOpen(false)
   }
 
   function selectAgeBand(ab: string) {
-    setSelectedAgeBand(ab)
     onAgeBandChange(ab)
-    setTagOrder((prev) => [...prev.filter((t) => t !== 'ageBand'), 'ageBand'])
     setQuery('')
     setOpen(false)
   }
 
-  function selectYear(y: number) {
-    setSelectedYear(y)
-    onYearChange(y)
-  }
-
-  function clearDrug() {
-    setSelectedDrug(null)
-    onDrugChange(null)
-    setTagOrder((prev) => prev.filter((t) => t !== 'drug'))
-  }
-
-  function clearRegion() {
-    setSelectedRegion(null)
-    onRegionChange(null)
-    setTagOrder((prev) => prev.filter((t) => t !== 'region'))
-  }
-
-  function clearGender() {
-    setSelectedGender(null)
-    onGenderChange(null)
-    setTagOrder((prev) => prev.filter((t) => t !== 'gender'))
-  }
-
-  function clearAgeBand() {
-    setSelectedAgeBand(null)
-    onAgeBandChange(null)
-    setTagOrder((prev) => prev.filter((t) => t !== 'ageBand'))
-  }
-
-  function clearYear() {
-    setSelectedYear(null)
-    onYearChange(null)
-  }
+  const genderLabel = (key: string) => GENDER_OPTIONS.find((g) => g.key === key)?.label ?? key
 
   const placeholder = (() => {
     if (allFilled) return ''
     const missing: string[] = []
-    if (!hasDrug) missing.push('medication')
-    if (!hasRegion) missing.push('region')
-    if (!hasGender) missing.push('gender')
-    if (availableAgeBands.length > 0 && !hasAgeBand) missing.push('age band')
-    if (missing.length === 0) return ''
-    return `Search ${missing.slice(0, 3).join(', ')}…`
+    if (!activeDrug) missing.push('medication')
+    if (!activeRegion) missing.push('region')
+    if (!activeGender) missing.push('gender')
+    if (availableAgeBands.length > 0 && !activeAgeBand) missing.push('age band')
+    return missing.length > 0 ? `Search ${missing.slice(0, 3).join(', ')}…` : ''
   })()
-
-  const genderLabel = (key: string) =>
-    GENDER_OPTIONS.find((g) => g.key === key)?.label ?? key
 
   return (
     <nav className="border-b border-gray-200 bg-white grid grid-cols-[auto_1fr_auto] items-center gap-6 px-8 py-3 shrink-0">
@@ -224,62 +187,54 @@ export default function AppNavbar({
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
           </svg>
 
-          {/* Tags */}
-          {tagOrder.map((type) => {
-            if (type === 'region' && selectedRegion) {
-              return (
-                <span key="region" className="inline-flex items-center gap-2 shrink-0 bg-teal-100 text-teal-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {selectedRegion.regionName}
-                  <button onClick={clearRegion} className="ml-0.5 text-teal-400 hover:text-teal-800 text-lg leading-none" aria-label="Remove region filter">×</button>
-                </span>
-              )
-            }
-            if (type === 'drug' && selectedDrug) {
-              return (
-                <span key="drug" className="inline-flex items-center gap-2 shrink-0 bg-blue-100 text-blue-800 text-base font-semibold px-4 py-2 rounded-full max-w-64 min-w-0">
-                  <span className="truncate">{selectedDrug.name}</span>
-                  {selectedDrug.narcoticClass && <span className="text-orange-600 font-bold shrink-0">·N</span>}
-                  <button onClick={clearDrug} className="ml-0.5 shrink-0 text-blue-400 hover:text-blue-800 text-lg leading-none" aria-label="Remove drug filter">×</button>
-                </span>
-              )
-            }
-            if (type === 'gender' && selectedGender) {
-              return (
-                <span key="gender" className="inline-flex items-center gap-2 shrink-0 bg-rose-100 text-rose-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  {genderLabel(selectedGender)}
-                  <button onClick={clearGender} className="ml-0.5 text-rose-400 hover:text-rose-800 text-lg leading-none" aria-label="Remove gender filter">×</button>
-                </span>
-              )
-            }
-            if (type === 'ageBand' && selectedAgeBand) {
-              return (
-                <span key="ageBand" className="inline-flex items-center gap-2 shrink-0 bg-amber-100 text-amber-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {selectedAgeBand} yrs
-                  <button onClick={clearAgeBand} className="ml-0.5 text-amber-500 hover:text-amber-800 text-lg leading-none" aria-label="Remove age band filter">×</button>
-                </span>
-              )
-            }
-            return null
-          })}
+          {/* Tags — rendered in fixed order based on what's active */}
+          {activeRegion && (
+            <span className="inline-flex items-center gap-2 shrink-0 bg-teal-100 text-teal-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {activeRegion.regionName}
+              <button onClick={() => onRegionChange(null)} className="ml-0.5 text-teal-400 hover:text-teal-800 text-lg leading-none" aria-label="Remove region filter">×</button>
+            </span>
+          )}
 
-          {/* Year — always a pill, native select overlaid when unselected */}
-          {selectedYear !== null ? (
+          {activeDrug && (
+            <span className="inline-flex items-center gap-2 shrink-0 bg-blue-100 text-blue-800 text-base font-semibold px-4 py-2 rounded-full max-w-64 min-w-0">
+              <span className="truncate">{activeDrug.name}</span>
+              {activeDrug.narcoticClass && <span className="text-orange-600 font-bold shrink-0">·N</span>}
+              <button onClick={() => onDrugChange(null)} className="ml-0.5 shrink-0 text-blue-400 hover:text-blue-800 text-lg leading-none" aria-label="Remove drug filter">×</button>
+            </span>
+          )}
+
+          {activeGender && (
+            <span className="inline-flex items-center gap-2 shrink-0 bg-rose-100 text-rose-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {genderLabel(activeGender)}
+              <button onClick={() => onGenderChange(null)} className="ml-0.5 text-rose-400 hover:text-rose-800 text-lg leading-none" aria-label="Remove gender filter">×</button>
+            </span>
+          )}
+
+          {activeAgeBand && (
+            <span className="inline-flex items-center gap-2 shrink-0 bg-amber-100 text-amber-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {activeAgeBand} yrs
+              <button onClick={() => onAgeBandChange(null)} className="ml-0.5 text-amber-500 hover:text-amber-800 text-lg leading-none" aria-label="Remove age band filter">×</button>
+            </span>
+          )}
+
+          {/* Year — always a pill; native select overlaid when no year is active */}
+          {activeYear !== null ? (
             <span className="inline-flex items-center gap-2 shrink-0 bg-violet-100 text-violet-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              {selectedYear}
-              <button onClick={clearYear} className="ml-0.5 text-violet-400 hover:text-violet-800 text-lg leading-none" aria-label="Remove year filter">×</button>
+              {activeYear}
+              <button onClick={() => onYearChange(null)} className="ml-0.5 text-violet-400 hover:text-violet-800 text-lg leading-none" aria-label="Remove year filter">×</button>
             </span>
           ) : (
             <span className="relative inline-flex items-center gap-2 shrink-0 bg-gray-100 text-gray-500 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap hover:bg-gray-200 cursor-pointer transition-colors">
@@ -290,10 +245,9 @@ export default function AppNavbar({
               <svg className="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
-              {/* Invisible native select covers the whole pill */}
               <select
                 value=""
-                onChange={(e) => e.target.value && selectYear(Number(e.target.value))}
+                onChange={(e) => e.target.value && onYearChange(Number(e.target.value))}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 aria-label="Filter by year"
               >
@@ -315,10 +269,9 @@ export default function AppNavbar({
             className="flex-1 min-w-32 bg-transparent outline-none text-base text-gray-700 placeholder-gray-400"
           />
 
-          {/* Clear query button */}
           {query && (
             <button
-              onClick={handleClear}
+              onClick={handleClearQuery}
               className="shrink-0 w-6 h-6 rounded-full bg-gray-300 hover:bg-gray-400 text-white flex items-center justify-center text-sm leading-none"
               aria-label="Clear search"
             >
@@ -327,9 +280,9 @@ export default function AppNavbar({
           )}
         </div>
 
+        {/* Dropdown */}
         {open && hasResults && (
           <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-            {/* Regions */}
             {regionResults.length > 0 && (
               <>
                 <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
@@ -352,7 +305,6 @@ export default function AppNavbar({
               </>
             )}
 
-            {/* Medications */}
             {(drugResults.length > 0 || searching) && (
               <>
                 <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
@@ -383,7 +335,6 @@ export default function AppNavbar({
               </>
             )}
 
-            {/* Gender */}
             {genderResults.length > 0 && (
               <>
                 <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
@@ -405,7 +356,6 @@ export default function AppNavbar({
               </>
             )}
 
-            {/* Age bands */}
             {ageBandResults.length > 0 && (
               <>
                 <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
@@ -427,7 +377,6 @@ export default function AppNavbar({
               </>
             )}
 
-            {/* No results */}
             {!searching &&
               regionResults.length === 0 &&
               drugResults.length === 0 &&
