@@ -37,6 +37,11 @@ export interface Drug {
   narcoticClass: string | null
 }
 
+export interface Region {
+  id: number
+  regionName: string
+}
+
 export interface UserMedication {
   notes: string | null
   addedAt: string
