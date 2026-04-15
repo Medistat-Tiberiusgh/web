@@ -15,6 +15,7 @@ import { useDrugInsights } from './hooks/useDrugInsights'
 import { UserContext, useUser } from './context/UserContext'
 import { getToken, saveToken, clearToken, decodeToken } from './lib/auth'
 import type { User } from './context/UserContext'
+import type { Drug, Region, DrugInsights, TrendPoint } from './types'
 
 // Formats a number to 1 decimal place with sign, avoiding "-0.0"
 function fmtDelta1(n: number, suffix = '') {
@@ -22,39 +23,122 @@ function fmtDelta1(n: number, suffix = '') {
   return `${v >= 0 ? '+' : ''}${v.toFixed(1)}${suffix}`
 }
 
+function isMaleLike(g: string): boolean {
+  const l = g.toLowerCase()
+  return l === 'men' || l === 'man' || l === 'male' || l === 'män' || l === 'm'
+}
+
+/** Derive a per1000-only trend from gender or age-band split data.
+ *  Split data can be sub-annual (monthly/quarterly), so we aggregate to one
+ *  point per calendar year by averaging all entries within that year. */
+function deriveFilteredTrend(
+  insights: DrugInsights | null,
+  filterGender: string | null,
+  filterAgeBand: string | null
+): TrendPoint[] | null {
+  if (!insights) return null
+
+  function aggregateByYear(entries: { year: number; per1000: number }[]): TrendPoint[] {
+    const map = new Map<number, { sum: number; count: number }>()
+    for (const e of entries) {
+      const existing = map.get(e.year) ?? { sum: 0, count: 0 }
+      map.set(e.year, { sum: existing.sum + e.per1000, count: existing.count + 1 })
+    }
+    return Array.from(map.entries())
+      .map(([year, { sum, count }]) => ({
+        year,
+        per1000: sum / count,
+        totalPrescriptions: 0,
+        totalPatients: 0,
+      }))
+      .sort((a, b) => a.year - b.year)
+  }
+
+  if (filterGender) {
+    const wantMale = isMaleLike(filterGender)
+    return aggregateByYear(
+      insights.genderSplit.filter((pt) => isMaleLike(pt.gender) === wantMale)
+    )
+  }
+
+  if (filterAgeBand) {
+    return aggregateByYear(
+      insights.ageSplit.filter((pt) => pt.ageGroupName === filterAgeBand)
+    )
+  }
+
+  return null
+}
+
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const user = useUser()!
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [filterDrug, setFilterDrug] = useState<Drug | null>(null)
+  const [filterRegion, setFilterRegion] = useState<Region | null>(null)
+  const [filterYear, setFilterYear] = useState<number | null>(null)
+  const [filterGender, setFilterGender] = useState<string | null>(null)
+  const [filterAgeBand, setFilterAgeBand] = useState<string | null>(null)
 
   const { medications, loading: medsLoading } = useMedications()
 
   const selectedMed = selectedIndex !== null ? medications[selectedIndex] : null
+
+  // FilterBar selections take precedence over sidebar selection
+  const effectiveDrug = filterDrug ?? selectedMed?.drugData ?? null
+  const effectiveAtcCode = effectiveDrug?.atcCode ?? null
+  // FilterBar region takes precedence over user's home region
+  const effectiveRegionId = filterRegion?.id ?? user.regionId ?? null
+
+  // Always fetch all years so the trend chart shows the full history.
+  // The year filter is applied client-side to scope KPIs and demographic charts.
   const { insights: nationalInsights, loading: insightsLoading } =
-    useDrugInsights(selectedMed?.drugData?.atcCode ?? null, null, null)
+    useDrugInsights(effectiveAtcCode, null, null)
   const { insights: regionalInsights } = useDrugInsights(
-    user.regionId != null ? (selectedMed?.drugData?.atcCode ?? null) : null,
+    effectiveRegionId != null ? effectiveAtcCode : null,
     null,
-    user.regionId
+    effectiveRegionId
   )
 
-  // National trend points
-  const natLatest =
-    (nationalInsights?.trend.at(-1)?.totalPatients ?? 0) > 0
-      ? nationalInsights!.trend.at(-1)!
-      : null
-  const natPrev =
-    (nationalInsights?.trend.at(-2)?.totalPatients ?? 0) > 0
-      ? nationalInsights!.trend.at(-2)!
-      : null
-  // Regional trend points
-  const regLatest =
-    (regionalInsights?.trend.at(-1)?.totalPatients ?? 0) > 0
-      ? regionalInsights!.trend.at(-1)!
-      : null
-  const regPrev =
-    (regionalInsights?.trend.at(-2)?.totalPatients ?? 0) > 0
-      ? regionalInsights!.trend.at(-2)!
-      : null
+  // Demographic-filtered trend (per1000 only; used for TrendChart when gender/age filter is active)
+  const filteredNatTrend = deriveFilteredTrend(nationalInsights, filterGender, filterAgeBand)
+  const filteredRegTrend = deriveFilteredTrend(regionalInsights, filterGender, filterAgeBand)
+  const effectiveNatTrend = filteredNatTrend ?? nationalInsights?.trend ?? []
+  const effectiveRegTrend = filteredRegTrend ?? regionalInsights?.trend
+
+  // Active demographic label for chart headers
+  const demographicLabel = filterGender
+    ? (isMaleLike(filterGender) ? 'Men' : 'Women')
+    : filterAgeBand
+    ? `${filterAgeBand} yrs`
+    : null
+
+  // National trend points (always aggregate — patient counts aren't in split data).
+  // When a year filter is active, look up that year specifically; otherwise use the latest.
+  const natTrend = nationalInsights?.trend ?? []
+  const regTrend = regionalInsights?.trend ?? []
+  const natLatestPoint = filterYear
+    ? natTrend.find((t) => t.year === filterYear) ?? null
+    : natTrend.at(-1) ?? null
+  const natPrevPoint = filterYear
+    ? natTrend.find((t) => t.year === filterYear - 1) ?? null
+    : natTrend.at(-2) ?? null
+  const regLatestPoint = filterYear
+    ? regTrend.find((t) => t.year === filterYear) ?? null
+    : regTrend.at(-1) ?? null
+  const regPrevPoint = filterYear
+    ? regTrend.find((t) => t.year === filterYear - 1) ?? null
+    : regTrend.at(-2) ?? null
+
+  const natLatest = natLatestPoint && natLatestPoint.totalPatients > 0 ? natLatestPoint : null
+  const natPrev = natPrevPoint && natPrevPoint.totalPatients > 0 ? natPrevPoint : null
+  const regLatest = regLatestPoint && regLatestPoint.totalPatients > 0 ? regLatestPoint : null
+  const regPrev = regPrevPoint && regPrevPoint.totalPatients > 0 ? regPrevPoint : null
+
+  // When a demographic filter is active, use filtered per1000 for the rate KPI
+  const filteredPer1000Latest = demographicLabel ? (effectiveNatTrend.at(-1)?.per1000 ?? null) : null
+  const filteredPer1000Prev = demographicLabel ? (effectiveNatTrend.at(-2)?.per1000 ?? null) : null
+  const filteredRegPer1000Latest = demographicLabel ? (effectiveRegTrend?.at(-1)?.per1000 ?? null) : null
+  const filteredRegPer1000Prev = demographicLabel ? (effectiveRegTrend?.at(-2)?.per1000 ?? null) : null
 
   // Use regional as headline where available, fall back to national
   const latestTrend = regLatest ?? natLatest
@@ -106,7 +190,26 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <AppNavbar onLogout={onLogout} />
+      <AppNavbar
+        onLogout={onLogout}
+        onDrugChange={setFilterDrug}
+        onRegionChange={setFilterRegion}
+        onYearChange={setFilterYear}
+        onGenderChange={setFilterGender}
+        onAgeBandChange={setFilterAgeBand}
+        availableAgeBands={(() => {
+          if (!nationalInsights?.ageSplit) return []
+          const seen = new Set<string>()
+          const result: string[] = []
+          for (const pt of [...nationalInsights.ageSplit].sort((a, b) => a.ageGroupId - b.ageGroupId)) {
+            if (!seen.has(pt.ageGroupName)) {
+              seen.add(pt.ageGroupName)
+              result.push(pt.ageGroupName)
+            }
+          }
+          return result
+        })()}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar: My Medications */}
@@ -190,29 +293,52 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   }
                 />
                 <KpiCard
-                  label={`Dispensings per 1,000 Inhabitants${regionName ? ` · ${regionName}` : ''}`}
-                  value={latestTrend ? latestTrend.per1000.toFixed(1) : '—'}
-                  delta={
-                    per1000Diff != null
-                      ? {
-                          value: fmtDelta1(per1000Diff),
-                          subLabel:
-                            prevTrend != null
-                              ? `(${prevTrend.per1000.toFixed(1)})`
-                              : undefined
-                        }
-                      : undefined
+                  label={`Dispensings per 1,000 ${demographicLabel ?? 'Inhabitants'}${regionName ? ` · ${regionName}` : ''}`}
+                  value={
+                    filteredPer1000Latest != null
+                      ? filteredPer1000Latest.toFixed(1)
+                      : latestTrend
+                      ? latestTrend.per1000.toFixed(1)
+                      : '—'
                   }
-                  nationalDelta={
-                    per1000DeltaVsNat != null && natLatest
-                      ? {
-                          value: fmtDelta1(per1000DeltaVsNat, '%'),
-                          pct: per1000DeltaVsNat,
-                          avgLabel: natLatest.per1000.toFixed(1)
-                        }
-                      : null
+                  delta={(() => {
+                    // Use filtered per1000 delta when demographic filter is active
+                    if (filteredPer1000Latest != null && filteredPer1000Prev != null) {
+                      const diff = filteredPer1000Latest - filteredPer1000Prev
+                      return { value: fmtDelta1(diff), subLabel: `(${filteredPer1000Prev.toFixed(1)})` }
+                    }
+                    if (per1000Diff != null) {
+                      return {
+                        value: fmtDelta1(per1000Diff),
+                        subLabel: prevTrend != null ? `(${prevTrend.per1000.toFixed(1)})` : undefined,
+                      }
+                    }
+                    return undefined
+                  })()}
+                  nationalDelta={(() => {
+                    // Regional vs national comparison using filtered values when active
+                    if (filteredRegPer1000Latest != null && filteredPer1000Latest != null) {
+                      const pct = filteredPer1000Latest > 0
+                        ? ((filteredRegPer1000Latest - filteredPer1000Latest) / filteredPer1000Latest) * 100
+                        : null
+                      return pct != null
+                        ? { value: fmtDelta1(pct, '%'), pct, avgLabel: filteredPer1000Latest.toFixed(1) }
+                        : null
+                    }
+                    if (per1000DeltaVsNat != null && natLatest) {
+                      return {
+                        value: fmtDelta1(per1000DeltaVsNat, '%'),
+                        pct: per1000DeltaVsNat,
+                        avgLabel: natLatest.per1000.toFixed(1),
+                      }
+                    }
+                    return null
+                  })()}
+                  info={
+                    demographicLabel
+                      ? `Dispensings per 1,000 ${demographicLabel}. Trend chart above uses this demographic-filtered rate.`
+                      : `Dispensings per 1,000 inhabitants in ${regionName ?? 'your region'}. The national average is ${natLatest ? natLatest.per1000.toFixed(1) : '—'}.`
                   }
-                  info={`Dispensings per 1,000 inhabitants in ${regionName ?? 'your region'}. The national average is ${natLatest ? natLatest.per1000.toFixed(1) : '—'}.`}
                 />
                 <KpiCard
                   label={`Chronic Use Ratio${regionName ? ` · ${regionName}` : ''}`}
@@ -245,11 +371,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
 
           {/* Charts — only shown when a drug is selected */}
-          {!selectedMed ? (
+          {!effectiveDrug ? (
             <Card>
               <Card.Content className="flex items-center justify-center h-64 text-gray-400 text-sm">
-                Select a medication from the sidebar to explore dispensing
-                data
+                Select a medication from the sidebar or search bar to explore dispensing data
               </Card.Content>
             </Card>
           ) : (
@@ -260,7 +385,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   <Card>
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                       <div>
-                        <Card.Title>Dispensing Trend · 2006–2024</Card.Title>
+                        <Card.Title>
+                          Dispensing Trend · 2006–2024{demographicLabel ? ` · ${demographicLabel}` : ''}
+                        </Card.Title>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                         {regionName && (
@@ -283,8 +410,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       ) : (
                         <TrendChart
-                          data={nationalInsights?.trend ?? []}
-                          regionalData={regionalInsights?.trend}
+                          data={effectiveNatTrend}
+                          regionalData={effectiveRegTrend}
                           regionName={regionName}
                         />
                       )}
@@ -295,7 +422,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                       <div>
                         <Card.Title>
-                          Age Band Distribution · {latestTrend?.year ?? '—'}
+                          Age Band Distribution · {filterYear ?? latestTrend?.year ?? '—'}{demographicLabel ? ` · ${demographicLabel}` : ''}
                         </Card.Title>
                       </div>
                       {regionName && (
@@ -322,8 +449,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         <AgeBandChart
                           data={nationalInsights?.ageSplit ?? []}
                           regionalData={regionalInsights?.ageSplit}
-                          latestYear={latestTrend?.year ?? null}
+                          latestYear={filterYear ?? latestTrend?.year ?? null}
                           regionName={regionName}
+                          filterAgeBand={filterAgeBand}
                         />
                       )}
                     </Card.Content>
@@ -331,9 +459,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
                   <div className="grid grid-cols-[2fr_3fr] gap-3 items-stretch">
                     <DrugInfoCard
-                      atcCode={selectedMed.drugData.atcCode}
-                      drugName={selectedMed.drugData.name}
-                      narcoticClass={selectedMed.drugData.narcoticClass}
+                      atcCode={effectiveDrug.atcCode}
+                      drugName={effectiveDrug.name}
+                      narcoticClass={effectiveDrug.narcoticClass}
                     />
                     <Card>
                       <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
@@ -341,6 +469,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           <Card.Title>
                             Patient Gender Gap
                             {regionName ? ` · ${regionName}` : ''}
+                            {demographicLabel ? ` · ${demographicLabel}` : ''}
                           </Card.Title>
                           <Card.Description>
                             per 1,000 inhabitants · {latestTrend?.year ?? '—'}
@@ -368,6 +497,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             data={nationalInsights?.genderSplit ?? []}
                             regionalData={regionalInsights?.genderSplit}
                             regionName={regionName}
+                            filterGender={filterGender}
                           />
                         )}
                       </Card.Content>
