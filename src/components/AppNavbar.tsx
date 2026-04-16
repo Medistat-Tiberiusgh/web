@@ -94,12 +94,16 @@ export default function AppNavbar({
     availableAgeBands.length > 0
 
   // Debounced drug search — only fires when no drug is active yet
-  const searchDrugs = useCallback((q: string) => {
+  const searchDrugs = useCallback(async (q: string) => {
     setSearching(true)
-    gqlFetch<{ searchDrugs: Drug[] }>(SEARCH_DRUGS_QUERY, { query: q })
-      .then((data) => setDrugResults(data.searchDrugs))
-      .catch(() => setDrugResults([]))
-      .finally(() => setSearching(false))
+    try {
+      const data = await gqlFetch<{ searchDrugs: Drug[] }>(SEARCH_DRUGS_QUERY, { query: q })
+      setDrugResults(data.searchDrugs)
+    } catch {
+      setDrugResults([])
+    } finally {
+      setSearching(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -228,37 +232,37 @@ export default function AppNavbar({
             </span>
           )}
 
-          {/* Year — always a pill; native select overlaid when no year is active */}
-          {activeYear !== null ? (
-            <span className="inline-flex items-center gap-2 shrink-0 bg-violet-100 text-violet-800 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap">
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {activeYear}
-              <button onClick={() => onYearChange(null)} className="ml-0.5 text-violet-400 hover:text-violet-800 text-lg leading-none" aria-label="Remove year filter">×</button>
-            </span>
-          ) : (
-            <span className="relative inline-flex items-center gap-2 shrink-0 bg-gray-100 text-gray-500 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap hover:bg-gray-200 cursor-pointer transition-colors">
-              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Year
-              <svg className="w-3.5 h-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          {/* Year — always a pill with an overlaid native select for both active and inactive states */}
+          <span className={`relative inline-flex items-center gap-2 shrink-0 text-base font-semibold px-4 py-2 rounded-full whitespace-nowrap cursor-pointer transition-colors
+            ${activeYear !== null ? 'bg-violet-100 text-violet-800 hover:bg-violet-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+            <svg className="w-4 h-4 shrink-0 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="pointer-events-none">{activeYear ?? 'Year'}</span>
+            {activeYear === null && (
+              <svg className="w-3.5 h-3.5 shrink-0 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
-              <select
-                value=""
-                onChange={(e) => e.target.value && onYearChange(Number(e.target.value))}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                aria-label="Filter by year"
-              >
-                <option value="" disabled>Year</option>
-                {YEARS.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </span>
-          )}
+            )}
+            {activeYear !== null && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onYearChange(null) }}
+                className="relative z-10 ml-0.5 text-violet-400 hover:text-violet-800 text-lg leading-none"
+                aria-label="Remove year filter"
+              >×</button>
+            )}
+            <select
+              value={activeYear ?? ''}
+              onChange={(e) => e.target.value && onYearChange(Number(e.target.value))}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              aria-label="Filter by year"
+            >
+              {activeYear === null && <option value="" disabled>Year</option>}
+              {YEARS.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </span>
 
           {/* Text input */}
           <input
