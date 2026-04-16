@@ -32,15 +32,18 @@ export function useDrugInfo(atcCode: string | null) {
 
     const controller = new AbortController()
 
-    gqlFetch<{ drugInfo: DrugInfo | null }>(DRUG_INFO_QUERY, { atcCode }, controller.signal)
-      .then((res) => {
+    async function load() {
+      try {
+        const res = await gqlFetch<{ drugInfo: DrugInfo | null }>(DRUG_INFO_QUERY, { atcCode }, controller.signal)
         hasDataRef.current = true
         setData(res.drugInfo)
-      })
-      .catch((e: Error) => {
-        if (e.name !== 'AbortError') setError(e.message)
-      })
-      .finally(() => setLoading(false))
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') setError((e as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
 
     return () => controller.abort()
   }, [atcCode])

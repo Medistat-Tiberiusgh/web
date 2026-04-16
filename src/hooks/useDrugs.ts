@@ -8,9 +8,15 @@ export function useDrugs() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    gqlFetch<{ drugs: Drug[] }>(DRUGS_QUERY)
-      .then((data) => setDrugs(data.drugs))
-      .finally(() => setLoading(false))
+    async function load() {
+      try {
+        const data = await gqlFetch<{ drugs: Drug[] }>(DRUGS_QUERY)
+        setDrugs(data.drugs)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
 
   return { drugs, loading }

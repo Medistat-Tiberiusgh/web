@@ -32,19 +32,22 @@ export function useDemographicGrid(
     if (region) variables.region = region
     if (year) variables.year = year
 
-    gqlFetch<{ drugInsights: { demographicGrid: DemographicCell[] } }>(
-      DEMOGRAPHIC_GRID_QUERY,
-      variables,
-      controller.signal,
-    )
-      .then((data) => {
+    async function load() {
+      try {
+        const data = await gqlFetch<{ drugInsights: { demographicGrid: DemographicCell[] } }>(
+          DEMOGRAPHIC_GRID_QUERY,
+          variables,
+          controller.signal,
+        )
         hasDataRef.current = true
         setGrid(data.drugInsights.demographicGrid)
-      })
-      .catch((e: Error) => {
-        if (e.name !== 'AbortError') setGrid([])
-      })
-      .finally(() => setLoading(false))
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') setGrid([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
 
     return () => controller.abort()
   }, [atcCode, region, year])

@@ -35,15 +35,18 @@ export function useDrugInsights(
     if (gender) variables.gender = gender
     if (ageGroup) variables.ageGroup = ageGroup
 
-    gqlFetch<{ drugInsights: DrugInsights }>(DRUG_INSIGHTS_QUERY, variables, controller.signal)
-      .then((data) => {
+    async function load() {
+      try {
+        const data = await gqlFetch<{ drugInsights: DrugInsights }>(DRUG_INSIGHTS_QUERY, variables, controller.signal)
         hasDataRef.current = true
         setInsights(data.drugInsights)
-      })
-      .catch((e: Error) => {
-        if (e.name !== 'AbortError') setError(e.message)
-      })
-      .finally(() => setLoading(false))
+      } catch (e) {
+        if ((e as Error).name !== 'AbortError') setError((e as Error).message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
 
     return () => controller.abort()
   }, [atcCode, year, region, gender, ageGroup])

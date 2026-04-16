@@ -8,9 +8,15 @@ export function useRegions() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    gqlFetch<{ regions: Region[] }>(REGIONS_QUERY)
-      .then((data) => setRegions(data.regions))
-      .catch((e: Error) => setError(e.message))
+    async function load() {
+      try {
+        const data = await gqlFetch<{ regions: Region[] }>(REGIONS_QUERY)
+        setRegions(data.regions)
+      } catch (e) {
+        setError((e as Error).message)
+      }
+    }
+    load()
   }, [])
 
   return { regions, error }
