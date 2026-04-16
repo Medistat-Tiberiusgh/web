@@ -52,6 +52,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
   const user = useUser()
   const [geoJson, setGeoJson] = useState<FeatureCollection | null>(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const [hoveredFeatureId, setHoveredFeatureId] = useState<number | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -107,60 +108,77 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             style={{ width: '100%', height: '100%' }}
-            onMouseLeave={() => { setTooltip(null); onHoverRegion?.(null) }}
+            onMouseLeave={() => { setTooltip(null); setHoveredFeatureId(null); onHoverRegion?.(null) }}
           >
-            {/* Base layer — all regions */}
+            {/* Base layer — all regions except the currently hovered one */}
             {geoJson?.features.map((feature) => {
               const id = feature.id as number
+              if (id === hoveredFeatureId) return null
               const region = regionById.get(id)
               const isUserRegion = user?.regionId != null && id === user.regionId
-              const isHoveredFromList = hoveredRegionId === id && tooltip?.region.regionId !== id
+              const isHoveredFromList = hoveredRegionId === id
               const fill = isUserRegion
                 ? '#0d9488'
                 : region
                   ? getDivergingColor(region.per1000, centerPer1000, min, max)
                   : '#e5e7eb'
-              const d = pathGenerator(feature) ?? ''
 
               return (
                 <path
                   key={id}
-                  d={d}
+                  d={pathGenerator(feature) ?? ''}
                   fill={fill}
                   stroke={isHoveredFromList ? '#374151' : 'white'}
                   strokeWidth={isHoveredFromList ? 1.5 : 0.8}
                   style={{ cursor: region ? 'pointer' : 'default' }}
                   onMouseEnter={(e) => {
+                    setHoveredFeatureId(id)
                     if (region) {
                       setTooltip({ x: e.clientX, y: e.clientY, region })
                       onHoverRegion?.(id)
+                    } else {
+                      setTooltip(null)
+                      onHoverRegion?.(null)
                     }
-                  }}
-                  onMouseMove={(e) =>
-                    region && setTooltip({ x: e.clientX, y: e.clientY, region })
-                  }
-                  onMouseLeave={() => {
-                    setTooltip(null)
-                    onHoverRegion?.(null)
                   }}
                   onClick={() => region && onRegionClick?.(id, region.regionName)}
                 />
               )
             })}
-            {/* Hovered region ring — rendered above base layer */}
-            {tooltip?.region.regionId != null && geoJson?.features
-              .filter((f) => (f.id as number) === tooltip.region.regionId)
-              .map((feature) => (
-                <path
-                  key={`hov-${feature.id}`}
-                  d={pathGenerator(feature) ?? ''}
-                  fill="transparent"
-                  stroke="#374151"
-                  strokeWidth={2}
-                  strokeLinejoin="round"
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))
+            {/* Hovered region — rendered last so its stroke sits on top of all adjacent fills */}
+            {hoveredFeatureId != null && geoJson?.features
+              .filter((f) => (f.id as number) === hoveredFeatureId)
+              .map((feature) => {
+                const id = feature.id as number
+                const region = regionById.get(id)
+                const isUserRegion = user?.regionId != null && id === user.regionId
+                const fill = isUserRegion
+                  ? '#0d9488'
+                  : region
+                    ? getDivergingColor(region.per1000, centerPer1000, min, max)
+                    : '#e5e7eb'
+                return (
+                  <path
+                    key={`hov-${id}`}
+                    d={pathGenerator(feature) ?? ''}
+                    fill={fill}
+                    stroke="#374151"
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                    style={{ cursor: region ? 'pointer' : 'default' }}
+                    onMouseEnter={(e) => {
+                      if (region) {
+                        setTooltip({ x: e.clientX, y: e.clientY, region })
+                        onHoverRegion?.(id)
+                      }
+                    }}
+                    onMouseMove={(e) =>
+                      region && setTooltip({ x: e.clientX, y: e.clientY, region })
+                    }
+                    onClick={() => region && onRegionClick?.(id, region.regionName)}
+                  />
+                )
+              })
             }
             {/* Selected region — rendered last so the ring sits on top of all borders */}
             {selectedRegionId != null && geoJson?.features
