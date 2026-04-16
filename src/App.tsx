@@ -6,7 +6,7 @@ import TrendChart from './components/TrendChart'
 import MapView from './components/MapView'
 import RegionalRanking from './components/RegionalRanking'
 import GenderGapChart from './components/GenderGapChart'
-import AgeBandChart from './components/AgeBandChart'
+import AgeBandSparklines from './components/AgeBandSparklines'
 import MedicationList from './components/MedicationList'
 import DrugInfoCard from './components/DrugInfoCard'
 import DemographicHeatmap from './components/DemographicHeatmap'
@@ -379,11 +379,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
                   <Card>
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
-                      <Card.Title>
-                        Age Band Distribution ·{' '}
-                        {activeYear ?? latestTrend?.year ?? '—'}
-                        {demographicLabel ? ` · ${demographicLabel}` : ''}
-                      </Card.Title>
+                      <div>
+                        <Card.Title>
+                          Age Band Distribution ·{' '}
+                          {activeYear ?? latestTrend?.year ?? '—'}
+                          {demographicLabel ? ` · ${demographicLabel}` : ''}
+                        </Card.Title>
+                        <Card.Description>
+                          per 1,000 people · bars = {activeYear ?? latestTrend?.year ?? '—'} · lines = 2006–2024 trend
+                        </Card.Description>
+                      </div>
                       {regionName && (
                         <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                           <span className="flex items-center gap-1.5">
@@ -399,16 +404,17 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     </Card.Header>
                     <Card.Content className="p-0">
                       {loading ? (
-                        <div className="grid grid-cols-2 gap-4 p-4">
-                          {Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} className="h-6 rounded" />
+                        <div className="flex flex-col gap-2 p-4">
+                          {Array.from({ length: 8 }).map((_, i) => (
+                            <Skeleton key={i} className="h-7 rounded" />
                           ))}
                         </div>
                       ) : (
-                        <AgeBandChart
+                        <AgeBandSparklines
                           data={national?.ageSplit ?? []}
                           regionalData={regional?.ageSplit}
                           latestYear={activeYear ?? latestTrend?.year ?? null}
+                          selectedYear={activeYear}
                           regionName={regionName}
                           filterAgeBand={activeAgeBand?.name ?? null}
                         />
