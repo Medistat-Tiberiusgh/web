@@ -73,9 +73,15 @@ export default function AgeBandSparklines({
 
   const hasRegional = (regionalData ?? []).length > 0
   const regYears = hasRegional ? [...new Set((regionalData ?? []).map((d) => d.year))].sort() : []
-  const effectiveYear = hasRegional && regYears.length > 0
-    ? (latestYear != null && regYears.includes(latestYear) ? latestYear : regYears.at(-1)!)
-    : (latestYear ?? years.at(-1) ?? null)
+
+  // Pick a year that actually exists in both datasets so bars always fill
+  const sharedYears = hasRegional ? years.filter((y) => regYears.includes(y)) : years
+  const effectiveYear = (() => {
+    const pool = sharedYears.length > 0 ? sharedYears : years
+    const target = latestYear ?? null
+    if (target != null && pool.includes(target)) return target
+    return pool.at(-1) ?? null
+  })()
 
   const allLatest = ageGroups.flatMap(([id]) => [
     natLookup.get(id)?.get(effectiveYear ?? -1) ?? 0,
@@ -100,8 +106,6 @@ export default function AgeBandSparklines({
   function renderRow([id, name]: [number, string]) {
     const natVal = natLookup.get(id)?.get(effectiveYear ?? -1) ?? null
     const regVal = regLookup.get(id)?.get(effectiveYear ?? -1) ?? null
-    const primaryVal = hasRegional ? regVal : natVal
-    const primaryPct = primaryVal != null ? (primaryVal / maxBar) * 100 : 0
 
     const natSeries = years.map((y) => natLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
     const regSeries = years.map((y) => regLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
@@ -160,54 +164,48 @@ export default function AgeBandSparklines({
 
         {/* Bar + sparkline row */}
         <div className="flex items-center gap-2">
-          {/* Bars — two stacked when regional available, one otherwise */}
+          {/* Bars — two stacked when regional available, one (national/blue) otherwise */}
           <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-            <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${isUserAge ? 'bg-teal-600' : 'bg-teal-50/600'}`}
-                style={{ width: `${hasRegional ? (regVal != null ? (regVal / maxBar) * 100 : 0) : primaryPct}%` }}
-              />
-            </div>
             {hasRegional && (
               <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-blue-600 transition-all"
-                  style={{ width: `${natVal != null ? (natVal / maxBar) * 100 : 0}%` }}
+                  className={`h-full rounded-full transition-all ${isUserAge ? 'bg-teal-600' : 'bg-teal-500'}`}
+                  style={{ width: `${regVal != null ? (regVal / maxBar) * 100 : 0}%` }}
                 />
               </div>
             )}
+            <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-blue-600 transition-all"
+                style={{ width: `${natVal != null ? (natVal / maxBar) * 100 : 0}%` }}
+              />
+            </div>
           </div>
 
           {/* Values */}
           <div className="flex flex-col items-end shrink-0">
-            <span className="text-[10px] font-semibold text-teal-600 leading-none">
-              {(hasRegional ? regVal : natVal) != null ? (hasRegional ? regVal! : natVal!).toFixed(1) : '—'}
-            </span>
             {hasRegional && (
-              <span className="text-[10px] font-medium text-blue-600 leading-none">
-                {natVal != null ? natVal.toFixed(1) : '—'}
+              <span className="text-[10px] font-semibold text-teal-600 leading-none">
+                {regVal != null ? regVal.toFixed(1) : '—'}
               </span>
             )}
+            <span className={`text-[10px] font-medium leading-none ${hasRegional ? 'text-blue-600' : 'text-gray-600'}`}>
+              {natVal != null ? natVal.toFixed(1) : '—'}
+            </span>
           </div>
 
           {/* Sparkline */}
           <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`} className="shrink-0 overflow-visible">
-            {/* Regional dashed line (behind) */}
-            {regSparkPath && (
-              <path d={regSparkPath} fill="none" stroke="#0d9488" strokeWidth={1} strokeDasharray="2 2" strokeLinecap="round" />
-            )}
-            {/* Primary line */}
+            {/* National — dashed gray behind (always present) */}
             {natSparkPath && (
-              <path d={natSparkPath} fill="none" stroke={lineColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={natSparkPath} fill="none" stroke="#d1d5db" strokeWidth={1} strokeDasharray="2 2" strokeLinecap="round" />
             )}
-            {/* Endpoint dot */}
-            {trendSeries.length > 0 && (() => {
-              const min = Math.min(...trendSeries)
-              const max = Math.max(...trendSeries)
-              const lastY = SH - 2 - ((trendSeries.at(-1)! - min) / (max - min || 1)) * (SH - 4)
-              return <circle cx={SW} cy={lastY} r={2} fill={lineColor} />
-            })()}
-            {/* Selected year marker — vertical tick + dot */}
+            {/* Primary line: regional teal when selected, else national colored by trend */}
+            {hasRegional
+              ? regSparkPath && <path d={regSparkPath} fill="none" stroke="#0d9488" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              : natSparkPath && <path d={natSparkPath} fill="none" stroke={lineColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+            }
+            {/* Selected year marker */}
             {selectedYear && years.includes(selectedYear) && trendSeries.length > 0 && (() => {
               const idx = years.indexOf(selectedYear)
               const x = (idx / (years.length - 1)) * SW
@@ -256,17 +254,23 @@ export default function AgeBandSparklines({
           <span className="inline-block w-4 h-0.5 rounded bg-gray-300" /> Stable
         </span>
         {hasRegional && (
-          <span className="flex items-center gap-1.5">
-            <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke="#0d9488" strokeWidth={1} strokeDasharray="2 2" /></svg>
-            {regionName ?? 'Region'}
-          </span>
+          <>
+            <span className="flex items-center gap-1.5">
+              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke="#0d9488" strokeWidth={1.5} /></svg>
+              {regionName ?? 'Region'}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke="#d1d5db" strokeWidth={1} strokeDasharray="2 2" /></svg>
+              National
+            </span>
+          </>
         )}
         <span className="ml-auto">{years.at(0)}→{years.at(-1)}</span>
       </div>
 
       {/* Tooltip */}
       {tooltip && (
-        <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 260 : 180}>
+        <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 300 : 180}>
           <div className="px-3 py-2 border-b border-gray-100">
             <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
             <span className="text-gray-400 ml-2 text-[10px]">per 1,000 · all years</span>
