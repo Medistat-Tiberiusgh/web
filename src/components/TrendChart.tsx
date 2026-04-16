@@ -14,6 +14,7 @@ interface Props {
   data: TrendPoint[]
   regionalData?: TrendPoint[]
   regionName?: string | null
+  selectedYear?: number | null
 }
 
 const W = 600
@@ -59,7 +60,7 @@ function buildAreaPath(
   )
 }
 
-export default function TrendChart({ data, regionalData, regionName }: Props) {
+export default function TrendChart({ data, regionalData, regionName, selectedYear }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   if (data.length === 0) {
@@ -148,6 +149,20 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
         {regPath && (
           <path d={regPath} fill="none" stroke="#0d9488" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         )}
+
+        {/* Selected year band */}
+        {selectedYear && data.some((d) => d.year === selectedYear) && (() => {
+          const x = scaleX(selectedYear, minYear, maxYear)
+          return (
+            <g>
+              <rect x={x - colWidth / 2} y={PAD.top} width={colWidth} height={INNER_H} fill="#7c3aed" fillOpacity={0.08} rx={2} />
+              <line x1={x} y1={PAD.top} x2={x} y2={baseY} stroke="#7c3aed" strokeWidth={1.5} strokeDasharray="3 2" />
+              <text x={x} y={PAD.top - 6} textAnchor="middle" fontSize={9} fill="#7c3aed" fontWeight="600">
+                {selectedYear}
+              </text>
+            </g>
+          )
+        })()}
 
         {/* Hover crosshair */}
         {tooltip && (
@@ -270,9 +285,10 @@ export default function TrendChart({ data, regionalData, regionName }: Props) {
             const pct = tooltip.national > 0 ? (diff / tooltip.national) * 100 : null
             const absPct = pct !== null ? Math.abs(pct) : null
             const direction = diff > 0 ? 'higher' : 'lower'
+            const label = regionName ?? 'Your region'
             const text = absPct === null ? null : absPct < 5
-              ? `${regionName}: about the same as national avg.`
-              : `${regionName}: dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
+              ? `${label}: about the same as national avg.`
+              : `${label}: dispensed ${absPct.toFixed(0)}% ${direction} than national avg.`
             if (!text) return null
             return (
               <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
