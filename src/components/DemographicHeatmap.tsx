@@ -162,91 +162,74 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
 
 
       {/* Tooltip */}
-      {tooltip && (
-        <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 260 : 180}>
-          <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
-            <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
-            <span className="text-gray-400 ml-auto text-xs">per 1,000 people</span>
-          </div>
+      {tooltip && (() => {
+        const men = hasRegional ? tooltip.menReg : tooltip.menNat
+        const women = hasRegional ? tooltip.womenReg : tooltip.womenNat
+        const menNat = tooltip.menNat
+        const womenNat = tooltip.womenNat
+        const total = (men ?? 0) + (women ?? 0)
+        const menPct = total > 0 && men != null ? (men / total) * 100 : 50
+        const gap = men != null && women != null && men > 0 && women > 0
+          ? Math.abs(((men - women) / Math.min(men, women)) * 100)
+          : null
+        const higher = men != null && women != null ? (men > women ? 'men' : 'women') : null
 
-          <div className="flex divide-x divide-gray-100">
-            {hasRegional && (
-              <div className="flex-1 px-3 py-2 bg-teal-50/60">
-                <p className="text-[10px] font-semibold tracking-widest text-teal-600 uppercase mb-1.5">
-                  {regionName}
-                </p>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1 text-gray-600 text-xs">
-                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      Men
-                    </span>
-                    <span className="font-semibold text-gray-800 text-xs">
-                      {tooltip.menReg != null ? tooltip.menReg.toFixed(1) : '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1 text-gray-600 text-xs">
-                      <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" />
-                      Women
-                    </span>
-                    <span className="font-semibold text-gray-800 text-xs">
-                      {tooltip.womenReg != null ? tooltip.womenReg.toFixed(1) : '—'}
-                    </span>
-                  </div>
-                </div>
+        return (
+          <ChartTooltip x={tooltip.x} y={tooltip.y} width={200}>
+            {/* Header */}
+            <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+              <span className="font-semibold text-gray-800 text-sm">{tooltip.ageGroupName}</span>
+              {hasRegional && <span className="text-[10px] text-teal-600 font-semibold">{regionName}</span>}
+            </div>
+
+            {/* Gender values + ratio bar */}
+            <div className="px-3 py-2 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" /> Men
+                </span>
+                <span className="text-[11px] font-bold text-gray-800">
+                  {men != null ? men.toFixed(1) : '—'}
+                </span>
+              </div>
+              {/* Ratio bar */}
+              <div className="h-1.5 w-full rounded-full overflow-hidden flex">
+                <div className="h-full bg-blue-400 transition-all" style={{ width: `${menPct}%` }} />
+                <div className="h-full flex-1 bg-rose-300" />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-1 text-[11px] text-rose-500 font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Women
+                </span>
+                <span className="text-[11px] font-bold text-gray-800">
+                  {women != null ? women.toFixed(1) : '—'}
+                </span>
+              </div>
+            </div>
+
+            {/* National comparison when showing regional */}
+            {hasRegional && menNat != null && womenNat != null && (
+              <div className="px-3 py-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
+                <span>National avg</span>
+                <span>
+                  <span className="text-blue-400">{menNat.toFixed(1)}</span>
+                  <span className="mx-1">/</span>
+                  <span className="text-rose-400">{womenNat.toFixed(1)}</span>
+                </span>
               </div>
             )}
 
-            <div className="flex-1 px-3 py-2">
-              <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
-                National
-              </p>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-500 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                    Men
-                  </span>
-                  <span className="font-semibold text-gray-700 text-xs">
-                    {tooltip.menNat != null ? tooltip.menNat.toFixed(1) : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-500 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" />
-                    Women
-                  </span>
-                  <span className="font-semibold text-gray-700 text-xs">
-                    {tooltip.womenNat != null ? tooltip.womenNat.toFixed(1) : '—'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gender gap callout */}
-          {(() => {
-            const men = hasRegional ? tooltip.menReg : tooltip.menNat
-            const women = hasRegional ? tooltip.womenReg : tooltip.womenNat
-            if (men == null || women == null || men === 0 || women === 0) return null
-            const higher = men > women ? 'men' : 'women'
-            const pct = Math.abs(((men - women) / Math.min(men, women)) * 100)
-            if (pct < 5) return (
-              <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
-                <p className="text-[10px] text-gray-500">Similar rates for both genders in this age group.</p>
-              </div>
-            )
-            return (
+            {/* Gap insight */}
+            {gap != null && gap >= 5 && higher && (
               <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
                 <p className="text-[10px] text-gray-500">
-                  Dispensed to {higher} <span className="font-semibold">{pct.toFixed(0)}% more</span> in this age group.
+                  Dispensed to {higher} <span className="font-semibold">{gap.toFixed(0)}% more</span> in this group.
                 </p>
               </div>
-            )
-          })()}
-        </ChartTooltip>
-      )}
+            )}
+          </ChartTooltip>
+        )
+      })()}
     </div>
   )
 }
