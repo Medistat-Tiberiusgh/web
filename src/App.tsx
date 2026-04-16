@@ -13,6 +13,7 @@ import DemographicHeatmap from './components/DemographicHeatmap'
 import LoginPage from './components/LoginPage'
 import { useFilters } from './hooks/useFilters'
 import { useDashboardInsights } from './hooks/useDashboardInsights'
+import { useDemographicGrid } from './hooks/useDemographicGrid'
 import { useMedications } from './hooks/useMedications'
 import { useRegions } from './hooks/useRegions'
 import { UserContext, useUser } from './context/UserContext'
@@ -64,6 +65,19 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     effectiveRegionId,
     genderId,
     ageBandId,
+  )
+
+  // Demographic grid fetched separately so it can respect the year filter
+  // without limiting the trend series used by TrendChart.
+  const { grid: natGrid } = useDemographicGrid(
+    activeDrug?.atcCode ?? null,
+    null,
+    activeYear,
+  )
+  const { grid: regGrid } = useDemographicGrid(
+    effectiveRegionId != null ? (activeDrug?.atcCode ?? null) : null,
+    effectiveRegionId,
+    activeYear,
   )
 
   // Region name resolved from the static regions list — available immediately,
@@ -454,8 +468,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       ) : (
                         <DemographicHeatmap
-                          data={national?.demographicGrid ?? []}
-                          regionalData={regional?.demographicGrid}
+                          data={natGrid}
+                          regionalData={regGrid.length > 0 ? regGrid : undefined}
                           regionName={regionName}
                         />
                       )}

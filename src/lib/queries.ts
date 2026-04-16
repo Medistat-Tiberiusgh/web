@@ -94,6 +94,21 @@ export const DRUG_INFO_QUERY = `
   }
 `
 
+// Lightweight query — only fetches demographicGrid, so it can accept a year
+// filter without affecting the full trend series.
+export const DEMOGRAPHIC_GRID_QUERY = `
+  query DemographicGrid($atcCode: String!, $year: Int, $region: Int) {
+    drugInsights(atcCode: $atcCode, year: $year, region: $region) {
+      demographicGrid {
+        gender
+        ageGroupId
+        ageGroupName
+        per1000
+      }
+    }
+  }
+`
+
 export const ADD_MEDICATION_MUTATION = `
   mutation AddMedication($atc: String!, $notes: String) {
     addMedication(atc: $atc, notes: $notes) {
