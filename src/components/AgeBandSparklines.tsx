@@ -72,7 +72,10 @@ export default function AgeBandSparklines({
   }
 
   const hasRegional = (regionalData ?? []).length > 0
-  const effectiveYear = latestYear ?? years.at(-1) ?? null
+  const regYears = hasRegional ? [...new Set((regionalData ?? []).map((d) => d.year))].sort() : []
+  const effectiveYear = hasRegional && regYears.length > 0
+    ? (latestYear != null && regYears.includes(latestYear) ? latestYear : regYears.at(-1)!)
+    : (latestYear ?? years.at(-1) ?? null)
 
   const allLatest = ageGroups.flatMap(([id]) => [
     natLookup.get(id)?.get(effectiveYear ?? -1) ?? 0,
@@ -149,7 +152,7 @@ export default function AgeBandSparklines({
             {name}
           </span>
           {isUserAge && (
-            <span className="text-[9px] font-semibold text-teal-500 bg-teal-50 px-1 rounded-full shrink-0 leading-snug">
+            <span className="text-[9px] font-semibold text-teal-500 bg-teal-50/60 px-1 rounded-full shrink-0 leading-snug">
               you
             </span>
           )}
@@ -161,7 +164,7 @@ export default function AgeBandSparklines({
           <div className="flex-1 flex flex-col gap-0.5 min-w-0">
             <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${isUserAge ? 'bg-teal-600' : 'bg-teal-500'}`}
+                className={`h-full rounded-full transition-all ${isUserAge ? 'bg-teal-600' : 'bg-teal-50/600'}`}
                 style={{ width: `${hasRegional ? (regVal != null ? (regVal / maxBar) * 100 : 0) : primaryPct}%` }}
               />
             </div>
@@ -263,47 +266,54 @@ export default function AgeBandSparklines({
 
       {/* Tooltip */}
       {tooltip && (
-        <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 230 : 170}>
+        <ChartTooltip x={tooltip.x} y={tooltip.y} width={hasRegional ? 260 : 180}>
           <div className="px-3 py-2 border-b border-gray-100">
             <span className="font-semibold text-gray-800">{tooltip.ageGroupName}</span>
             <span className="text-gray-400 ml-2 text-[10px]">per 1,000 · all years</span>
           </div>
-          <div className="px-3 py-2 flex flex-col gap-0.5">
-            {(() => {
-              const sorted = [...tooltip.yearData].reverse()
-              // If a year is selected, pin it first; then show the 8 most recent excluding it
-              const pinned = selectedYear ? sorted.find((d) => d.year === selectedYear) : null
-              const rest = sorted.filter((d) => d.year !== selectedYear).slice(0, pinned ? 7 : 8)
-              return [...(pinned ? [pinned] : []), ...rest].map(({ year, national, regional }) => {
-                const isPinned = year === selectedYear
-                return (
-                  <div
-                    key={year}
-                    className={`flex items-center gap-2 text-[11px] rounded px-1 -mx-1
-                      ${isPinned ? 'bg-violet-50' : ''}`}
-                  >
-                    <span className={`w-9 shrink-0 ${isPinned ? 'text-violet-600 font-semibold' : 'text-gray-400'}`}>
-                      {year}
-                    </span>
-                    {hasRegional && (
-                      <span className="text-teal-700 font-medium w-10 text-right">
+          {/* Flat grid — regional column gets a continuous teal background */}
+          {(() => {
+            const sorted = [...tooltip.yearData].reverse()
+            const pinned = selectedYear ? sorted.find((d) => d.year === selectedYear) : null
+            const rest = sorted.filter((d) => d.year !== selectedYear).slice(0, pinned ? 7 : 8)
+            const rows = [...(pinned ? [pinned] : []), ...rest]
+            const cols = hasRegional ? 'grid-cols-[auto_1fr_1fr]' : 'grid-cols-[auto_1fr]'
+            return (
+              <div className={`grid ${cols} text-[11px]`}>
+                {/* Header row */}
+                <div className="px-3 pt-2 pb-1" />
+                {hasRegional && (
+                  <div className="bg-teal-50/60 px-3 pt-2 pb-1 text-[10px] font-semibold tracking-widest text-teal-600 uppercase text-right">
+                    {regionName ?? 'Region'}
+                  </div>
+                )}
+                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold tracking-widest text-gray-400 uppercase text-right">
+                  National
+                </div>
+
+                {/* Data rows */}
+                {rows.flatMap(({ year, national, regional }) => {
+                  const isPinned = year === selectedYear
+                  return [
+                    <span key={`${year}-y`} className={`px-3 py-0.5 ${isPinned ? 'bg-violet-50 text-violet-600 font-semibold' : 'text-gray-400'}`}>{year}</span>,
+                    ...(hasRegional ? [
+                      <span key={`${year}-r`} className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-teal-50/60 text-teal-700'}`}>
                         {regional != null ? regional.toFixed(1) : '—'}
                       </span>
-                    )}
-                    <span className={`w-10 text-right ${isPinned ? 'text-violet-700 font-bold' : 'text-gray-700 font-medium'}`}>
+                    ] : []),
+                    <span key={`${year}-n`} className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-50 text-violet-700 font-bold' : 'text-gray-700'}`}>
                       {national.toFixed(1)}
-                    </span>
-                  </div>
-                )
-              })
-            })()}
-          </div>
-          {hasRegional && (
-            <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50 flex justify-end gap-4 text-[10px] text-gray-400">
-              <span className="text-teal-600">{regionName ?? 'Region'}</span>
-              <span>National</span>
-            </div>
-          )}
+                    </span>,
+                  ]
+                })}
+
+                {/* Bottom padding row to close off the teal column cleanly */}
+                <div className="px-3 pb-2" />
+                {hasRegional && <div className="bg-teal-50/60 pb-2" />}
+                <div className="pb-2" />
+              </div>
+            )
+          })()}
         </ChartTooltip>
       )}
     </div>
