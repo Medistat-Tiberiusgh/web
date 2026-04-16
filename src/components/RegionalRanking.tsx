@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Chip } from '@heroui/react'
 import type { RegionalStat } from '../types'
 import { useUser } from '../context/UserContext'
+import { fmtPer1000 } from '../lib/format'
 
 interface Props {
   regions: RegionalStat[]
@@ -62,7 +63,7 @@ export default function RegionalRanking({ regions, selectedRegionId, hoveredRegi
                 </span>
                 {isHome && <Chip size="sm" variant="soft" color="accent">You</Chip>}
                 <span className={`text-xs font-semibold tabular-nums ${isHome ? 'text-teal-600' : 'text-gray-500'}`}>
-                  {region.per1000.toFixed(1)}
+                  {fmtPer1000(region.per1000)}
                 </span>
               </div>
 
@@ -92,7 +93,7 @@ export default function RegionalRanking({ regions, selectedRegionId, hoveredRegi
                     {showLabel && (
                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none">
                         <div className="bg-gray-700 text-white text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap">
-                          Avg {natAvg.toFixed(1)}
+                          Avg {fmtPer1000(natAvg)}
                         </div>
                       </div>
                     )}
@@ -108,7 +109,7 @@ export default function RegionalRanking({ regions, selectedRegionId, hoveredRegi
         <div className="px-4 py-2 border-t border-gray-100 flex items-center gap-1.5">
           <div className="w-0.5 h-3 bg-gray-500 rounded-full shrink-0" />
           <span className="text-[10px] text-gray-400">
-            National avg: {natAvg.toFixed(1)} per 1,000
+            National avg: {fmtPer1000(natAvg)} per 1,000
           </span>
         </div>
       )}

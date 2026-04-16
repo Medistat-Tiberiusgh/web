@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { useUser } from '../context/UserContext'
 import type { AgeSplitPoint } from '../types'
 import ChartTooltip from './ChartTooltip'
+import { fmtPer1000 } from '../lib/format'
 
 interface Props {
   data: AgeSplitPoint[]
@@ -186,11 +187,11 @@ export default function AgeBandSparklines({
           <div className="flex flex-col items-end shrink-0">
             {hasRegional && (
               <span className="text-[10px] font-semibold text-teal-600 leading-none">
-                {regVal != null ? regVal.toFixed(1) : '—'}
+                {regVal != null ? fmtPer1000(regVal) : '—'}
               </span>
             )}
             <span className={`text-[10px] font-medium leading-none ${hasRegional ? 'text-blue-600' : 'text-gray-600'}`}>
-              {natVal != null ? natVal.toFixed(1) : '—'}
+              {natVal != null ? fmtPer1000(natVal) : '—'}
             </span>
           </div>
 
@@ -302,11 +303,11 @@ export default function AgeBandSparklines({
                     <span key={`${year}-y`} className={`px-3 py-0.5 ${isPinned ? 'bg-violet-50 text-violet-600 font-semibold' : 'text-gray-400'}`}>{year}</span>,
                     ...(hasRegional ? [
                       <span key={`${year}-r`} className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-teal-50/60 text-teal-700'}`}>
-                        {regional != null ? regional.toFixed(1) : '—'}
+                        {regional != null ? fmtPer1000(regional) : '—'}
                       </span>
                     ] : []),
                     <span key={`${year}-n`} className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-50 text-violet-700 font-bold' : 'text-gray-700'}`}>
-                      {national.toFixed(1)}
+                      {fmtPer1000(national)}
                     </span>,
                   ]
                 })}

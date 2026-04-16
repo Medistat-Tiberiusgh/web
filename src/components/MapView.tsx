@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext'
 import type { RegionalStat } from '../types'
 import type { FeatureCollection } from 'geojson'
 import ChartTooltip from './ChartTooltip'
+import { fmtPer1000 } from '../lib/format'
 
 interface Props {
   regions: RegionalStat[]
@@ -227,7 +228,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                           Your region
                         </p>
                         <span className="text-lg font-bold text-teal-700">
-                          {userRegion.per1000.toFixed(1)}
+                          {fmtPer1000(userRegion.per1000)}
                         </span>
                       </div>
                     )}
@@ -239,7 +240,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                           per 1,000
                         </p>
                         <span className={`text-lg font-bold ${isUserRegion ? 'text-teal-700' : 'text-gray-800'}`}>
-                          {hovered.per1000.toFixed(1)}
+                          {fmtPer1000(hovered.per1000)}
                         </span>
                       </div>
                     )}
@@ -251,7 +252,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                           per 1,000
                         </p>
                         <span className="text-lg font-bold text-gray-800">
-                          {hovered.per1000.toFixed(1)}
+                          {fmtPer1000(hovered.per1000)}
                         </span>
                       </div>
                     )}

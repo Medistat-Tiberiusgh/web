@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { GenderSplitPoint } from '../types'
 import { useUser } from '../context/UserContext'
 import ChartTooltip from './ChartTooltip'
+import { fmtPer1000 } from '../lib/format'
 
 interface Props {
   data: GenderSplitPoint[]
@@ -166,7 +167,7 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                       {maleLabel}{userIsMale === true ? ' · you' : ''}
                     </span>
                     <span className="font-semibold text-gray-800">
-                      {tooltip.regMen != null ? tooltip.regMen.toFixed(1) : '—'}
+                      {tooltip.regMen != null ? fmtPer1000(tooltip.regMen) : '—'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
@@ -175,7 +176,7 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                       {femaleLabel}{userIsMale === false ? ' · you' : ''}
                     </span>
                     <span className="font-semibold text-gray-800">
-                      {tooltip.regWomen != null ? tooltip.regWomen.toFixed(1) : '—'}
+                      {tooltip.regWomen != null ? fmtPer1000(tooltip.regWomen) : '—'}
                     </span>
                   </div>
                 </div>
@@ -193,7 +194,7 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                     {maleLabel}{!hasRegional && userIsMale === true ? ' · you' : ''}
                   </span>
                   <span className="font-semibold text-gray-700">
-                    {tooltip.natMen != null ? tooltip.natMen.toFixed(1) : '—'}
+                    {tooltip.natMen != null ? fmtPer1000(tooltip.natMen) : '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
@@ -202,7 +203,7 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                     {femaleLabel}{!hasRegional && userIsMale === false ? ' · you' : ''}
                   </span>
                   <span className="font-semibold text-gray-700">
-                    {tooltip.natWomen != null ? tooltip.natWomen.toFixed(1) : '—'}
+                    {tooltip.natWomen != null ? fmtPer1000(tooltip.natWomen) : '—'}
                   </span>
                 </div>
               </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { DemographicCell } from '../types'
 import { useUser } from '../context/UserContext'
 import ChartTooltip from './ChartTooltip'
+import { fmtPer1000 } from '../lib/format'
 
 interface Props {
   data: DemographicCell[]
@@ -145,7 +146,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
                 className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(menIntensity)}`}
                 style={{ backgroundColor: cellColor(menIntensity, true) }}
               >
-                {primary.men != null ? primary.men.toFixed(1) : '—'}
+                {primary.men != null ? fmtPer1000(primary.men) : '—'}
               </div>
 
               {/* Women cell */}
@@ -153,7 +154,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
                 className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(womenIntensity)}`}
                 style={{ backgroundColor: cellColor(womenIntensity, false) }}
               >
-                {primary.women != null ? primary.women.toFixed(1) : '—'}
+                {primary.women != null ? fmtPer1000(primary.women) : '—'}
               </div>
             </div>
           )
@@ -189,7 +190,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
                   <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" /> Men
                 </span>
                 <span className="text-[11px] font-bold text-gray-800">
-                  {men != null ? men.toFixed(1) : '—'}
+                  {men != null ? fmtPer1000(men) : '—'}
                 </span>
               </div>
               {/* Ratio bar */}
@@ -202,7 +203,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
                   <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Women
                 </span>
                 <span className="text-[11px] font-bold text-gray-800">
-                  {women != null ? women.toFixed(1) : '—'}
+                  {women != null ? fmtPer1000(women) : '—'}
                 </span>
               </div>
             </div>
@@ -212,9 +213,9 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
               <div className="px-3 py-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
                 <span>National avg</span>
                 <span>
-                  <span className="text-blue-400">{menNat.toFixed(1)}</span>
+                  <span className="text-blue-400">{fmtPer1000(menNat)}</span>
                   <span className="mx-1">/</span>
-                  <span className="text-rose-400">{womenNat.toFixed(1)}</span>
+                  <span className="text-rose-400">{fmtPer1000(womenNat)}</span>
                 </span>
               </div>
             )}

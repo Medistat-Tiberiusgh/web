@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { fmtPer1000, fmtPer1000Delta } from './lib/format'
 import { Card, Skeleton } from '@heroui/react'
 import AppNavbar from './components/AppNavbar'
 import KpiCard from './components/KpiCard'
@@ -23,9 +24,12 @@ import type { User } from './context/UserContext'
 // Helpers
 // ---------------------------------------------------------------------------
 
-function fmtDelta1(n: number, suffix = '') {
-  const v = parseFloat(n.toFixed(1))
-  return `${v >= 0 ? '+' : ''}${v.toFixed(1)}${suffix}`
+function fmtDelta1(n: number, suffix = '', dp = 1) {
+  // Detect sign from the original value to avoid the JS -0 trap:
+  // parseFloat("-0.0") === -0, and -0 >= 0 is true, which flips the sign.
+  const threshold = 5 * Math.pow(10, -(dp + 1)) // 0.05 for dp=1, 0.005 for dp=2
+  const sign = n <= -threshold ? '-' : '+'
+  return `${sign}${Math.abs(n).toFixed(dp)}${suffix}`
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +61,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  const { medications, loading: medsLoading } = useMedications()
+  const { medications, loading: medsLoading, addMedication, removeMedication } = useMedications()
   const { regions } = useRegions()
 
   // The effective region comes from an explicit filter first, then the user's
@@ -182,7 +186,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       : null
 
   const per1000DeltaVsNat =
-    regLatest && natLatest
+    regLatest && natLatest && natLatest.per1000 > 0
       ? ((regLatest.per1000 - natLatest.per1000) / natLatest.per1000) * 100
       : null
 
@@ -194,7 +198,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       ? ((chronicUseRatio - natChronicRatio) / natChronicRatio) * 100
       : null
 
-  const mapRegions = national?.regionalPopularity ?? []
+  // Inject the real national per-1,000 (region=0 row) so RegionalRanking and
+  // MapView can display the correct national average. The API excludes region=0
+  // from regionalPopularity, so we add it here from the national trend data.
+  const mapRegions = useMemo(() => {
+    const base = national?.regionalPopularity ?? []
+    if (natLatest?.per1000 != null) {
+      return [...base, { regionId: 0, regionName: 'National', per1000: natLatest.per1000 }]
+    }
+    return base
+  }, [national?.regionalPopularity, natLatest?.per1000])
 
   // ---------------------------------------------------------------------------
   // Render
@@ -210,11 +223,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         activeGender={activeGender}
         activeAgeBand={activeAgeBand}
         availableAgeBands={availableAgeBands}
+        savedAtcCodes={new Set(medications.map((m) => m.drugData.atcCode))}
         onDrugChange={setActiveDrug}
         onRegionChange={setActiveRegion}
         onYearChange={setActiveYear}
         onGenderChange={setActiveGender}
         onAgeBandChange={setActiveAgeBand}
+        onSaveDrug={(drug) => addMedication(drug.atcCode)}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -224,6 +239,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             loading={medsLoading}
             activeDrugAtcCode={activeDrug?.atcCode ?? null}
             onSelect={setActiveDrug}
+            onRemove={removeMedication}
           />
         </aside>
 
@@ -259,19 +275,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         }
                       : undefined
                   }
-                  nationalDelta={(() => {
-                    if (!natLatest || !regLatest) return null
-                    const natAvgPerRegion = natLatest.totalPatients / 21
-                    const pct =
-                      ((regLatest.totalPatients - natAvgPerRegion) /
-                        natAvgPerRegion) *
-                      100
-                    return {
-                      value: fmtDelta1(pct, '%'),
-                      pct,
-                      avgLabel: Math.round(natAvgPerRegion).toLocaleString()
-                    }
-                  })()}
+                  nationalDelta={null}
                   info={
                     <>
                       <p>
@@ -299,12 +303,12 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
                 <KpiCard
                   label={`Dispensings per 1,000 ${demographicLabel ?? 'Inhabitants'}${regionName ? ` · ${regionName}` : ''}`}
-                  value={latestTrend ? latestTrend.per1000.toFixed(1) : '—'}
+                  value={latestTrend ? fmtPer1000(latestTrend.per1000) : '—'}
                   delta={
                     per1000Diff != null
                       ? {
-                          value: fmtDelta1(per1000Diff),
-                          subLabel: prevTrend ? `(${prevTrend.per1000.toFixed(1)})` : undefined
+                          value: fmtPer1000Delta(per1000Diff),
+                          subLabel: prevTrend ? `(${fmtPer1000(prevTrend.per1000)})` : undefined
                         }
                       : undefined
                   }
@@ -313,14 +317,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       ? {
                           value: fmtDelta1(per1000DeltaVsNat, '%'),
                           pct: per1000DeltaVsNat,
-                          avgLabel: natLatest.per1000.toFixed(1)
+                          avgLabel: fmtPer1000(natLatest.per1000)
                         }
                       : null
                   }
                   info={
                     demographicLabel
                       ? `Dispensings per 1,000 ${demographicLabel}. The API filters the data for this demographic.`
-                      : `Dispensings per 1,000 inhabitants in ${regionName ?? 'your region'}. National average: ${natLatest ? natLatest.per1000.toFixed(1) : '—'}.`
+                      : `Dispensings per 1,000 inhabitants in ${regionName ?? 'your region'}. National average: ${natLatest ? fmtPer1000(natLatest.per1000) : '—'}.`
                   }
                 />
 
@@ -334,7 +338,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   delta={
                     ratioDiff != null && prevTrend != null
                       ? {
-                          value: `${fmtDelta1(ratioDiff)}x`,
+                          value: fmtDelta1(ratioDiff, 'x', 2),
                           subLabel: `(${(prevTrend.totalPrescriptions / prevTrend.totalPatients).toFixed(2)}x)`
                         }
                       : undefined

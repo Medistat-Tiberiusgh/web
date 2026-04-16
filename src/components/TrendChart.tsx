@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { TrendPoint } from '../types'
 import ChartTooltip from './ChartTooltip'
+import { fmtPer1000 } from '../lib/format'
 
 interface TooltipState {
   x: number
@@ -135,7 +136,7 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
           <g key={val}>
             <line x1={PAD.left} y1={y} x2={PAD.left + INNER_W} y2={y} stroke="#f3f4f6" strokeWidth={1} />
             <text x={PAD.left - 8} y={y} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="#9ca3af">
-              {val.toFixed(1)}
+              {fmtPer1000(val)}
             </text>
           </g>
         ))}
@@ -265,7 +266,7 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
                   {regionName}
                 </p>
                 <span className="text-lg font-bold text-gray-800">
-                  {tooltip.regional!.toFixed(1)}
+                  {fmtPer1000(tooltip.regional!)}
                 </span>
               </div>
             )}
@@ -274,7 +275,7 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
                 National
               </p>
               <span className="text-lg font-bold text-gray-600">
-                {tooltip.national != null ? tooltip.national.toFixed(1) : '—'}
+                {tooltip.national != null ? fmtPer1000(tooltip.national) : '—'}
               </span>
             </div>
           </div>
