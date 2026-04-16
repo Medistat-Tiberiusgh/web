@@ -78,7 +78,7 @@ function ModalContent({
             </Modal.Heading>
             <Chip size="sm" variant="soft">{atcCode}</Chip>
             {narcoticClass && (
-              <Chip size="sm" variant="soft" color="warning">Class {narcoticClass}</Chip>
+              <span className="text-xs font-bold text-red-600">Narcotic {narcoticClass}</span>
             )}
           </div>
           <p className="text-xs text-gray-400">Drug information</p>
@@ -162,7 +162,7 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
             <div className="flex items-center gap-1.5 flex-wrap">
               <Chip size="sm" variant="soft">{atcCode}</Chip>
               {narcoticClass && (
-                <Chip size="sm" variant="soft" color="warning">Class {narcoticClass}</Chip>
+                <span className="text-xs font-bold text-red-600">Narcotic {narcoticClass}</span>
               )}
             </div>
           </div>
