@@ -34,6 +34,7 @@ function fmtDelta1(n: number, suffix = '') {
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const user = useUser()!
+  const [hoveredRegionId, setHoveredRegionId] = useState<number | null>(null)
 
   const {
     activeDrug,
@@ -47,6 +48,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     activeAgeBand,
     setActiveAgeBand
   } = useFilters()
+
+  function handleRegionClick(regionId: number, regionName: string) {
+    if (activeRegion?.id === regionId) {
+      setActiveRegion(null)
+    } else {
+      setActiveRegion({ id: regionId, regionName })
+    }
+  }
 
   const { medications, loading: medsLoading } = useMedications()
   const { regions } = useRegions()
@@ -566,7 +575,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       className="pt-3 px-0 pb-0 overflow-hidden"
                       style={{ height: '630px' }}
                     >
-                      <MapView regions={mapRegions} />
+                      <MapView
+                        regions={mapRegions}
+                        selectedRegionId={activeRegion?.id ?? null}
+                        hoveredRegionId={hoveredRegionId}
+                        onHoverRegion={setHoveredRegionId}
+                        onRegionClick={handleRegionClick}
+                      />
                     </Card.Content>
                   </Card>
 
@@ -581,7 +596,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       className="p-0 overflow-hidden"
                       style={{ height: '560px' }}
                     >
-                      <RegionalRanking regions={mapRegions} />
+                      <RegionalRanking
+                        regions={mapRegions}
+                        selectedRegionId={activeRegion?.id ?? null}
+                        hoveredRegionId={hoveredRegionId}
+                        onHoverRegion={setHoveredRegionId}
+                        onRegionClick={handleRegionClick}
+                      />
                     </Card.Content>
                   </Card>
                 </div>

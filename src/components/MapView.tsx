@@ -7,6 +7,10 @@ import ChartTooltip from './ChartTooltip'
 
 interface Props {
   regions: RegionalStat[]
+  selectedRegionId?: number | null
+  hoveredRegionId?: number | null
+  onHoverRegion?: (id: number | null) => void
+  onRegionClick?: (regionId: number, regionName: string) => void
 }
 
 // Diverging color scale centered on the user's region value.
@@ -43,16 +47,21 @@ interface TooltipState {
 const WIDTH = 320
 const HEIGHT = 700
 
-export default function MapView({ regions }: Props) {
+export default function MapView({ regions, selectedRegionId, hoveredRegionId, onHoverRegion, onRegionClick }: Props) {
   const user = useUser()
   const [geoJson, setGeoJson] = useState<FeatureCollection | null>(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   useEffect(() => {
-    fetch('/sweden-counties.geojson')
-      .then((r) => r.json())
-      .then(setGeoJson)
-      .catch(() => setGeoJson(null))
+    async function load() {
+      try {
+        const r = await fetch('/sweden-counties.geojson')
+        setGeoJson(await r.json())
+      } catch {
+        setGeoJson(null)
+      }
+    }
+    load()
   }, [])
 
   const filtered = regions.filter((r) => r.regionId !== 0)
@@ -97,13 +106,16 @@ export default function MapView({ regions }: Props) {
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             style={{ width: '100%', height: '100%' }}
+            onMouseLeave={() => { setTooltip(null); onHoverRegion?.(null) }}
           >
+            {/* Base layer — all regions */}
             {geoJson?.features.map((feature) => {
               const id = feature.id as number
               const region = regionById.get(id)
               const isUserRegion = user?.regionId != null && id === user.regionId
+              const isHoveredFromList = hoveredRegionId === id && tooltip?.region.regionId !== id
               const fill = isUserRegion
-                ? '#0d9488' // teal-600
+                ? '#0d9488'
                 : region
                   ? getDivergingColor(region.per1000, centerPer1000, min, max)
                   : '#e5e7eb'
@@ -114,19 +126,56 @@ export default function MapView({ regions }: Props) {
                   key={id}
                   d={d}
                   fill={fill}
-                  stroke="white"
-                  strokeWidth={0.8}
+                  stroke={isHoveredFromList ? '#374151' : 'white'}
+                  strokeWidth={isHoveredFromList ? 1.5 : 0.8}
                   style={{ cursor: region ? 'pointer' : 'default' }}
-                  onMouseEnter={(e) =>
-                    region && setTooltip({ x: e.clientX, y: e.clientY, region })
-                  }
+                  onMouseEnter={(e) => {
+                    if (region) {
+                      setTooltip({ x: e.clientX, y: e.clientY, region })
+                      onHoverRegion?.(id)
+                    }
+                  }}
                   onMouseMove={(e) =>
                     region && setTooltip({ x: e.clientX, y: e.clientY, region })
                   }
-                  onMouseLeave={() => setTooltip(null)}
+                  onMouseLeave={() => {
+                    setTooltip(null)
+                    onHoverRegion?.(null)
+                  }}
+                  onClick={() => region && onRegionClick?.(id, region.regionName)}
                 />
               )
             })}
+            {/* Hovered region ring — rendered above base layer */}
+            {tooltip?.region.regionId != null && geoJson?.features
+              .filter((f) => (f.id as number) === tooltip.region.regionId)
+              .map((feature) => (
+                <path
+                  key={`hov-${feature.id}`}
+                  d={pathGenerator(feature) ?? ''}
+                  fill="transparent"
+                  stroke="#374151"
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ))
+            }
+            {/* Selected region — rendered last so the ring sits on top of all borders */}
+            {selectedRegionId != null && geoJson?.features
+              .filter((f) => (f.id as number) === selectedRegionId)
+              .map((feature) => (
+                <path
+                  key={`sel-${feature.id}`}
+                  d={pathGenerator(feature) ?? ''}
+                  fill="transparent"
+                  stroke="#0d9488"
+                  strokeWidth={2.5}
+                  strokeLinejoin="round"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ))
+            }
           </svg>
 
           {tooltip &&

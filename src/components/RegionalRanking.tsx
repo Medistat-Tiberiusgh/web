@@ -1,15 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Chip } from '@heroui/react'
 import type { RegionalStat } from '../types'
 import { useUser } from '../context/UserContext'
 
 interface Props {
   regions: RegionalStat[]
+  selectedRegionId?: number | null
+  hoveredRegionId?: number | null
+  onHoverRegion?: (id: number | null) => void
+  onRegionClick?: (regionId: number, regionName: string) => void
 }
 
-export default function RegionalRanking({ regions }: Props) {
+export default function RegionalRanking({ regions, selectedRegionId, hoveredRegionId, onHoverRegion, onRegionClick }: Props) {
   const user = useUser()
   const [hoveredMarkerId, setHoveredMarkerId] = useState<number | null>(null)
+  const selectedRowRef = useRef<HTMLLIElement | null>(null)
+
+  // Scroll the selected region into view when it changes
+  useEffect(() => {
+    selectedRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedRegionId])
 
   const ranked = regions
     .filter((r) => r.regionId !== 0)
@@ -28,19 +38,26 @@ export default function RegionalRanking({ regions }: Props) {
       <ul className="flex-1 overflow-y-auto px-3 py-1 flex flex-col">
         {ranked.map((region, i) => {
           const isHome = user?.regionId != null && region.regionId === user.regionId
+          const isSelected = selectedRegionId === region.regionId
+          const isHoveredFromMap = hoveredRegionId === region.regionId
           const fillPct = (region.per1000 / maxValue) * 100
           const showLabel = hoveredMarkerId === region.regionId
 
           return (
             <li
               key={region.regionId}
-              className={`rounded-md px-2 py-1.5 cursor-default hover:bg-gray-50 ${isHome ? 'bg-gray-50' : ''}`}
+              ref={isSelected ? selectedRowRef : null}
+              className={`rounded-md px-2 py-1.5 cursor-pointer transition-colors
+                ${isSelected ? 'bg-teal-100' : isHoveredFromMap ? 'bg-gray-50' : isHome ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-50'}`}
+              onClick={() => onRegionClick?.(region.regionId, region.regionName)}
+              onMouseEnter={() => onHoverRegion?.(region.regionId)}
+              onMouseLeave={() => onHoverRegion?.(null)}
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[10px] text-gray-300 tabular-nums shrink-0 w-6">
                   #{i + 1}
                 </span>
-                <span className={`text-xs flex-1 truncate ${isHome ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                <span className={`text-xs flex-1 truncate ${isHome || isSelected ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
                   {region.regionName}
                 </span>
                 {isHome && <Chip size="sm" variant="soft" color="accent">You</Chip>}
