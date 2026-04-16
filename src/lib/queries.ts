@@ -68,6 +68,12 @@ export const DRUG_INSIGHTS_QUERY = `
         ageGroupName
         per1000
       }
+      demographicGrid {
+        gender
+        ageGroupId
+        ageGroupName
+        per1000
+      }
     }
   }
 `

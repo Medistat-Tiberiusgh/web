@@ -17,11 +17,19 @@ export interface GenderSplitPoint {
   per1000: number
 }
 
+export interface DemographicCell {
+  gender: string // "Män" || "Kvinnor"
+  ageGroupId: number
+  ageGroupName: string
+  per1000: number
+}
+
 export interface DrugInsights {
   regionalPopularity: RegionalStat[]
   trend: TrendPoint[]
   genderSplit: GenderSplitPoint[]
   ageSplit: AgeSplitPoint[]
+  demographicGrid: DemographicCell[]
 }
 
 export interface AgeSplitPoint {

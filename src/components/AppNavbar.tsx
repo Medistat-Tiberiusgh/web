@@ -3,6 +3,7 @@ import { useUser } from '../context/UserContext'
 import { useRegions } from '../hooks/useRegions'
 import { gqlFetch } from '../lib/graphql'
 import { SEARCH_DRUGS_QUERY } from '../lib/queries'
+import type { AgeBand } from '../hooks/useFilters'
 import type { Drug, Region } from '../types'
 
 const YEARS = Array.from({ length: 19 }, (_, i) => 2024 - i)
@@ -19,14 +20,14 @@ interface Props {
   activeRegion: Region | null
   activeYear: number | null
   activeGender: string | null
-  activeAgeBand: string | null
-  availableAgeBands: string[]
+  activeAgeBand: AgeBand | null
+  availableAgeBands: AgeBand[]
   // Callbacks to request state changes
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
   onGenderChange: (gender: string | null) => void
-  onAgeBandChange: (ageBand: string | null) => void
+  onAgeBandChange: (ageBand: AgeBand | null) => void
 }
 
 export default function AppNavbar({
@@ -74,7 +75,7 @@ export default function AppNavbar({
   const ageBandResults =
     !activeAgeBand && query.length >= 1
       ? availableAgeBands
-          .filter((ab) => ab.toLowerCase().includes(query.toLowerCase()))
+          .filter((ab) => ab.name.toLowerCase().includes(query.toLowerCase()))
           .slice(0, 8)
       : []
 
@@ -154,7 +155,7 @@ export default function AppNavbar({
     setOpen(false)
   }
 
-  function selectAgeBand(ab: string) {
+  function selectAgeBand(ab: AgeBand) {
     onAgeBandChange(ab)
     setQuery('')
     setOpen(false)
@@ -222,7 +223,7 @@ export default function AppNavbar({
               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              {activeAgeBand} yrs
+              {activeAgeBand.name} yrs
               <button onClick={() => onAgeBandChange(null)} className="ml-0.5 text-amber-500 hover:text-amber-800 text-lg leading-none" aria-label="Remove age band filter">×</button>
             </span>
           )}
@@ -363,7 +364,7 @@ export default function AppNavbar({
                 </div>
                 {ageBandResults.map((ab) => (
                   <button
-                    key={ab}
+                    key={ab.id}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => selectAgeBand(ab)}
@@ -371,7 +372,7 @@ export default function AppNavbar({
                     <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-base text-gray-900">{ab} yrs</span>
+                    <span className="text-base text-gray-900">{ab.name} yrs</span>
                   </button>
                 ))}
               </>
