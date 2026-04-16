@@ -6,7 +6,9 @@ import { DRUG_INSIGHTS_QUERY } from '../lib/queries'
 export function useDrugInsights(
   atcCode: string | null,
   year: number | null,
-  region: number | null
+  region: number | null,
+  gender: number | null = null,
+  ageGroup: number | null = null,
 ) {
   const [insights, setInsights] = useState<DrugInsights | null>(null)
   const [loading, setLoading] = useState(false)
@@ -30,6 +32,8 @@ export function useDrugInsights(
     const variables: Record<string, unknown> = { atcCode }
     if (year) variables.year = year
     if (region) variables.region = region
+    if (gender) variables.gender = gender
+    if (ageGroup) variables.ageGroup = ageGroup
 
     gqlFetch<{ drugInsights: DrugInsights }>(DRUG_INSIGHTS_QUERY, variables, controller.signal)
       .then((data) => {
@@ -42,7 +46,7 @@ export function useDrugInsights(
       .finally(() => setLoading(false))
 
     return () => controller.abort()
-  }, [atcCode, year, region])
+  }, [atcCode, year, region, gender, ageGroup])
 
   return { insights, loading, error }
 }
