@@ -160,26 +160,6 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
         })}
       </div>
 
-      {/* Colour scale legend */}
-      <div className="mt-3 flex items-center gap-4 justify-end">
-        <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-          <div className="flex gap-px">
-            {[0.1, 0.3, 0.5, 0.7, 0.9].map((v) => (
-              <div key={v} className="w-4 h-2 rounded-sm" style={{ backgroundColor: cellColor(v, true) }} />
-            ))}
-          </div>
-          Men
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-          Women
-          <div className="flex gap-px">
-            {[0.1, 0.3, 0.5, 0.7, 0.9].map((v) => (
-              <div key={v} className="w-4 h-2 rounded-sm" style={{ backgroundColor: cellColor(v, false) }} />
-            ))}
-          </div>
-        </div>
-        <span className="text-[10px] text-gray-400">per 1,000 people · darker = higher rate</span>
-      </div>
 
       {/* Tooltip */}
       {tooltip && (
