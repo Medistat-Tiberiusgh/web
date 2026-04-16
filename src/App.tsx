@@ -491,7 +491,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             {demographicLabel ? ` · ${demographicLabel}` : ''}
                           </Card.Title>
                           <Card.Description>
-                            per 1,000 inhabitants · {latestTrend?.year ?? '—'}
+                            per 1,000 inhabitants · all years{regionName ? ` · ${regionName}` : ''}
                           </Card.Description>
                         </div>
                         <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
