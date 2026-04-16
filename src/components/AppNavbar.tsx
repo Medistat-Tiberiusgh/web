@@ -22,12 +22,14 @@ interface Props {
   activeGender: string | null
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
+  savedAtcCodes: Set<string>
   // Callbacks to request state changes
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: AgeBand | null) => void
+  onSaveDrug: (drug: Drug) => void
 }
 
 export default function AppNavbar({
@@ -38,11 +40,13 @@ export default function AppNavbar({
   activeGender,
   activeAgeBand,
   availableAgeBands,
+  savedAtcCodes,
   onDrugChange,
   onRegionChange,
   onYearChange,
   onGenderChange,
   onAgeBandChange,
+  onSaveDrug,
 }: Props) {
   const user = useUser()
   const { regions } = useRegions()
@@ -207,7 +211,19 @@ export default function AppNavbar({
           {activeDrug && (
             <span className="inline-flex items-center gap-2 shrink-0 bg-blue-100 text-blue-800 text-base font-semibold px-4 py-2 rounded-full max-w-64 min-w-0">
               <span className="truncate">{activeDrug.name}</span>
-              {activeDrug.narcoticClass && <span className="text-orange-600 font-bold shrink-0">·N</span>}
+              {activeDrug.narcoticClass && <span className="text-red-600 font-bold shrink-0 text-sm">N{activeDrug.narcoticClass}</span>}
+              {!savedAtcCodes.has(activeDrug.atcCode) && (
+                <button
+                  onClick={() => onSaveDrug(activeDrug)}
+                  className="ml-0.5 shrink-0 text-blue-400 hover:text-blue-700 transition-colors"
+                  aria-label="Save to list"
+                  title="Save to list"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+              )}
               <button onClick={() => onDrugChange(null)} className="ml-0.5 shrink-0 text-blue-400 hover:text-blue-800 text-lg leading-none" aria-label="Remove drug filter">×</button>
             </span>
           )}
@@ -330,8 +346,8 @@ export default function AppNavbar({
                         <span className="text-sm text-gray-400">{drug.atcCode}</span>
                       </div>
                       {drug.narcoticClass && (
-                        <span className="text-sm font-semibold text-orange-600 shrink-0">
-                          Class {drug.narcoticClass}
+                        <span className="text-sm font-bold text-red-600 shrink-0">
+                          N{drug.narcoticClass}
                         </span>
                       )}
                     </button>
@@ -396,6 +412,7 @@ export default function AppNavbar({
       </div>
 
       <div className="flex items-center justify-end gap-3">
+
         {user?.avatarUrl ? (
           <img src={user.avatarUrl} alt={user.username} className="w-10 h-10 rounded-full object-cover" />
         ) : (
