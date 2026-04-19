@@ -152,7 +152,8 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
   return (
     <>
       <Card
-        className="flex flex-col h-full cursor-pointer"
+        className="flex flex-col cursor-pointer"
+        style={{ height: '100%' }}
         onClick={() => hasContent && setIsOpen(true)}
       >
         {/* Header */}

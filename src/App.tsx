@@ -198,6 +198,56 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       ? ((chronicUseRatio - natChronicRatio) / natChronicRatio) * 100
       : null
 
+  // ── Demographic filter helpers ──────────────────────────────────────────────
+
+  function isMaleGender(g: string) {
+    const l = g.toLowerCase()
+    return l === 'men' || l === 'man' || l === 'male' || l === 'män' || l === 'm'
+  }
+
+  // Filter genderSplit to only the active gender when one is set.
+  // The API always returns both genders for this field regardless of the filter.
+  const natGenderSplit = useMemo(() => {
+    const split = national?.genderSplit ?? []
+    if (!activeGender) return split
+    return split.filter(pt => activeGender === 'men' ? isMaleGender(pt.gender) : !isMaleGender(pt.gender))
+  }, [national?.genderSplit, activeGender])
+
+  const regGenderSplit = useMemo(() => {
+    if (!regional?.genderSplit) return undefined
+    if (!activeGender) return regional.genderSplit
+    return regional.genderSplit.filter(pt => activeGender === 'men' ? isMaleGender(pt.gender) : !isMaleGender(pt.gender))
+  }, [regional?.genderSplit, activeGender])
+
+  // Filter ageSplit to only the active age band when one is set.
+  // The API always returns all age bands for this field regardless of the filter.
+  const natAgeSplit = useMemo(() => {
+    const split = national?.ageSplit ?? []
+    if (!activeAgeBand) return split
+    return split.filter(pt => pt.ageGroupId === activeAgeBand.id)
+  }, [national?.ageSplit, activeAgeBand])
+
+  const regAgeSplit = useMemo(() => {
+    if (!regional?.ageSplit) return undefined
+    if (!activeAgeBand) return regional.ageSplit
+    return regional.ageSplit.filter(pt => pt.ageGroupId === activeAgeBand.id)
+  }, [regional?.ageSplit, activeAgeBand])
+
+  // Filter demographic grid to only the active age band when one is set.
+  const filteredNatGrid = useMemo(() => {
+    let grid = natGrid
+    if (activeAgeBand) grid = grid.filter(cell => cell.ageGroupId === activeAgeBand.id)
+    if (activeGender) grid = grid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
+    return grid
+  }, [natGrid, activeAgeBand, activeGender])
+
+  const filteredRegGrid = useMemo(() => {
+    let grid = regGrid
+    if (activeAgeBand) grid = grid.filter(cell => cell.ageGroupId === activeAgeBand.id)
+    if (activeGender) grid = grid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
+    return grid
+  }, [regGrid, activeAgeBand, activeGender])
+
   // Inject the real national per-1,000 (region=0 row) so RegionalRanking and
   // MapView can display the correct national average. The API excludes region=0
   // from regionalPopularity, so we add it here from the national trend data.
@@ -438,8 +488,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       ) : (
                         <AgeBandSparklines
-                          data={national?.ageSplit ?? []}
-                          regionalData={regional?.ageSplit}
+                          data={natAgeSplit}
+                          regionalData={regAgeSplit}
                           latestYear={activeYear ?? latestTrend?.year ?? null}
                           selectedYear={activeYear}
                           regionName={regionName}
@@ -481,57 +531,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         </div>
                       ) : (
                         <DemographicHeatmap
-                          data={natGrid}
-                          regionalData={regGrid.length > 0 ? regGrid : undefined}
+                          data={filteredNatGrid}
+                          regionalData={filteredRegGrid.length > 0 ? filteredRegGrid : undefined}
                           regionName={regionName}
+                          filterGender={activeGender}
                         />
                       )}
                     </Card.Content>
                   </Card>
 
-                  <div className="grid grid-cols-[2fr_3fr] gap-3 items-stretch">
-                    <DrugInfoCard
-                      atcCode={activeDrug.atcCode}
-                      drugName={activeDrug.name}
-                      narcoticClass={activeDrug.narcoticClass}
-                    />
-                    <Card>
-                      <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
-                        <div>
-                          <Card.Title>
-                            Patient Gender Gap
-                            {regionName ? ` · ${regionName}` : ''}
-                            {demographicLabel ? ` · ${demographicLabel}` : ''}
-                          </Card.Title>
-                          <Card.Description>
-                            per 1,000 inhabitants · all years{regionName ? ` · ${regionName}` : ''}
-                          </Card.Description>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
-                            Men
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
-                            Women
-                          </span>
-                        </div>
-                      </Card.Header>
-                      <Card.Content className="p-0">
-                        {loading ? (
-                          <Skeleton className="h-48 m-4 rounded" />
-                        ) : (
-                          <GenderGapChart
-                            data={national?.genderSplit ?? []}
-                            regionalData={regional?.genderSplit}
-                            regionName={regionName}
-                            filterGender={activeGender}
-                          />
-                        )}
-                      </Card.Content>
-                    </Card>
-                  </div>
                 </div>
 
                 {/* Right column: map + ranking */}
@@ -589,17 +597,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     </Card.Content>
                   </Card>
 
-                  <Card className="flex-1 flex flex-col min-h-0">
+                  <Card>
                     <Card.Header className="px-4 pt-4 pb-0 shrink-0">
                       <Card.Title>Regional Ranking</Card.Title>
                       <Card.Description>
                         Dispensings per 1,000 residents · descending
                       </Card.Description>
                     </Card.Header>
-                    <Card.Content
-                      className="p-0 overflow-hidden"
-                      style={{ height: '560px' }}
-                    >
+                    <Card.Content className="p-0 overflow-hidden">
                       <RegionalRanking
                         regions={mapRegions}
                         selectedRegionId={activeRegion?.id ?? null}
@@ -609,6 +614,61 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       />
                     </Card.Content>
                   </Card>
+                </div>
+              </div>
+
+              {/* Full-width bottom row: chart fixed-width, drug info fills the rest */}
+              <div className="flex gap-3 items-stretch">
+                <div style={{ width: '640px' }} className="shrink-0">
+                  <Card>
+                    <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+                      <div>
+                        <Card.Title>
+                          Patient Gender Gap
+                          {regionName ? ` · ${regionName}` : ''}
+                          {demographicLabel ? ` · ${demographicLabel}` : ''}
+                        </Card.Title>
+                        <Card.Description>
+                          per 1,000 inhabitants · all years{regionName ? ` · ${regionName}` : ''}
+                        </Card.Description>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                        {(!activeGender || activeGender === 'men') && (
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
+                            Men
+                          </span>
+                        )}
+                        {(!activeGender || activeGender === 'women') && (
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
+                            Women
+                          </span>
+                        )}
+                      </div>
+                    </Card.Header>
+                    <Card.Content className="p-0">
+                      {loading ? (
+                        <Skeleton className="h-48 m-4 rounded" />
+                      ) : (
+                        <GenderGapChart
+                          data={natGenderSplit}
+                          regionalData={regGenderSplit}
+                          regionName={regionName}
+                          filterGender={activeGender}
+                          selectedYear={activeYear}
+                        />
+                      )}
+                    </Card.Content>
+                  </Card>
+                </div>
+
+                <div className="flex-1">
+                  <DrugInfoCard
+                    atcCode={activeDrug.atcCode}
+                    drugName={activeDrug.name}
+                    narcoticClass={activeDrug.narcoticClass}
+                  />
                 </div>
               </div>
             </>

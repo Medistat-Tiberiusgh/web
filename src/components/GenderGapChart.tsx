@@ -9,6 +9,7 @@ interface Props {
   regionalData?: GenderSplitPoint[]
   regionName?: string | null
   filterGender?: string | null
+  selectedYear?: number | null
 }
 
 function isMaleLike(g: string) {
@@ -41,9 +42,9 @@ interface TooltipState {
 }
 
 function buildYearMap(data: GenderSplitPoint[]) {
-  const map = new Map<number, { men: number; women: number }>()
+  const map = new Map<number, { men: number | null; women: number | null }>()
   for (const pt of data) {
-    if (!map.has(pt.year)) map.set(pt.year, { men: 0, women: 0 })
+    if (!map.has(pt.year)) map.set(pt.year, { men: null, women: null })
     const entry = map.get(pt.year)!
     if (isMaleLike(pt.gender)) entry.men = pt.per1000
     else entry.women = pt.per1000
@@ -51,7 +52,7 @@ function buildYearMap(data: GenderSplitPoint[]) {
   return map
 }
 
-export default function GenderGapChart({ data, regionalData, regionName, filterGender }: Props) {
+export default function GenderGapChart({ data, regionalData, regionName, filterGender, selectedYear }: Props) {
   const user = useUser()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -63,9 +64,8 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
     )
   }
 
-  const uniqueGenders = [...new Set(data.map((d) => d.gender))]
-  const maleLabel = displayLabel(uniqueGenders.find(isMaleLike) ?? uniqueGenders[0])
-  const femaleLabel = displayLabel(uniqueGenders.find((g) => !isMaleLike(g)) ?? uniqueGenders[1])
+  const maleLabel = 'Men'
+  const femaleLabel = 'Women'
 
   // null = gender unknown; true = male; false = female
   const userIsMale: boolean | null = user?.genderId != null ? user.genderId === 1 : null
@@ -78,17 +78,30 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
   const years = Array.from(natByYear.keys()).sort((a, b) => a - b)
 
   const allVals = [
-    ...Array.from(natByYear.values()).flatMap((v) => [v.men, v.women]),
-    ...Array.from(regByYear.values()).flatMap((v) => [v.men, v.women]),
+    ...Array.from(natByYear.values()).flatMap((v) => [v.men ?? 0, v.women ?? 0]),
+    ...Array.from(regByYear.values()).flatMap((v) => [v.men ?? 0, v.women ?? 0]),
   ]
   const maxVal = Math.max(...allVals, 1)
 
-  const H = PAD.top + years.length * (BAR_H + BAR_GAP) - BAR_GAP + PAD.bottom
+  const rowH = BAR_H + BAR_GAP
+  const dynBarH = BAR_H
+  const dynBarGap = BAR_GAP
+
+  const H = PAD.top + years.length * rowH - BAR_GAP + PAD.bottom
   const centerX = PAD.left + BAR_AREA + CENTER_W / 2
 
   // Highlighted color for the user's gender, muted for the other (or both muted if unknown)
   const menColor = userIsMale === true ? '#3b82f6' : '#93c5fd'
   const womenColor = userIsMale === false ? '#f43f5e' : '#fda4af'
+
+  // In single-gender mode, shift the year-label column to the near edge so the
+  // active gender's bars use the full available width (both BAR_AREAs combined).
+  const filterIsMale = filterGender != null ? isMaleLike(filterGender) : null
+  const singleGender = filterGender != null
+  const effectiveCenterX = singleGender
+    ? (filterIsMale ? W - PAD.right - CENTER_W / 2 : PAD.left + CENTER_W / 2)
+    : centerX
+  const effectiveBarArea = singleGender ? BAR_AREA * 2 : BAR_AREA
 
   return (
     <div className="relative pt-1">
@@ -97,41 +110,49 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
         className="w-full"
         onMouseLeave={() => setTooltip(null)}
       >
-        <text x={centerX - CENTER_W / 2 - 4} y={PAD.top - 4} textAnchor="end" fontSize={9} fill="#9ca3af">
-          ← {maleLabel}{userIsMale === true ? ' (you)' : ''}
-        </text>
-        <text x={centerX + CENTER_W / 2 + 4} y={PAD.top - 4} textAnchor="start" fontSize={9} fill="#9ca3af">
-          {femaleLabel}{userIsMale === false ? ' (you)' : ''} →
-        </text>
+        {(!filterGender || isMaleLike(filterGender)) && (
+          <text x={effectiveCenterX - CENTER_W / 2 - 4} y={PAD.top - 4} textAnchor="end" fontSize={9} fill="#9ca3af">
+            ← {maleLabel}{userIsMale === true ? ' (you)' : ''}
+          </text>
+        )}
+        {(!filterGender || !isMaleLike(filterGender)) && (
+          <text x={effectiveCenterX + CENTER_W / 2 + 4} y={PAD.top - 4} textAnchor="start" fontSize={9} fill="#9ca3af">
+            {femaleLabel}{userIsMale === false ? ' (you)' : ''} →
+          </text>
+        )}
 
         {years.map((year, i) => {
-          const primary = primaryByYear.get(year) ?? { men: 0, women: 0 }
-          const nat = natByYear.get(year) ?? { men: 0, women: 0 }
-          const rowH = BAR_H + BAR_GAP
+          const primary = primaryByYear.get(year) ?? { men: null, women: null }
+          const nat = natByYear.get(year) ?? { men: null, women: null }
           const y = PAD.top + i * rowH
           const isHovered = tooltip?.year === year
+          const isSelected = selectedYear === year
 
-          const regMenLen = (primary.men / maxVal) * BAR_AREA
-          const regWomenLen = (primary.women / maxVal) * BAR_AREA
+          const regMenLen = ((primary.men ?? 0) / maxVal) * effectiveBarArea
+          const regWomenLen = ((primary.women ?? 0) / maxVal) * effectiveBarArea
 
-          const filterIsMale = filterGender != null ? isMaleLike(filterGender) : null
-          const menOpacity = filterIsMale === false ? 0.12 : (isHovered ? 1 : 0.75)
-          const womenOpacity = filterIsMale === true ? 0.12 : (isHovered ? 1 : 0.75)
+          const menOpacity = isHovered ? 1 : 0.75
+          const womenOpacity = isHovered ? 1 : 0.75
 
           return (
             <g key={year}>
-              {/* Regional bars (primary) */}
-              <rect x={centerX - CENTER_W / 2 - regMenLen} y={y} width={regMenLen} height={BAR_H} rx={2} fill={menColor} opacity={menOpacity} />
-              <rect x={centerX + CENTER_W / 2} y={y} width={regWomenLen} height={BAR_H} rx={2} fill={womenColor} opacity={womenOpacity} />
+              {/* Selected year highlight band */}
+              {isSelected && (
+                <rect x={PAD.left} y={y - dynBarGap / 2} width={W - PAD.left - PAD.right} height={rowH} fill="#7c3aed" fillOpacity={0.08} rx={2} />
+              )}
+
+              {/* Bars */}
+              <rect x={effectiveCenterX - CENTER_W / 2 - regMenLen} y={y} width={regMenLen} height={dynBarH} rx={2} fill={menColor} opacity={menOpacity} />
+              <rect x={effectiveCenterX + CENTER_W / 2} y={y} width={regWomenLen} height={dynBarH} rx={2} fill={womenColor} opacity={womenOpacity} />
 
               {/* Year label */}
-              <text x={centerX} y={y + BAR_H / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize={8} fill={isHovered ? '#111827' : '#9ca3af'} fontWeight={isHovered ? 'bold' : 'normal'}>
+              <text x={effectiveCenterX} y={y + dynBarH / 2 + 1} textAnchor="middle" dominantBaseline="middle" fontSize={8} fill={isSelected ? '#7c3aed' : isHovered ? '#111827' : '#9ca3af'} fontWeight={isSelected || isHovered ? 'bold' : 'normal'}>
                 {year}
               </text>
 
               {/* Hover target */}
               <rect
-                x={PAD.left} y={y - BAR_GAP / 2} width={W - PAD.left - PAD.right} height={rowH}
+                x={PAD.left} y={y - dynBarGap / 2} width={W - PAD.left - PAD.right} height={rowH}
                 fill="transparent" style={{ cursor: 'crosshair' }}
                 onMouseEnter={(e) => setTooltip({ x: e.clientX, y: e.clientY, year, regMen: hasRegional ? primary.men : null, regWomen: hasRegional ? primary.women : null, natMen: nat.men, natWomen: nat.women })}
                 onMouseMove={(e) => setTooltip((t) => t ? { ...t, x: e.clientX, y: e.clientY } : null)}
@@ -140,8 +161,8 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
           )
         })}
 
-        <line x1={centerX - CENTER_W / 2} y1={PAD.top - 4} x2={centerX - CENTER_W / 2} y2={H - PAD.bottom} stroke="#e5e7eb" strokeWidth={1} />
-        <line x1={centerX + CENTER_W / 2} y1={PAD.top - 4} x2={centerX + CENTER_W / 2} y2={H - PAD.bottom} stroke="#e5e7eb" strokeWidth={1} />
+        <line x1={effectiveCenterX - CENTER_W / 2} y1={PAD.top - 4} x2={effectiveCenterX - CENTER_W / 2} y2={H - PAD.bottom} stroke="#e5e7eb" strokeWidth={1} />
+        <line x1={effectiveCenterX + CENTER_W / 2} y1={PAD.top - 4} x2={effectiveCenterX + CENTER_W / 2} y2={H - PAD.bottom} stroke="#e5e7eb" strokeWidth={1} />
       </svg>
 
       {tooltip && (() => {
@@ -161,24 +182,24 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                   {regionName}
                 </p>
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: menColor }} />
-                      {maleLabel}{userIsMale === true ? ' · you' : ''}
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {tooltip.regMen != null ? fmtPer1000(tooltip.regMen) : '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: womenColor }} />
-                      {femaleLabel}{userIsMale === false ? ' · you' : ''}
-                    </span>
-                    <span className="font-semibold text-gray-800">
-                      {tooltip.regWomen != null ? fmtPer1000(tooltip.regWomen) : '—'}
-                    </span>
-                  </div>
+                  {tooltip.regMen != null && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: menColor }} />
+                        {maleLabel}{userIsMale === true ? ' · you' : ''}
+                      </span>
+                      <span className="font-semibold text-gray-800">{fmtPer1000(tooltip.regMen)}</span>
+                    </div>
+                  )}
+                  {tooltip.regWomen != null && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-1 text-gray-600 whitespace-nowrap">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: womenColor }} />
+                        {femaleLabel}{userIsMale === false ? ' · you' : ''}
+                      </span>
+                      <span className="font-semibold text-gray-800">{fmtPer1000(tooltip.regWomen)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -188,24 +209,24 @@ export default function GenderGapChart({ data, regionalData, regionName, filterG
                 National
               </p>
               <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#60a5fa' : menColor }} />
-                    {maleLabel}{!hasRegional && userIsMale === true ? ' · you' : ''}
-                  </span>
-                  <span className="font-semibold text-gray-700">
-                    {tooltip.natMen != null ? fmtPer1000(tooltip.natMen) : '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#fda4af' : womenColor }} />
-                    {femaleLabel}{!hasRegional && userIsMale === false ? ' · you' : ''}
-                  </span>
-                  <span className="font-semibold text-gray-700">
-                    {tooltip.natWomen != null ? fmtPer1000(tooltip.natWomen) : '—'}
-                  </span>
-                </div>
+                {tooltip.natMen != null && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#60a5fa' : menColor }} />
+                      {maleLabel}{!hasRegional && userIsMale === true ? ' · you' : ''}
+                    </span>
+                    <span className="font-semibold text-gray-700">{fmtPer1000(tooltip.natMen)}</span>
+                  </div>
+                )}
+                {tooltip.natWomen != null && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-1 text-gray-500 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: hasRegional ? '#fda4af' : womenColor }} />
+                      {femaleLabel}{!hasRegional && userIsMale === false ? ' · you' : ''}
+                    </span>
+                    <span className="font-semibold text-gray-700">{fmtPer1000(tooltip.natWomen)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
