@@ -44,8 +44,8 @@ export const MY_MEDICATIONS_QUERY = `
 `
 
 export const DRUG_INSIGHTS_QUERY = `
-  query DrugInsights($atcCode: String!, $year: Int, $region: Int) {
-    drugInsights(atcCode: $atcCode, year: $year, region: $region) {
+  query DrugInsights($atcCode: String!, $year: Int, $region: Int, $gender: Int, $ageGroup: Int) {
+    drugInsights(atcCode: $atcCode, year: $year, region: $region, gender: $gender, ageGroup: $ageGroup) {
       trend {
         year
         totalPrescriptions
