@@ -8,6 +8,7 @@ interface Props {
   data: DemographicCell[]
   regionName?: string | null
   regionalData?: DemographicCell[]
+  filterGender?: string | null
 }
 
 interface TooltipState {
@@ -49,7 +50,7 @@ function textColor(intensity: number): string {
   return intensity > 0.55 ? 'text-white' : 'text-gray-700'
 }
 
-export default function DemographicHeatmap({ data, regionalData, regionName }: Props) {
+export default function DemographicHeatmap({ data, regionalData, regionName, filterGender }: Props) {
   const user = useUser()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -96,13 +97,17 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
 
   const displayMap = hasRegional ? regMap : natMap
 
+  const showMen = !filterGender || isMaleLike(filterGender)
+  const showWomen = !filterGender || !isMaleLike(filterGender)
+  const colLayout = showMen && showWomen ? 'grid-cols-[1fr_1fr_1fr]' : 'grid-cols-[1fr_1fr]'
+
   return (
     <div className="px-4 pb-4 pt-2" onMouseLeave={() => setTooltip(null)}>
       {/* Column headers */}
-      <div className="grid grid-cols-[1fr_1fr_1fr] gap-px mb-1">
+      <div className={`grid ${colLayout} gap-px mb-1`}>
         <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider" />
-        <div className="text-[11px] font-semibold text-blue-600 text-center py-1">Men</div>
-        <div className="text-[11px] font-semibold text-rose-500 text-center py-1">Women</div>
+        {showMen && <div className="text-[11px] font-semibold text-blue-600 text-center py-1">Men</div>}
+        {showWomen && <div className="text-[11px] font-semibold text-rose-500 text-center py-1">Women</div>}
       </div>
 
       {/* Rows */}
@@ -116,7 +121,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
           return (
             <div
               key={id}
-              className={`grid grid-cols-[1fr_1fr_1fr] gap-px rounded overflow-hidden cursor-default
+              className={`grid ${colLayout} gap-px rounded overflow-hidden cursor-default
                 ${isUserAge ? 'ring-2 ring-offset-1 ring-teal-500' : ''}`}
               onMouseEnter={(e) =>
                 setTooltip({
@@ -142,20 +147,24 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
               </div>
 
               {/* Men cell */}
-              <div
-                className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(menIntensity)}`}
-                style={{ backgroundColor: cellColor(menIntensity, true) }}
-              >
-                {primary.men != null ? fmtPer1000(primary.men) : '—'}
-              </div>
+              {showMen && (
+                <div
+                  className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(menIntensity)}`}
+                  style={{ backgroundColor: cellColor(menIntensity, true) }}
+                >
+                  {primary.men != null ? fmtPer1000(primary.men) : '—'}
+                </div>
+              )}
 
               {/* Women cell */}
-              <div
-                className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(womenIntensity)}`}
-                style={{ backgroundColor: cellColor(womenIntensity, false) }}
-              >
-                {primary.women != null ? fmtPer1000(primary.women) : '—'}
-              </div>
+              {showWomen && (
+                <div
+                  className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(womenIntensity)}`}
+                  style={{ backgroundColor: cellColor(womenIntensity, false) }}
+                >
+                  {primary.women != null ? fmtPer1000(primary.women) : '—'}
+                </div>
+              )}
             </div>
           )
         })}
@@ -185,37 +194,43 @@ export default function DemographicHeatmap({ data, regionalData, regionName }: P
 
             {/* Gender values + ratio bar */}
             <div className="px-3 py-2 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" /> Men
-                </span>
-                <span className="text-[11px] font-bold text-gray-800">
-                  {men != null ? fmtPer1000(men) : '—'}
-                </span>
-              </div>
-              {/* Ratio bar */}
-              <div className="h-1.5 w-full rounded-full overflow-hidden flex">
-                <div className="h-full bg-blue-400 transition-all" style={{ width: `${menPct}%` }} />
-                <div className="h-full flex-1 bg-rose-300" />
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-1 text-[11px] text-rose-500 font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Women
-                </span>
-                <span className="text-[11px] font-bold text-gray-800">
-                  {women != null ? fmtPer1000(women) : '—'}
-                </span>
-              </div>
+              {showMen && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" /> Men
+                  </span>
+                  <span className="text-[11px] font-bold text-gray-800">
+                    {men != null ? fmtPer1000(men) : '—'}
+                  </span>
+                </div>
+              )}
+              {/* Ratio bar — only when both genders are visible */}
+              {showMen && showWomen && (
+                <div className="h-1.5 w-full rounded-full overflow-hidden flex">
+                  <div className="h-full bg-blue-400 transition-all" style={{ width: `${menPct}%` }} />
+                  <div className="h-full flex-1 bg-rose-300" />
+                </div>
+              )}
+              {showWomen && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="flex items-center gap-1 text-[11px] text-rose-500 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Women
+                  </span>
+                  <span className="text-[11px] font-bold text-gray-800">
+                    {women != null ? fmtPer1000(women) : '—'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* National comparison when showing regional */}
-            {hasRegional && menNat != null && womenNat != null && (
+            {hasRegional && (menNat != null || womenNat != null) && (
               <div className="px-3 py-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
                 <span>National avg</span>
                 <span>
-                  <span className="text-blue-400">{fmtPer1000(menNat)}</span>
-                  <span className="mx-1">/</span>
-                  <span className="text-rose-400">{fmtPer1000(womenNat)}</span>
+                  {showMen && menNat != null && <span className="text-blue-400">{fmtPer1000(menNat)}</span>}
+                  {showMen && showWomen && menNat != null && womenNat != null && <span className="mx-1">/</span>}
+                  {showWomen && womenNat != null && <span className="text-rose-400">{fmtPer1000(womenNat)}</span>}
                 </span>
               </div>
             )}
