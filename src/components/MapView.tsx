@@ -113,10 +113,10 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
             {/* Base layer — all regions except the currently hovered one */}
             {geoJson?.features.map((feature) => {
               const id = feature.id as number
-              if (id === hoveredFeatureId) return null
+              // Skip whichever region is "active" — it will be painted last on the top layer
+              if (id === hoveredFeatureId || id === hoveredRegionId) return null
               const region = regionById.get(id)
               const isUserRegion = user?.regionId != null && id === user.regionId
-              const isHoveredFromList = hoveredRegionId === id
               const fill = isUserRegion
                 ? '#0d9488'
                 : region
@@ -128,8 +128,8 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                   key={id}
                   d={pathGenerator(feature) ?? ''}
                   fill={fill}
-                  stroke={isHoveredFromList ? '#374151' : 'white'}
-                  strokeWidth={isHoveredFromList ? 1.5 : 0.8}
+                  stroke="white"
+                  strokeWidth={0.8}
                   style={{ cursor: region ? 'pointer' : 'default' }}
                   onMouseEnter={(e) => {
                     setHoveredFeatureId(id)
@@ -145,9 +145,10 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                 />
               )
             })}
-            {/* Hovered region — rendered last so its stroke sits on top of all adjacent fills */}
-            {hoveredFeatureId != null && geoJson?.features
-              .filter((f) => (f.id as number) === hoveredFeatureId)
+            {/* Hovered region — rendered last so its stroke sits on top of all adjacent fills.
+                Covers both direct map hover (hoveredFeatureId) and list hover (hoveredRegionId). */}
+            {(hoveredFeatureId ?? hoveredRegionId) != null && geoJson?.features
+              .filter((f) => (f.id as number) === (hoveredFeatureId ?? hoveredRegionId))
               .map((feature) => {
                 const id = feature.id as number
                 const region = regionById.get(id)
