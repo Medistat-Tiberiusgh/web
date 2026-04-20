@@ -192,7 +192,7 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               {data.indication && (
                 <div className="flex flex-col gap-1.5">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Indications</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-6">
+                  <p className="text-xs text-gray-700 leading-relaxed">
                     {data.indication.replace(/\n+/g, ' ')}
                   </p>
                 </div>
@@ -200,7 +200,7 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               {data.precautions && (
                 <div className="flex flex-col gap-1.5">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precautions</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-5">
+                  <p className="text-xs text-gray-700 leading-relaxed">
                     {data.precautions.replace(/\n+/g, ' ')}
                   </p>
                 </div>
@@ -208,7 +208,7 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               {data.sideEffects && (
                 <div className="flex flex-col gap-1.5">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Side Effects</p>
-                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-5">
+                  <p className="text-xs text-gray-700 leading-relaxed">
                     {data.sideEffects.replace(/\n+/g, ' ')}
                   </p>
                 </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { fmtPer1000, fmtPer1000Delta } from './lib/format'
 import { Card, Skeleton } from '@heroui/react'
 import AppNavbar from './components/AppNavbar'
@@ -52,6 +52,16 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     activeAgeBand,
     setActiveAgeBand
   } = useFilters()
+
+  const chartCardRef = useRef<HTMLDivElement>(null)
+  const [chartCardHeight, setChartCardHeight] = useState<number | undefined>(undefined)
+  useEffect(() => {
+    const el = chartCardRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setChartCardHeight(e.contentRect.height))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [activeDrug?.atcCode])
 
   function handleRegionClick(regionId: number, regionName: string) {
     if (activeRegion?.id === regionId) {
@@ -618,8 +628,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               </div>
 
               {/* Full-width bottom row: chart fixed-width, drug info fills the rest */}
-              <div className="flex gap-3 items-stretch">
-                <div style={{ width: '640px' }} className="shrink-0">
+              <div className="flex gap-3 items-start">
+                <div ref={chartCardRef} style={{ width: '640px' }} className="shrink-0">
                   <Card>
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                       <div>
@@ -663,7 +673,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   </Card>
                 </div>
 
-                <div className="flex-1">
+                <div className="flex-1" style={{ height: chartCardHeight }}>
                   <DrugInfoCard
                     atcCode={activeDrug.atcCode}
                     drugName={activeDrug.name}
