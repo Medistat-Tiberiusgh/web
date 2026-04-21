@@ -459,6 +459,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           regionalData={effectiveRegTrend}
                           regionName={regionName}
                           selectedYear={activeYear}
+                          onYearChange={setActiveYear}
                         />
                       )}
                     </Card.Content>

@@ -21,6 +21,7 @@ interface Props {
   regionalData?: TrendPoint[]
   regionName?: string | null
   selectedYear?: number | null
+  onYearChange?: (year: number | null) => void
 }
 
 const W = 600
@@ -66,7 +67,7 @@ function buildAreaPath(
   )
 }
 
-export default function TrendChart({ data, regionalData, regionName, selectedYear }: Props) {
+export default function TrendChart({ data, regionalData, regionName, selectedYear, onYearChange }: Props) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
   if (data.length === 0) {
@@ -209,13 +210,14 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
                 width={colWidth}
                 height={INNER_H}
                 fill="transparent"
-                style={{ cursor: 'crosshair' }}
+                style={{ cursor: onYearChange ? 'pointer' : 'crosshair' }}
                 onMouseEnter={(e) =>
                   setTooltip({ x: e.clientX, y: e.clientY, year, national: per1000, regional: regByYear.get(year) ?? null })
                 }
                 onMouseMove={(e) =>
                   setTooltip({ x: e.clientX, y: e.clientY, year, national: per1000, regional: regByYear.get(year) ?? null })
                 }
+                onClick={() => onYearChange?.(selectedYear === year ? null : year)}
               />
             </g>
           )
