@@ -5,6 +5,7 @@ import type { RegionalStat } from '../types'
 import type { FeatureCollection } from 'geojson'
 import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../lib/format'
+import { COLOR_REGIONAL, COLOR_AXIS } from '../theme'
 
 interface Props {
   regions: RegionalStat[]
@@ -23,11 +24,11 @@ function getDivergingColor(
   max: number
 ): string {
   if (value < userValue) {
-    // blue-200 (#bfdbfe) → blue-700 (#1d4ed8)
+    // slate-100 (#f1f5f9) → slate-600 (#475569)
     const t = userValue === min ? 0 : (userValue - value) / (userValue - min)
-    const r = Math.round(191 - t * (191 - 29))
-    const g = Math.round(219 - t * (219 - 78))
-    const b = Math.round(254 - t * (254 - 216))
+    const r = Math.round(241 - t * (241 - 71))
+    const g = Math.round(245 - t * (245 - 85))
+    const b = Math.round(249 - t * (249 - 105))
     return `rgb(${r},${g},${b})`
   } else {
     // orange-200 (#fed7aa) → orange-700 (#c2410c)
@@ -118,10 +119,10 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
               const region = regionById.get(id)
               const isUserRegion = user?.regionId != null && id === user.regionId
               const fill = isUserRegion
-                ? '#0d9488'
+                ? COLOR_REGIONAL
                 : region
                   ? getDivergingColor(region.per1000, centerPer1000, min, max)
-                  : '#e5e7eb'
+                  : COLOR_AXIS
 
               return (
                 <path
@@ -154,10 +155,10 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                 const region = regionById.get(id)
                 const isUserRegion = user?.regionId != null && id === user.regionId
                 const fill = isUserRegion
-                  ? '#0d9488'
+                  ? COLOR_REGIONAL
                   : region
                     ? getDivergingColor(region.per1000, centerPer1000, min, max)
-                    : '#e5e7eb'
+                    : COLOR_AXIS
                 return (
                   <path
                     key={`hov-${id}`}
@@ -189,7 +190,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                   key={`sel-${feature.id}`}
                   d={pathGenerator(feature) ?? ''}
                   fill="transparent"
-                  stroke="#0d9488"
+                  stroke={COLOR_REGIONAL}
                   strokeWidth={2.5}
                   strokeLinejoin="round"
                   style={{ pointerEvents: 'none' }}

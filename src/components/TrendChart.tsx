@@ -2,6 +2,11 @@ import { useState } from 'react'
 import type { TrendPoint } from '../types'
 import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../lib/format'
+import {
+  COLOR_NATIONAL, COLOR_REGIONAL, COLOR_YEAR,
+  COLOR_AXIS, COLOR_AXIS_LABEL, COLOR_GRID,
+  FONT_TICK, FONT_LABEL,
+} from '../theme'
 
 interface TooltipState {
   x: number
@@ -122,20 +127,20 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
       >
         <defs>
           <linearGradient id="natGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            <stop offset="0%" stopColor={COLOR_NATIONAL} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={COLOR_NATIONAL} stopOpacity="0" />
           </linearGradient>
           <linearGradient id="regGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0d9488" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#0d9488" stopOpacity="0" />
+            <stop offset="0%" stopColor={COLOR_REGIONAL} stopOpacity="0.12" />
+            <stop offset="100%" stopColor={COLOR_REGIONAL} stopOpacity="0" />
           </linearGradient>
         </defs>
 
         {/* Grid lines */}
         {yTicks.map(({ val, y }) => (
           <g key={val}>
-            <line x1={PAD.left} y1={y} x2={PAD.left + INNER_W} y2={y} stroke="#f3f4f6" strokeWidth={1} />
-            <text x={PAD.left - 8} y={y} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="#9ca3af">
+            <line x1={PAD.left} y1={y} x2={PAD.left + INNER_W} y2={y} stroke={COLOR_GRID} strokeWidth={1} />
+            <text x={PAD.left - 8} y={y} textAnchor="end" dominantBaseline="middle" fontSize={FONT_TICK} fill={COLOR_AXIS_LABEL}>
               {fmtPer1000(val)}
             </text>
           </g>
@@ -146,9 +151,9 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
         <path d={natAreaPath} fill="url(#natGrad)" />
 
         {/* Lines */}
-        <path d={natPath} fill="none" stroke="#1d4ed8" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={natPath} fill="none" stroke={COLOR_NATIONAL} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         {regPath && (
-          <path d={regPath} fill="none" stroke="#0d9488" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={regPath} fill="none" stroke={COLOR_REGIONAL} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         )}
 
         {/* Selected year band */}
@@ -156,9 +161,9 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
           const x = scaleX(selectedYear, minYear, maxYear)
           return (
             <g>
-              <rect x={x - colWidth / 2} y={PAD.top} width={colWidth} height={INNER_H} fill="#7c3aed" fillOpacity={0.08} rx={2} />
-              <line x1={x} y1={PAD.top} x2={x} y2={baseY} stroke="#7c3aed" strokeWidth={1.5} strokeDasharray="3 2" />
-              <text x={x} y={PAD.top - 6} textAnchor="middle" fontSize={9} fill="#7c3aed" fontWeight="600">
+              <rect x={x - colWidth / 2} y={PAD.top} width={colWidth} height={INNER_H} fill={COLOR_YEAR} fillOpacity={0.08} rx={2} />
+              <line x1={x} y1={PAD.top} x2={x} y2={baseY} stroke={COLOR_YEAR} strokeWidth={1.5} strokeDasharray="3 2" />
+              <text x={x} y={PAD.top - 6} textAnchor="middle" fontSize={FONT_LABEL} fill={COLOR_YEAR} fontWeight="600">
                 {selectedYear}
               </text>
             </g>
@@ -172,7 +177,7 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
             y1={PAD.top}
             x2={scaleX(tooltip.year, minYear, maxYear)}
             y2={baseY}
-            stroke="#9ca3af"
+            stroke={COLOR_AXIS_LABEL}
             strokeWidth={1}
             strokeDasharray="3 2"
           />
@@ -185,14 +190,14 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
             <g key={year}>
               {hovered && (
                 <>
-                  <circle cx={x} cy={y} r={6} fill="white" stroke="#1d4ed8" strokeWidth={2} />
+                  <circle cx={x} cy={y} r={6} fill="white" stroke={COLOR_NATIONAL} strokeWidth={2} />
                   {regByYear.has(year) && (
                     <circle
                       cx={x}
                       cy={scaleY(regByYear.get(year)!, minVal, maxVal)}
                       r={6}
                       fill="white"
-                      stroke="#0d9488"
+                      stroke={COLOR_REGIONAL}
                       strokeWidth={2}
                     />
                   )}
@@ -223,8 +228,8 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
             x={scaleX(d.year, minYear, maxYear)}
             y={baseY + 20}
             textAnchor="middle"
-            fontSize={10}
-            fill="#9ca3af"
+            fontSize={FONT_TICK}
+            fill={COLOR_AXIS_LABEL}
           >
             {d.year}
           </text>
@@ -236,16 +241,16 @@ export default function TrendChart({ data, regionalData, regionName, selectedYea
           y={PAD.top + INNER_H / 2}
           textAnchor="middle"
           dominantBaseline="middle"
-          fontSize={9}
-          fill="#9ca3af"
+          fontSize={FONT_LABEL}
+          fill={COLOR_AXIS_LABEL}
           transform={`rotate(-90, 10, ${PAD.top + INNER_H / 2})`}
         >
           per 1,000 inhabitants
         </text>
 
         {/* Axes */}
-        <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={baseY} stroke="#e5e7eb" />
-        <line x1={PAD.left} y1={baseY} x2={PAD.left + INNER_W} y2={baseY} stroke="#e5e7eb" />
+        <line x1={PAD.left} y1={PAD.top} x2={PAD.left} y2={baseY} stroke={COLOR_AXIS} />
+        <line x1={PAD.left} y1={baseY} x2={PAD.left + INNER_W} y2={baseY} stroke={COLOR_AXIS} />
       </svg>
 
       {tooltip && (() => {

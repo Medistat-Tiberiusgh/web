@@ -28,13 +28,13 @@ function isMaleLike(g: string) {
 
 /** Map a 0–1 intensity to a colour in a given hue family. */
 function cellColor(intensity: number, isMale: boolean): string {
-  // Men: blue family.  Women: rose family.
+  // Men: sky family.  Women: rose family.
   // At intensity=0 we use a very light tint; at 1 we use a saturated dark shade.
   if (isMale) {
-    // #dbeafe (blue-100) → #1e40af (blue-800)
-    const r = Math.round(219 - intensity * (219 - 30))
-    const g = Math.round(234 - intensity * (234 - 64))
-    const b = Math.round(254 - intensity * (254 - 175))
+    // sky-100 (#e0f2fe) → sky-800 (#075985)
+    const r = Math.round(224 - intensity * (224 - 7))
+    const g = Math.round(242 - intensity * (242 - 89))
+    const b = Math.round(254 - intensity * (254 - 133))
     return `rgb(${r},${g},${b})`
   } else {
     // #ffe4e6 (rose-100) → #9f1239 (rose-800)
@@ -106,8 +106,8 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
       {/* Column headers */}
       <div className={`grid ${colLayout} gap-px mb-1`}>
         <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider" />
-        {showMen && <div className="text-[11px] font-semibold text-blue-600 text-center py-1">Men</div>}
-        {showWomen && <div className="text-[11px] font-semibold text-rose-500 text-center py-1">Women</div>}
+        {showMen && <div className="text-xs font-semibold text-sky-500 text-center py-1">Men</div>}
+        {showWomen && <div className="text-xs font-semibold text-rose-500 text-center py-1">Women</div>}
       </div>
 
       {/* Rows */}
@@ -122,7 +122,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
             <div
               key={id}
               className={`grid ${colLayout} gap-px rounded overflow-hidden cursor-default
-                ${isUserAge ? 'ring-2 ring-offset-1 ring-teal-500' : ''}`}
+                ${isUserAge ? 'ring-2 ring-offset-1 ring-teal-600' : ''}`}
               onMouseEnter={(e) =>
                 setTooltip({
                   x: e.clientX,
@@ -140,16 +140,16 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
             >
               {/* Age label */}
               <div className={`flex items-center px-2 py-1.5 bg-gray-50 ${isUserAge ? 'bg-teal-50' : ''}`}>
-                <span className={`text-[11px] font-medium ${isUserAge ? 'text-teal-700 font-semibold' : 'text-gray-500'}`}>
+                <span className={`text-xs font-medium ${isUserAge ? 'text-teal-700 font-semibold' : 'text-gray-500'}`}>
                   {nat.name}
-                  {isUserAge && <span className="ml-1 text-teal-500">·you</span>}
+                  {isUserAge && <span className="ml-1 text-teal-600">·you</span>}
                 </span>
               </div>
 
               {/* Men cell */}
               {showMen && (
                 <div
-                  className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(menIntensity)}`}
+                  className={`flex items-center justify-center py-1.5 text-xs font-semibold transition-colors ${textColor(menIntensity)}`}
                   style={{ backgroundColor: cellColor(menIntensity, true) }}
                 >
                   {primary.men != null ? fmtPer1000(primary.men) : '—'}
@@ -159,7 +159,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
               {/* Women cell */}
               {showWomen && (
                 <div
-                  className={`flex items-center justify-center py-1.5 text-[11px] font-semibold transition-colors ${textColor(womenIntensity)}`}
+                  className={`flex items-center justify-center py-1.5 text-xs font-semibold transition-colors ${textColor(womenIntensity)}`}
                   style={{ backgroundColor: cellColor(womenIntensity, false) }}
                 >
                   {primary.women != null ? fmtPer1000(primary.women) : '—'}
@@ -196,10 +196,10 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
             <div className="px-3 py-2 flex flex-col gap-2">
               {showMen && (
                 <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" /> Men
+                  <span className="flex items-center gap-1 text-xs text-sky-600 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0" /> Men
                   </span>
-                  <span className="text-[11px] font-bold text-gray-800">
+                  <span className="text-xs font-bold text-gray-800">
                     {men != null ? fmtPer1000(men) : '—'}
                   </span>
                 </div>
@@ -207,16 +207,16 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
               {/* Ratio bar — only when both genders are visible */}
               {showMen && showWomen && (
                 <div className="h-1.5 w-full rounded-full overflow-hidden flex">
-                  <div className="h-full bg-blue-400 transition-all" style={{ width: `${menPct}%` }} />
+                  <div className="h-full bg-sky-400 transition-all" style={{ width: `${menPct}%` }} />
                   <div className="h-full flex-1 bg-rose-300" />
                 </div>
               )}
               {showWomen && (
                 <div className="flex items-center justify-between gap-4">
-                  <span className="flex items-center gap-1 text-[11px] text-rose-500 font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0" /> Women
+                  <span className="flex items-center gap-1 text-xs text-rose-500 font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" /> Women
                   </span>
-                  <span className="text-[11px] font-bold text-gray-800">
+                  <span className="text-xs font-bold text-gray-800">
                     {women != null ? fmtPer1000(women) : '—'}
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
               <div className="px-3 py-1.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
                 <span>National avg</span>
                 <span>
-                  {showMen && menNat != null && <span className="text-blue-400">{fmtPer1000(menNat)}</span>}
+                  {showMen && menNat != null && <span className="text-sky-400">{fmtPer1000(menNat)}</span>}
                   {showMen && showWomen && menNat != null && womenNat != null && <span className="mx-1">/</span>}
                   {showWomen && womenNat != null && <span className="text-rose-400">{fmtPer1000(womenNat)}</span>}
                 </span>

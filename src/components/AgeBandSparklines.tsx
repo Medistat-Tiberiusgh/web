@@ -10,6 +10,10 @@ import { useUser } from '../context/UserContext'
 import type { AgeSplitPoint } from '../types'
 import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../lib/format'
+import {
+  COLOR_REGIONAL, COLOR_SPARK_NAT, COLOR_YEAR,
+  COLOR_TREND_UP, COLOR_TREND_DOWN, COLOR_TREND_FLAT,
+} from '../theme'
 
 interface Props {
   data: AgeSplitPoint[]
@@ -108,16 +112,17 @@ export default function AgeBandSparklines({
     const natVal = natLookup.get(id)?.get(effectiveYear ?? -1) ?? null
     const regVal = regLookup.get(id)?.get(effectiveYear ?? -1) ?? null
 
-    const natSeries = years.map((y) => natLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
-    const regSeries = years.map((y) => regLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
+    const sparkYears = selectedYear ? years.filter((y) => y <= selectedYear) : years
+    const natSeries = sparkYears.map((y) => natLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
+    const regSeries = sparkYears.map((y) => regLookup.get(id)?.get(y) ?? null).filter((v): v is number => v !== null)
     const trendSeries = hasRegional && regSeries.length > 0 ? regSeries : natSeries
 
     const first = trendSeries.at(0)
     const last = trendSeries.at(-1)
     const trendPct = first && last && first > 0 ? ((last - first) / first) * 100 : null
     const dir = trendPct == null ? 'flat' : trendPct > 5 ? 'up' : trendPct < -5 ? 'down' : 'flat'
-    const lineColor = dir === 'up' ? '#f97316' : dir === 'down' ? '#3b82f6' : '#9ca3af'
-    const trendClass = dir === 'up' ? 'text-orange-500' : dir === 'down' ? 'text-blue-500' : 'text-gray-400'
+    const lineColor = dir === 'up' ? COLOR_TREND_UP : dir === 'down' ? COLOR_TREND_DOWN : COLOR_TREND_FLAT
+    const trendClass = dir === 'up' ? 'text-orange-700' : dir === 'down' ? 'text-gray-500' : 'text-gray-400'
     const trendLabel = trendPct == null ? '' : `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}%`
 
     const isUserAge = user?.ageGroupId != null && user.ageGroupId === id
@@ -152,12 +157,12 @@ export default function AgeBandSparklines({
       >
         {/* Label + "you" badge */}
         <div className="flex items-center gap-1 mb-0.5">
-          <span className={`text-[11px] font-medium truncate leading-none
+          <span className={`text-xs font-medium truncate leading-none
             ${isUserAge ? 'text-teal-700 font-semibold' : 'text-gray-600'}`}>
             {name}
           </span>
           {isUserAge && (
-            <span className="text-[9px] font-semibold text-teal-500 bg-teal-50/60 px-1 rounded-full shrink-0 leading-snug">
+            <span className="text-[10px] font-semibold text-teal-600 bg-teal-50/60 px-1 rounded-full shrink-0 leading-snug">
               you
             </span>
           )}
@@ -177,7 +182,7 @@ export default function AgeBandSparklines({
             )}
             <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
               <div
-                className="h-full rounded-full bg-blue-600 transition-all"
+                className="h-full rounded-full bg-blue-700 transition-all"
                 style={{ width: `${natVal != null ? (natVal / maxBar) * 100 : 0}%` }}
               />
             </div>
@@ -199,26 +204,25 @@ export default function AgeBandSparklines({
           <svg width={SW} height={SH} viewBox={`0 0 ${SW} ${SH}`} className="shrink-0 overflow-visible">
             {/* National — dashed gray behind (always present) */}
             {natSparkPath && (
-              <path d={natSparkPath} fill="none" stroke="#d1d5db" strokeWidth={1} strokeDasharray="2 2" strokeLinecap="round" />
+              <path d={natSparkPath} fill="none" stroke={COLOR_SPARK_NAT} strokeWidth={1} strokeDasharray="2 2" strokeLinecap="round" />
             )}
             {/* Primary line: regional teal when selected, else national colored by trend */}
             {hasRegional
-              ? regSparkPath && <path d={regSparkPath} fill="none" stroke="#0d9488" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+              ? regSparkPath && <path d={regSparkPath} fill="none" stroke={COLOR_REGIONAL} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
               : natSparkPath && <path d={natSparkPath} fill="none" stroke={lineColor} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
             }
-            {/* Selected year marker */}
-            {selectedYear && years.includes(selectedYear) && trendSeries.length > 0 && (() => {
-              const idx = years.indexOf(selectedYear)
-              const x = (idx / (years.length - 1)) * SW
+            {/* Selected year marker — always at the right edge when year is filtered */}
+            {selectedYear && trendSeries.length > 0 && (() => {
+              const x = SW
               const min = Math.min(...trendSeries)
               const max = Math.max(...trendSeries)
-              const val = trendSeries[idx]
+              const val = trendSeries.at(-1)
               if (val == null) return null
               const y = SH - 2 - ((val - min) / (max - min || 1)) * (SH - 4)
               return (
                 <g>
-                  <line x1={x} y1={0} x2={x} y2={SH} stroke="#7c3aed" strokeWidth={1} strokeDasharray="2 2" />
-                  <circle cx={x} cy={y} r={2.5} fill="white" stroke="#7c3aed" strokeWidth={1.5} />
+                  <line x1={x} y1={0} x2={x} y2={SH} stroke={COLOR_YEAR} strokeWidth={1} strokeDasharray="2 2" />
+                  <circle cx={x} cy={y} r={2.5} fill="white" stroke={COLOR_YEAR} strokeWidth={1.5} />
                 </g>
               )
             })()}
@@ -244,12 +248,12 @@ export default function AgeBandSparklines({
       </div>
 
       {/* Legend */}
-      <div className="px-4 pb-3 flex items-center gap-4 text-[10px] text-gray-400 border-t border-gray-50 pt-2">
+      <div className="px-4 pb-3 flex items-center gap-4 text-[10px] text-gray-400 border-t border-gray-100 pt-2">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-0.5 rounded bg-orange-400" /> Growing
+          <span className="inline-block w-4 h-0.5 rounded bg-green-500" /> Growing
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-0.5 rounded bg-blue-400" /> Shrinking
+          <span className="inline-block w-4 h-0.5 rounded bg-amber-400" /> Shrinking
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-4 h-0.5 rounded bg-gray-300" /> Stable
@@ -257,16 +261,16 @@ export default function AgeBandSparklines({
         {hasRegional && (
           <>
             <span className="flex items-center gap-1.5">
-              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke="#0d9488" strokeWidth={1.5} /></svg>
+              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke={COLOR_REGIONAL} strokeWidth={1.5} /></svg>
               {regionName ?? 'Region'}
             </span>
             <span className="flex items-center gap-1.5">
-              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke="#d1d5db" strokeWidth={1} strokeDasharray="2 2" /></svg>
+              <svg width={16} height={6}><line x1={0} y1={3} x2={16} y2={3} stroke={COLOR_SPARK_NAT} strokeWidth={1} strokeDasharray="2 2" /></svg>
               National
             </span>
           </>
         )}
-        <span className="ml-auto">{years.at(0)}→{years.at(-1)}</span>
+        <span className="ml-auto">{years.at(0)}→{selectedYear ?? years.at(-1)}</span>
       </div>
 
       {/* Tooltip */}
@@ -284,7 +288,7 @@ export default function AgeBandSparklines({
             const rows = [...(pinned ? [pinned] : []), ...rest]
             const cols = hasRegional ? 'grid-cols-[auto_1fr_1fr]' : 'grid-cols-[auto_1fr]'
             return (
-              <div className={`grid ${cols} text-[11px]`}>
+              <div className={`grid ${cols} text-xs`}>
                 {/* Header row */}
                 <div className="px-3 pt-2 pb-1" />
                 {hasRegional && (
