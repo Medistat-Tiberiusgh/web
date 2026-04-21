@@ -1,3 +1,5 @@
+import { COLOR_BRAND } from '../theme'
+
 const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function LoginPage() {
@@ -5,7 +7,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 flex flex-col items-center gap-6 w-full max-w-sm">
         <div className="flex flex-col items-center gap-1">
-          <span className="text-2xl font-bold text-blue-700">Medistat</span>
+          <span className="text-2xl font-bold" style={{ color: COLOR_BRAND }}>Medistat</span>
           <span className="text-sm text-gray-500">Swedish prescription analytics</span>
         </div>
 

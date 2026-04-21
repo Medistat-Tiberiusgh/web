@@ -1,6 +1,8 @@
 // ── Semantic chart colors ─────────────────────────────────────────────────────
 // Import these wherever you need a chart color so all charts stay in sync.
 
+/** App wordmark / brand color */
+export const COLOR_BRAND = '#0d9488'         // teal-600
 /** National trend line / national bars */
 export const COLOR_NATIONAL = '#1d4ed8'      // blue-700
 /** Regional / selected-region trend line and highlights */

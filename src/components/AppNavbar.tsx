@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { COLOR_BRAND } from '../theme'
 import { useUser } from '../context/UserContext'
 import { useRegions } from '../hooks/useRegions'
 import { gqlFetch } from '../lib/graphql'
@@ -404,7 +405,7 @@ export default function AppNavbar({
       <nav className="border-b border-gray-200 bg-white shrink-0">
         {/* ── Row 1: Logo / Search / User ───────────────────────────── */}
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-8 py-3">
-          <span className="text-3xl font-bold text-blue-700">Medistat</span>
+          <span className="text-3xl font-bold" style={{ color: COLOR_BRAND }}>Medistat</span>
 
           {/* Inline search */}
           <div ref={containerRef} className="relative w-full max-w-2xl justify-self-center">
