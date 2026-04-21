@@ -39,12 +39,12 @@ export default function MedicationList({
                   key={med.drugData.atcCode}
                   onClick={() => onSelect(med.drugData)}
                   className={`group px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                    active ? 'bg-blue-100' : 'hover:bg-gray-50'
+                    active ? 'bg-indigo-100' : 'hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span
-                      className={`font-semibold text-sm truncate flex-1 ${active ? 'text-blue-800' : 'text-gray-900'}`}
+                      className={`font-semibold text-sm truncate flex-1 ${active ? 'text-indigo-800' : 'text-gray-900'}`}
                     >
                       {med.drugData.name}
                     </span>

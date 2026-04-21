@@ -440,7 +440,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                         {regionName && (
                           <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-teal-500 inline-block" />
+                            <span className="w-4 h-1.5 rounded-full bg-teal-600 inline-block" />
                             {regionName}
                           </span>
                         )}
@@ -473,13 +473,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           {demographicLabel ? ` · ${demographicLabel}` : ''}
                         </Card.Title>
                         <Card.Description>
-                          per 1,000 people · bars = {activeYear ?? latestTrend?.year ?? '—'} · lines = 2006–2024 trend
+                          per 1,000 people · bars = {activeYear ?? latestTrend?.year ?? '—'} · lines = 2006–{activeYear ?? latestTrend?.year ?? '2024'} trend
                         </Card.Description>
                       </div>
                       {regionName && (
                         <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                           <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-teal-500 inline-block" />
+                            <span className="w-4 h-1.5 rounded-full bg-teal-600 inline-block" />
                             {regionName}
                           </span>
                           <span className="flex items-center gap-1.5">
@@ -522,7 +522,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                         {regionName && (
                           <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-teal-500 inline-block" />
+                            <span className="w-4 h-1.5 rounded-full bg-teal-600 inline-block" />
                             {regionName}
                           </span>
                         )}
@@ -568,10 +568,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                             className="h-1.5 w-16 rounded-full shrink-0"
                             style={{
                               background:
-                                'linear-gradient(to right, #bfdbfe, #1d4ed8)'
+                                'linear-gradient(to right, #f1f5f9, #475569)'
                             }}
                           />
-                          <span className="text-blue-700 whitespace-nowrap">
+                          <span className="text-slate-600 whitespace-nowrap">
                             {user.regionId != null
                               ? 'Less than yours'
                               : 'Below average'}
@@ -641,20 +641,6 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                         <Card.Description>
                           per 1,000 inhabitants · all years{regionName ? ` · ${regionName}` : ''}
                         </Card.Description>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                        {(!activeGender || activeGender === 'men') && (
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-blue-500 inline-block" />
-                            Men
-                          </span>
-                        )}
-                        {(!activeGender || activeGender === 'women') && (
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-rose-400 inline-block" />
-                            Women
-                          </span>
-                        )}
                       </div>
                     </Card.Header>
                     <Card.Content className="p-0">

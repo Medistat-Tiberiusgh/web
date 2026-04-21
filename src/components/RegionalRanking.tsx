@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { Chip } from '@heroui/react'
 import type { RegionalStat } from '../types'
 import { useUser } from '../context/UserContext'
 import { fmtPer1000 } from '../lib/format'
@@ -61,7 +60,7 @@ export default function RegionalRanking({ regions, selectedRegionId, hoveredRegi
                 <span className={`text-xs flex-1 truncate ${isHome || isSelected ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
                   {region.regionName}
                 </span>
-                {isHome && <Chip size="sm" variant="soft" color="accent">You</Chip>}
+                {isHome && <span className="text-[10px] font-semibold text-teal-700 bg-teal-100 px-1.5 py-0.5 rounded-full shrink-0">You</span>}
                 <span className={`text-xs font-semibold tabular-nums ${isHome ? 'text-teal-600' : 'text-gray-500'}`}>
                   {fmtPer1000(region.per1000)}
                 </span>
@@ -71,7 +70,7 @@ export default function RegionalRanking({ regions, selectedRegionId, hoveredRegi
               <div className="relative">
                 <div className="relative h-1.5 rounded-full bg-gray-200">
                   <div
-                    className={`absolute left-0 top-0 h-1.5 rounded-full ${isHome ? 'bg-teal-500' : 'bg-blue-600/60'}`}
+                    className={`absolute left-0 top-0 h-1.5 rounded-full ${isHome ? 'bg-teal-600' : 'bg-blue-700'}`}
                     style={{ width: `${fillPct}%` }}
                   />
                   {natPct !== null && (

@@ -168,7 +168,7 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
             </div>
           </div>
           {hasContent && (
-            <span className="text-[10px] text-teal-600 shrink-0 mt-0.5 font-medium">
+            <span className="text-[10px] text-indigo-500 shrink-0 mt-0.5 font-medium">
               Read more →
             </span>
           )}
