@@ -12,7 +12,7 @@ import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../lib/format'
 import {
   COLOR_REGIONAL, COLOR_SPARK_NAT, COLOR_YEAR,
-  COLOR_TREND_UP, COLOR_TREND_DOWN, COLOR_TREND_FLAT,
+  COLOR_TREND_UP, COLOR_TREND_DOWN, COLOR_TREND_FLAT, COLOR_AGE_BAND,
 } from '../theme'
 
 interface Props {
@@ -128,7 +128,6 @@ export default function AgeBandSparklines({
 
     const isUserAge = user?.ageGroupId != null && user.ageGroupId === id
     const isFiltered = !!filterAgeBand && filterAgeBand === name
-    const isDimmed = !!filterAgeBand && !isFiltered
 
     const natSparkPath = sparkPath(natSeries, SW, SH)
     const regSparkPath = hasRegional ? sparkPath(regSeries, SW, SH) : ''
@@ -136,9 +135,8 @@ export default function AgeBandSparklines({
     return (
       <li
         key={id}
-        className={`rounded-md px-2 py-1 -mx-2 cursor-default transition-opacity
-          ${isDimmed ? 'opacity-30' : ''}
-          ${isUserAge || isFiltered ? 'bg-gray-50 hover:bg-gray-100' : 'hover:bg-gray-100'}`}
+        className="relative rounded-md px-2 py-1 -mx-2 cursor-default hover:bg-gray-100"
+        style={isFiltered ? { backgroundColor: `${COLOR_AGE_BAND}14` } : isUserAge ? { backgroundColor: '#0d948814' } : undefined}
         onMouseEnter={(e) =>
           setTooltip({
             x: e.clientX,
@@ -158,8 +156,13 @@ export default function AgeBandSparklines({
       >
         {/* Label + "you" badge */}
         <div className="flex items-center gap-1 mb-0.5">
-          <span className={`text-xs font-medium truncate leading-none
-            ${isUserAge ? 'text-teal-700 font-semibold' : 'text-gray-600'}`}>
+          <span
+            className="text-xs font-medium truncate leading-none"
+            style={{
+              color: isFiltered ? COLOR_AGE_BAND : isUserAge ? '#0f766e' : '#4b5563',
+              fontWeight: (isFiltered || isUserAge) ? 600 : 400,
+            }}
+          >
             {name}
           </span>
           {isUserAge && (

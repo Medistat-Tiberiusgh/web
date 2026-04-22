@@ -3,12 +3,14 @@ import type { DemographicCell } from '../types'
 import { useUser } from '../context/UserContext'
 import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../lib/format'
+import { COLOR_AGE_BAND } from '../theme'
 
 interface Props {
   data: DemographicCell[]
   regionName?: string | null
   regionalData?: DemographicCell[]
   filterGender?: string | null
+  highlightAgeBand?: number | null
 }
 
 interface TooltipState {
@@ -50,7 +52,7 @@ function textColor(intensity: number): string {
   return intensity > 0.55 ? 'text-white' : 'text-gray-700'
 }
 
-export default function DemographicHeatmap({ data, regionalData, regionName, filterGender }: Props) {
+export default function DemographicHeatmap({ data, regionalData, regionName, filterGender, highlightAgeBand }: Props) {
   const user = useUser()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
@@ -115,14 +117,14 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
         {ageGroups.map(([id, nat]) => {
           const primary = hasRegional ? (regMap.get(id) ?? { men: null, women: null }) : nat
           const isUserAge = user?.ageGroupId != null && user.ageGroupId === id
+          const isHighlighted = highlightAgeBand != null && highlightAgeBand === id
           const menIntensity = primary.men != null ? primary.men / maxVal : 0
           const womenIntensity = primary.women != null ? primary.women / maxVal : 0
 
           return (
             <div
               key={id}
-              className={`grid ${colLayout} gap-px rounded overflow-hidden cursor-default
-                ${isUserAge ? 'ring-2 ring-offset-1 ring-teal-600' : ''}`}
+              className="relative cursor-default"
               onMouseEnter={(e) =>
                 setTooltip({
                   x: e.clientX,
@@ -138,9 +140,21 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
                 setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null))
               }
             >
+              {/* Highlight background — sits behind the grid row */}
+              {isHighlighted && (
+                <div className="absolute inset-0 rounded pointer-events-none" style={{ backgroundColor: COLOR_AGE_BAND, opacity: 0.08 }} />
+              )}
+
+              <div className={`grid ${colLayout} gap-px rounded overflow-hidden`}>
               {/* Age label */}
-              <div className={`flex items-center px-2 py-1.5 bg-gray-50 ${isUserAge ? 'bg-teal-50' : ''}`}>
-                <span className={`text-xs font-medium ${isUserAge ? 'text-teal-700 font-semibold' : 'text-gray-500'}`}>
+              <div className={`flex items-center px-2 py-1.5 ${isUserAge ? 'bg-teal-50' : 'bg-gray-50'}`}>
+                <span
+                  className="text-xs font-medium"
+                  style={{
+                    color: isHighlighted ? COLOR_AGE_BAND : isUserAge ? '#0f766e' : '#6b7280',
+                    fontWeight: (isHighlighted || isUserAge) ? 600 : 400,
+                  }}
+                >
                   {nat.name}
                   {isUserAge && <span className="ml-1 text-teal-600">·you</span>}
                 </span>
@@ -165,6 +179,7 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
                   {primary.women != null ? fmtPer1000(primary.women) : '—'}
                 </div>
               )}
+              </div>
             </div>
           )
         })}

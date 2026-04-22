@@ -17,6 +17,10 @@ export const COLOR_MALE_NAT = '#38bdf8'      // sky-400
 export const COLOR_FEMALE = '#f43f5e'        // rose-500
 /** Female bars — muted (user is male) */
 export const COLOR_FEMALE_MUTED = '#fda4af'  // rose-300
+/** Active age band filter — chip, highlight ring, inline label */
+export const COLOR_AGE_BAND = '#d97706'      // amber-600
+/** Active gender filter — chip, inline label */
+export const COLOR_GENDER = '#f43f5e'        // rose-500
 /** Selected year band / annotation */
 export const COLOR_YEAR = '#7c3aed'          // violet-700
 /** Trend sparkline — growing (mirrors map "above average" orange-red scale) */
