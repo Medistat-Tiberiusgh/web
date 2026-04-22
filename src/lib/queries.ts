@@ -109,6 +109,19 @@ export const DEMOGRAPHIC_GRID_QUERY = `
   }
 `
 
+export const AGE_SPLIT_QUERY = `
+  query AgeSplit($atcCode: String!, $region: Int, $gender: Int) {
+    drugInsights(atcCode: $atcCode, region: $region, gender: $gender) {
+      ageSplit {
+        year
+        ageGroupId
+        ageGroupName
+        per1000
+      }
+    }
+  }
+`
+
 export const ADD_MEDICATION_MUTATION = `
   mutation AddMedication($atc: String!, $notes: String) {
     addMedication(atc: $atc, notes: $notes) {

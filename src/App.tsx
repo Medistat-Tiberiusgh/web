@@ -16,6 +16,7 @@ import LoginPage from './components/LoginPage'
 import { useFilters } from './hooks/useFilters'
 import { useDashboardInsights } from './hooks/useDashboardInsights'
 import { useDemographicGrid } from './hooks/useDemographicGrid'
+import { useAgeSplit } from './hooks/useAgeSplit'
 import { useMedications } from './hooks/useMedications'
 import { useRegions } from './hooks/useRegions'
 import { UserContext, useUser } from './context/UserContext'
@@ -91,6 +92,20 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     ageBandId,
   )
 
+  // Age split fetched separately so all age bands are always returned,
+  // regardless of the active age band filter — AgeBandSparklines highlights
+  // the selected band instead of collapsing to a single row.
+  const { ageSplit: natAgeSplit } = useAgeSplit(
+    activeDrug?.atcCode ?? null,
+    null,
+    genderId,
+  )
+  const { ageSplit: regAgeSplit } = useAgeSplit(
+    effectiveRegionId != null ? (activeDrug?.atcCode ?? null) : null,
+    effectiveRegionId,
+    genderId,
+  )
+
   // Demographic grid fetched separately so it can respect the year filter
   // without limiting the trend series used by TrendChart.
   const { grid: natGrid } = useDemographicGrid(
@@ -111,17 +126,15 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     [regions, effectiveRegionId]
   )
 
-  // Available age bands for the search dropdown, sorted by group ID.
-  // ageSplit always returns all bands regardless of demographic filters,
-  // so this list stays complete even when a gender filter is active.
+  // Available age bands for the search dropdown — derived from the always-complete
+  // natAgeSplit (no ageGroup filter) so the list never shrinks when a band is active.
   const availableAgeBands = useMemo(() => {
-    if (!national?.ageSplit) return []
     const seen = new Set<number>()
-    return [...national.ageSplit]
+    return [...natAgeSplit]
       .sort((a, b) => a.ageGroupId - b.ageGroupId)
       .filter((pt) => !seen.has(pt.ageGroupId) && seen.add(pt.ageGroupId))
       .map((pt) => ({ name: pt.ageGroupName, id: pt.ageGroupId }))
-  }, [national?.ageSplit])
+  }, [natAgeSplit])
 
   // A human-readable label for the active demographic filter, used in chart titles.
   const demographicLabel = activeGender === 'men'
@@ -230,34 +243,18 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     return regional.genderSplit.filter(pt => activeGender === 'men' ? isMaleGender(pt.gender) : !isMaleGender(pt.gender))
   }, [regional?.genderSplit, activeGender])
 
-  // Filter ageSplit to only the active age band when one is set.
-  // The API always returns all age bands for this field regardless of the filter.
-  const natAgeSplit = useMemo(() => {
-    const split = national?.ageSplit ?? []
-    if (!activeAgeBand) return split
-    return split.filter(pt => pt.ageGroupId === activeAgeBand.id)
-  }, [national?.ageSplit, activeAgeBand])
 
-  const regAgeSplit = useMemo(() => {
-    if (!regional?.ageSplit) return undefined
-    if (!activeAgeBand) return regional.ageSplit
-    return regional.ageSplit.filter(pt => pt.ageGroupId === activeAgeBand.id)
-  }, [regional?.ageSplit, activeAgeBand])
-
-  // Filter demographic grid to only the active age band when one is set.
+  // Heatmap always shows all age bands — only filter by gender so the card
+  // never collapses to a single row when an age band filter is active.
   const filteredNatGrid = useMemo(() => {
-    let grid = natGrid
-    if (activeAgeBand) grid = grid.filter(cell => cell.ageGroupId === activeAgeBand.id)
-    if (activeGender) grid = grid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
-    return grid
-  }, [natGrid, activeAgeBand, activeGender])
+    if (!activeGender) return natGrid
+    return natGrid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
+  }, [natGrid, activeGender])
 
   const filteredRegGrid = useMemo(() => {
-    let grid = regGrid
-    if (activeAgeBand) grid = grid.filter(cell => cell.ageGroupId === activeAgeBand.id)
-    if (activeGender) grid = grid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
-    return grid
-  }, [regGrid, activeAgeBand, activeGender])
+    if (!activeGender) return regGrid
+    return regGrid.filter(cell => activeGender === 'men' ? isMaleGender(cell.gender) : !isMaleGender(cell.gender))
+  }, [regGrid, activeGender])
 
   // Inject the real national per-1,000 (region=0 row) so RegionalRanking and
   // MapView can display the correct national average. The API excludes region=0
@@ -503,7 +500,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       ) : (
                         <AgeBandSparklines
                           data={natAgeSplit}
-                          regionalData={regAgeSplit}
+                          regionalData={regAgeSplit.length > 0 ? regAgeSplit : undefined}
                           latestYear={activeYear ?? latestTrend?.year ?? null}
                           selectedYear={activeYear}
                           regionName={regionName}
@@ -534,6 +531,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                           regionalData={filteredRegGrid.length > 0 ? filteredRegGrid : undefined}
                           regionName={regionName}
                           filterGender={activeGender}
+                          highlightAgeBand={activeAgeBand?.id ?? null}
                         />
                       )}
                     </Card.Content>
