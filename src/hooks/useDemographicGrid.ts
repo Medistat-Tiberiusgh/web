@@ -11,7 +11,7 @@ import { DEMOGRAPHIC_GRID_QUERY } from '../lib/queries'
 export function useDemographicGrid(
   atcCode: string | null,
   region: number | null,
-  year: number | null,
+  year: number | null
 ) {
   const [grid, setGrid] = useState<DemographicCell[]>([])
   const hasDataRef = useRef(false)
@@ -34,11 +34,9 @@ export function useDemographicGrid(
 
     async function load() {
       try {
-        const data = await gqlFetch<{ drugInsights: { demographicGrid: DemographicCell[] } }>(
-          DEMOGRAPHIC_GRID_QUERY,
-          variables,
-          controller.signal,
-        )
+        const data = await gqlFetch<{
+          drugInsights: { demographicGrid: DemographicCell[] }
+        }>(DEMOGRAPHIC_GRID_QUERY, variables, controller.signal)
         hasDataRef.current = true
         setGrid(data.drugInsights.demographicGrid)
       } catch (e) {

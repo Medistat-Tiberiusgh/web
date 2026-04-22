@@ -24,7 +24,7 @@ export function decodeToken(token: string): User | null {
       regionId: decoded.regionId,
       genderId: decoded.genderId,
       ageGroupId: decoded.ageGroupId,
-      avatarUrl: decoded.avatarUrl ?? null,
+      avatarUrl: decoded.avatarUrl ?? null
     }
   } catch {
     return null

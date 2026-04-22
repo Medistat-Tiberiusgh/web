@@ -11,7 +11,7 @@ import { AGE_SPLIT_QUERY } from '../lib/queries'
 export function useAgeSplit(
   atcCode: string | null,
   region: number | null,
-  gender: number | null,
+  gender: number | null
 ) {
   const [ageSplit, setAgeSplit] = useState<AgeSplitPoint[]>([])
   const hasDataRef = useRef(false)
@@ -34,11 +34,9 @@ export function useAgeSplit(
 
     async function load() {
       try {
-        const data = await gqlFetch<{ drugInsights: { ageSplit: AgeSplitPoint[] } }>(
-          AGE_SPLIT_QUERY,
-          variables,
-          controller.signal,
-        )
+        const data = await gqlFetch<{
+          drugInsights: { ageSplit: AgeSplitPoint[] }
+        }>(AGE_SPLIT_QUERY, variables, controller.signal)
         hasDataRef.current = true
         setAgeSplit(data.drugInsights.ageSplit)
       } catch (e) {

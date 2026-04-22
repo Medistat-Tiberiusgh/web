@@ -15,7 +15,9 @@ export function useMedications() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await gqlFetch<{ me: { medications: UserMedication[] } }>(MY_MEDICATIONS_QUERY)
+        const data = await gqlFetch<{ me: { medications: UserMedication[] } }>(
+          MY_MEDICATIONS_QUERY
+        )
         setMedications(data.me.medications)
       } finally {
         setLoading(false)

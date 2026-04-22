@@ -54,6 +54,6 @@ export function useFilters(): Filters {
     setActiveRegion,
     setActiveYear,
     setActiveGender,
-    setActiveAgeBand,
+    setActiveAgeBand
   }
 }

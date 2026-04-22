@@ -12,15 +12,19 @@ export function useDashboardInsights(
   atcCode: string | null,
   regionId: number | null,
   genderId: number | null,
-  ageBandId: number | null,
+  ageBandId: number | null
 ) {
-  const { insights: national, loading, error } = useDrugInsights(atcCode, null, null, genderId, ageBandId)
+  const {
+    insights: national,
+    loading,
+    error
+  } = useDrugInsights(atcCode, null, null, genderId, ageBandId)
   const { insights: regional } = useDrugInsights(
     regionId != null ? atcCode : null,
     null,
     regionId,
     genderId,
-    ageBandId,
+    ageBandId
   )
 
   return { national, regional, loading, error }

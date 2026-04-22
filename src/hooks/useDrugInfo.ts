@@ -34,7 +34,11 @@ export function useDrugInfo(atcCode: string | null) {
 
     async function load() {
       try {
-        const res = await gqlFetch<{ drugInfo: DrugInfo | null }>(DRUG_INFO_QUERY, { atcCode }, controller.signal)
+        const res = await gqlFetch<{ drugInfo: DrugInfo | null }>(
+          DRUG_INFO_QUERY,
+          { atcCode },
+          controller.signal
+        )
         hasDataRef.current = true
         setData(res.drugInfo)
       } catch (e) {

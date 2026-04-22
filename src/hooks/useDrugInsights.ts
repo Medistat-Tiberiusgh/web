@@ -8,7 +8,7 @@ export function useDrugInsights(
   year: number | null,
   region: number | null,
   gender: number | null = null,
-  ageGroup: number | null = null,
+  ageGroup: number | null = null
 ) {
   const [insights, setInsights] = useState<DrugInsights | null>(null)
   const [loading, setLoading] = useState(false)
@@ -37,7 +37,11 @@ export function useDrugInsights(
 
     async function load() {
       try {
-        const data = await gqlFetch<{ drugInsights: DrugInsights }>(DRUG_INSIGHTS_QUERY, variables, controller.signal)
+        const data = await gqlFetch<{ drugInsights: DrugInsights }>(
+          DRUG_INSIGHTS_QUERY,
+          variables,
+          controller.signal
+        )
         hasDataRef.current = true
         setInsights(data.drugInsights)
       } catch (e) {

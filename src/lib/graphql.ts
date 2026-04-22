@@ -14,7 +14,7 @@ export async function gqlFetch<T>(
       Authorization: `Bearer ${getToken()}`
     },
     body: JSON.stringify({ query, variables }),
-    signal,
+    signal
   })
 
   if (!res.ok) {
