@@ -1,0 +1,13 @@
+# Exclude everything by default
+*
+
+# Files needed for the build
+!index.html
+!vite.config.ts
+!tsconfig.json
+!tsconfig.app.json
+!tsconfig.node.json
+!package.json
+!package-lock.json
+!public
+!src
