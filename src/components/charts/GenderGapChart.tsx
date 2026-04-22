@@ -1,14 +1,20 @@
 import { useState } from 'react'
-import type { GenderSplitPoint } from '../types'
-import { useUser } from '../context/UserContext'
+import type { GenderSplitPoint } from '../../types'
+import { useUser } from '../../context/UserContext'
 import ChartTooltip from './ChartTooltip'
-import { fmtPer1000 } from '../lib/format'
+import { fmtPer1000 } from '../../lib/format'
 import {
-  COLOR_MALE, COLOR_MALE_MUTED, COLOR_MALE_NAT,
-  COLOR_FEMALE, COLOR_FEMALE_MUTED,
-  COLOR_YEAR, COLOR_AXIS, COLOR_AXIS_LABEL,
-  FONT_TICK, FONT_LABEL,
-} from '../theme'
+  COLOR_MALE,
+  COLOR_MALE_MUTED,
+  COLOR_MALE_NAT,
+  COLOR_FEMALE,
+  COLOR_FEMALE_MUTED,
+  COLOR_YEAR,
+  COLOR_AXIS,
+  COLOR_AXIS_LABEL,
+  FONT_TICK,
+  FONT_LABEL
+} from '../../theme'
 
 interface Props {
   data: GenderSplitPoint[]

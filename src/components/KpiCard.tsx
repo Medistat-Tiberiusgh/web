@@ -57,14 +57,17 @@ export default function KpiCard({
               <div className="flex flex-col items-end gap-0.5">
                 {delta && (
                   <span className="text-xs font-semibold text-gray-500">
-                    {delta.value} vs prior year{delta.subLabel ? ` ${delta.subLabel}` : ''}
+                    {delta.value} vs prior year
+                    {delta.subLabel ? ` ${delta.subLabel}` : ''}
                   </span>
                 )}
                 {subValue && (
                   <span className="text-xs text-gray-400">{subValue}</span>
                 )}
                 {nationalDelta && (
-                  <span className={`text-xs font-semibold ${nationalDeltaColor(nationalDelta.pct)}`}>
+                  <span
+                    className={`text-xs font-semibold ${nationalDeltaColor(nationalDelta.pct)}`}
+                  >
                     {nationalDelta.value} vs national avg{' '}
                     <span className="font-normal opacity-75">
                       ({nationalDelta.avgLabel})

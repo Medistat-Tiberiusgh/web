@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { geoMercator, geoPath } from 'd3-geo'
-import { useUser } from '../context/UserContext'
-import type { RegionalStat } from '../types'
+import { useUser } from '../../context/UserContext'
+import type { RegionalStat } from '../../types'
 import type { FeatureCollection } from 'geojson'
 import ChartTooltip from './ChartTooltip'
-import { fmtPer1000 } from '../lib/format'
-import { COLOR_REGIONAL, COLOR_AXIS } from '../theme'
+import { fmtPer1000 } from '../../lib/format'
+import { COLOR_REGIONAL, COLOR_AXIS } from '../../theme'
 
 interface Props {
   regions: RegionalStat[]
@@ -49,7 +49,13 @@ interface TooltipState {
 const WIDTH = 320
 const HEIGHT = 700
 
-export default function MapView({ regions, selectedRegionId, hoveredRegionId, onHoverRegion, onRegionClick }: Props) {
+export default function MapView({
+  regions,
+  selectedRegionId,
+  hoveredRegionId,
+  onHoverRegion,
+  onRegionClick
+}: Props) {
   const user = useUser()
   const [geoJson, setGeoJson] = useState<FeatureCollection | null>(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
@@ -74,7 +80,7 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
 
   const userRegion =
     user?.regionId != null
-      ? filtered.find((r) => r.regionId === user.regionId) ?? null
+      ? (filtered.find((r) => r.regionId === user.regionId) ?? null)
       : null
   const userPer1000 = userRegion?.per1000 ?? null
 
@@ -109,7 +115,11 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             style={{ width: '100%', height: '100%' }}
-            onMouseLeave={() => { setTooltip(null); setHoveredFeatureId(null); onHoverRegion?.(null) }}
+            onMouseLeave={() => {
+              setTooltip(null)
+              setHoveredFeatureId(null)
+              onHoverRegion?.(null)
+            }}
           >
             {/* Base layer — all regions except the currently hovered one */}
             {geoJson?.features.map((feature) => {
@@ -117,7 +127,8 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
               // Skip whichever region is "active" — it will be painted last on the top layer
               if (id === hoveredFeatureId || id === hoveredRegionId) return null
               const region = regionById.get(id)
-              const isUserRegion = user?.regionId != null && id === user.regionId
+              const isUserRegion =
+                user?.regionId != null && id === user.regionId
               const fill = isUserRegion
                 ? COLOR_REGIONAL
                 : region
@@ -142,76 +153,95 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
                       onHoverRegion?.(null)
                     }
                   }}
-                  onClick={() => region && onRegionClick?.(id, region.regionName)}
+                  onClick={() =>
+                    region && onRegionClick?.(id, region.regionName)
+                  }
                 />
               )
             })}
             {/* Hovered region — rendered last so its stroke sits on top of all adjacent fills.
                 Covers both direct map hover (hoveredFeatureId) and list hover (hoveredRegionId). */}
-            {(hoveredFeatureId ?? hoveredRegionId) != null && geoJson?.features
-              .filter((f) => (f.id as number) === (hoveredFeatureId ?? hoveredRegionId))
-              .map((feature) => {
-                const id = feature.id as number
-                const region = regionById.get(id)
-                const isUserRegion = user?.regionId != null && id === user.regionId
-                const fill = isUserRegion
-                  ? COLOR_REGIONAL
-                  : region
-                    ? getDivergingColor(region.per1000, centerPer1000, min, max)
-                    : COLOR_AXIS
-                return (
-                  <path
-                    key={`hov-${id}`}
-                    d={pathGenerator(feature) ?? ''}
-                    fill={fill}
-                    stroke="#374151"
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                    style={{ cursor: region ? 'pointer' : 'default' }}
-                    onMouseEnter={(e) => {
-                      if (region) {
-                        setTooltip({ x: e.clientX, y: e.clientY, region })
-                        onHoverRegion?.(id)
-                      }
-                    }}
-                    onMouseMove={(e) =>
-                      region && setTooltip({ x: e.clientX, y: e.clientY, region })
-                    }
-                    onClick={() => region && onRegionClick?.(id, region.regionName)}
-                  />
+            {(hoveredFeatureId ?? hoveredRegionId) != null &&
+              geoJson?.features
+                .filter(
+                  (f) =>
+                    (f.id as number) === (hoveredFeatureId ?? hoveredRegionId)
                 )
-              })
-            }
+                .map((feature) => {
+                  const id = feature.id as number
+                  const region = regionById.get(id)
+                  const isUserRegion =
+                    user?.regionId != null && id === user.regionId
+                  const fill = isUserRegion
+                    ? COLOR_REGIONAL
+                    : region
+                      ? getDivergingColor(
+                          region.per1000,
+                          centerPer1000,
+                          min,
+                          max
+                        )
+                      : COLOR_AXIS
+                  return (
+                    <path
+                      key={`hov-${id}`}
+                      d={pathGenerator(feature) ?? ''}
+                      fill={fill}
+                      stroke="#374151"
+                      strokeWidth={2}
+                      strokeLinejoin="round"
+                      style={{ cursor: region ? 'pointer' : 'default' }}
+                      onMouseEnter={(e) => {
+                        if (region) {
+                          setTooltip({ x: e.clientX, y: e.clientY, region })
+                          onHoverRegion?.(id)
+                        }
+                      }}
+                      onMouseMove={(e) =>
+                        region &&
+                        setTooltip({ x: e.clientX, y: e.clientY, region })
+                      }
+                      onClick={() =>
+                        region && onRegionClick?.(id, region.regionName)
+                      }
+                    />
+                  )
+                })}
             {/* Selected region — rendered last so the ring sits on top of all borders */}
-            {selectedRegionId != null && geoJson?.features
-              .filter((f) => (f.id as number) === selectedRegionId)
-              .map((feature) => (
-                <path
-                  key={`sel-${feature.id}`}
-                  d={pathGenerator(feature) ?? ''}
-                  fill="transparent"
-                  stroke={COLOR_REGIONAL}
-                  strokeWidth={2.5}
-                  strokeLinejoin="round"
-                  style={{ pointerEvents: 'none' }}
-                />
-              ))
-            }
+            {selectedRegionId != null &&
+              geoJson?.features
+                .filter((f) => (f.id as number) === selectedRegionId)
+                .map((feature) => (
+                  <path
+                    key={`sel-${feature.id}`}
+                    d={pathGenerator(feature) ?? ''}
+                    fill="transparent"
+                    stroke={COLOR_REGIONAL}
+                    strokeWidth={2.5}
+                    strokeLinejoin="round"
+                    style={{ pointerEvents: 'none' }}
+                  />
+                ))}
           </svg>
 
           {tooltip &&
             (() => {
               const hovered = tooltip.region
-              const isUserRegion = user?.regionId != null && hovered.regionId === user.regionId
+              const isUserRegion =
+                user?.regionId != null && hovered.regionId === user.regionId
               const rank = rankById.get(hovered.regionId)
               const total = filtered.length
               const hasUserRegion = userPer1000 !== null
 
               // delta vs user's region (only when user has a region and it's not the hovered one)
               const diff =
-                hasUserRegion && !isUserRegion ? hovered.per1000 - userPer1000! : null
+                hasUserRegion && !isUserRegion
+                  ? hovered.per1000 - userPer1000!
+                  : null
               const pct =
-                diff !== null && userPer1000! > 0 ? (diff / userPer1000!) * 100 : null
+                diff !== null && userPer1000! > 0
+                  ? (diff / userPer1000!) * 100
+                  : null
 
               let footerText: string | null = null
               if (pct !== null) {
@@ -255,11 +285,15 @@ export default function MapView({ regions, selectedRegionId, hoveredRegionId, on
 
                     {/* Left (own region or no region): hovered value, teal-tinted when it's the user's own */}
                     {(isUserRegion || !hasUserRegion) && (
-                      <div className={`flex-1 px-3 py-2 ${isUserRegion ? 'bg-teal-50/60' : ''}`}>
+                      <div
+                        className={`flex-1 px-3 py-2 ${isUserRegion ? 'bg-teal-50/60' : ''}`}
+                      >
                         <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1.5">
                           per 1,000
                         </p>
-                        <span className={`text-lg font-bold ${isUserRegion ? 'text-teal-700' : 'text-gray-800'}`}>
+                        <span
+                          className={`text-lg font-bold ${isUserRegion ? 'text-teal-700' : 'text-gray-800'}`}
+                        >
                           {fmtPer1000(hovered.per1000)}
                         </span>
                       </div>

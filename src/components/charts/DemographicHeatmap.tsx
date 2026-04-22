@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import type { DemographicCell } from '../types'
-import { useUser } from '../context/UserContext'
+import type { DemographicCell } from '../../types'
+import { useUser } from '../../context/UserContext'
 import ChartTooltip from './ChartTooltip'
-import { fmtPer1000 } from '../lib/format'
-import { COLOR_AGE_BAND } from '../theme'
+import { fmtPer1000 } from '../../lib/format'
+import { COLOR_AGE_BAND } from '../../theme'
 
 interface Props {
   data: DemographicCell[]

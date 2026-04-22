@@ -27,11 +27,19 @@ function TextBlock({ text }: { text: string }) {
   )
 }
 
-function Section({ label, text }: { label: string; text: string | null | undefined }) {
+function Section({
+  label,
+  text
+}: {
+  label: string
+  text: string | null | undefined
+}) {
   if (!text) return null
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</p>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        {label}
+      </p>
       <TextBlock text={text} />
     </div>
   )
@@ -41,7 +49,9 @@ function PrecautionsSection({ text }: { text: string | null | undefined }) {
   if (!text) return null
   return (
     <div className="flex flex-col gap-2 bg-amber-50 border-l-2 border-amber-300 rounded-r-lg px-3 py-2.5">
-      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Precautions</p>
+      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">
+        Precautions
+      </p>
       <TextBlock text={text} />
     </div>
   )
@@ -57,12 +67,14 @@ function ModalContent({
   drugName,
   narcoticClass,
   atcCode,
-  data,
+  data
 }: {
   drugName: string
   narcoticClass?: string | null
   atcCode: string
-  data: NonNullable<ReturnType<typeof import('../hooks/useDrugInfo').useDrugInfo>['data']>
+  data: NonNullable<
+    ReturnType<typeof import('../hooks/useDrugInfo').useDrugInfo>['data']
+  >
 }) {
   const cachedDate = data.cachedAt
     ? new Date(data.cachedAt).toLocaleDateString('sv-SE')
@@ -76,9 +88,13 @@ function ModalContent({
             <Modal.Heading className="text-base font-semibold text-gray-900">
               {drugName}
             </Modal.Heading>
-            <Chip size="sm" variant="soft">{atcCode}</Chip>
+            <Chip size="sm" variant="soft">
+              {atcCode}
+            </Chip>
             {narcoticClass && (
-              <span className="text-xs font-bold text-red-600">Narcotic {narcoticClass}</span>
+              <span className="text-xs font-bold text-red-600">
+                Narcotic {narcoticClass}
+              </span>
             )}
           </div>
           <p className="text-xs text-gray-400">Drug information</p>
@@ -88,7 +104,9 @@ function ModalContent({
       <Modal.Body className="px-6 py-4 flex flex-col gap-4">
         <Section label="Indications" text={data.indication} />
 
-        {data.indication && (data.precautions || data.sideEffects) && <Divider />}
+        {data.indication && (data.precautions || data.sideEffects) && (
+          <Divider />
+        )}
 
         {(data.precautions || data.sideEffects) && (
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -97,7 +115,8 @@ function ModalContent({
           </div>
         )}
 
-        {(data.precautions || data.sideEffects) && (data.howToUse || data.otherUses) && <Divider />}
+        {(data.precautions || data.sideEffects) &&
+          (data.howToUse || data.otherUses) && <Divider />}
 
         {(data.howToUse || data.otherUses) && (
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -106,7 +125,9 @@ function ModalContent({
           </div>
         )}
 
-        {data.otherInfo && <Section label="Other Information" text={data.otherInfo} />}
+        {data.otherInfo && (
+          <Section label="Other Information" text={data.otherInfo} />
+        )}
       </Modal.Body>
 
       <Modal.Footer className="px-6 pb-5 pt-0 flex items-center justify-between gap-4">
@@ -140,14 +161,22 @@ function ModalContent({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props) {
+export default function DrugInfoCard({
+  atcCode,
+  drugName,
+  narcoticClass
+}: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const { data, loading, error } = useDrugInfo(atcCode)
 
-  const hasContent = data && (
-    data.indication || data.howToUse || data.otherUses ||
-    data.precautions || data.sideEffects || data.otherInfo
-  )
+  const hasContent =
+    data &&
+    (data.indication ||
+      data.howToUse ||
+      data.otherUses ||
+      data.precautions ||
+      data.sideEffects ||
+      data.otherInfo)
 
   return (
     <>
@@ -159,11 +188,17 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
         {/* Header */}
         <Card.Header className="px-4 pt-4 pb-3 flex-row items-start justify-between gap-2 shrink-0">
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-gray-900 leading-tight">{drugName}</span>
+            <span className="text-sm font-semibold text-gray-900 leading-tight">
+              {drugName}
+            </span>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <Chip size="sm" variant="soft">{atcCode}</Chip>
+              <Chip size="sm" variant="soft">
+                {atcCode}
+              </Chip>
               {narcoticClass && (
-                <span className="text-xs font-bold text-red-600">Narcotic {narcoticClass}</span>
+                <span className="text-xs font-bold text-red-600">
+                  Narcotic {narcoticClass}
+                </span>
               )}
             </div>
           </div>
@@ -186,12 +221,16 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               <Skeleton className="h-3 w-3/4 rounded-full" />
             </div>
           ) : error ? (
-            <p className="text-xs text-red-400">Failed to load drug information.</p>
+            <p className="text-xs text-red-400">
+              Failed to load drug information.
+            </p>
           ) : data && hasContent ? (
             <>
               {data.indication && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Indications</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Indications
+                  </p>
                   <p className="text-xs text-gray-700 leading-relaxed">
                     {data.indication.replace(/\n+/g, ' ')}
                   </p>
@@ -199,7 +238,9 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               )}
               {data.precautions && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precautions</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Precautions
+                  </p>
                   <p className="text-xs text-gray-700 leading-relaxed">
                     {data.precautions.replace(/\n+/g, ' ')}
                   </p>
@@ -207,7 +248,9 @@ export default function DrugInfoCard({ atcCode, drugName, narcoticClass }: Props
               )}
               {data.sideEffects && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Side Effects</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Side Effects
+                  </p>
                   <p className="text-xs text-gray-700 leading-relaxed">
                     {data.sideEffects.replace(/\n+/g, ' ')}
                   </p>
