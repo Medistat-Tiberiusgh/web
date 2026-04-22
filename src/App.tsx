@@ -10,6 +10,7 @@ import GenderGapChart from './components/GenderGapChart'
 import AgeBandSparklines from './components/AgeBandSparklines'
 import MedicationList from './components/MedicationList'
 import DrugInfoCard from './components/DrugInfoCard'
+import ChartFilterLabel from './components/ChartFilterLabel'
 import DemographicHeatmap from './components/DemographicHeatmap'
 import LoginPage from './components/LoginPage'
 import { useFilters } from './hooks/useFilters'
@@ -433,10 +434,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 <div className="flex-1 min-w-0 flex flex-col gap-3">
                   <Card>
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
-                      <Card.Title>
-                        Dispensing Trend · 2006–2024
-                        {demographicLabel ? ` · ${demographicLabel}` : ''}
-                      </Card.Title>
+                      <div>
+                        <Card.Title>
+                          Dispensing Trend · 2006–2024
+                          <ChartFilterLabel gender={activeGender} ageBand={activeAgeBand} />
+                        </Card.Title>
+                        <Card.Description>per 1,000 inhabitants</Card.Description>
+                      </div>
                       <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
                         {regionName && (
                           <span className="flex items-center gap-1.5">
@@ -469,9 +473,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
                       <div>
                         <Card.Title>
-                          Age Band Distribution ·{' '}
-                          {activeYear ?? latestTrend?.year ?? '—'}
-                          {demographicLabel ? ` · ${demographicLabel}` : ''}
+                          Age Band Trends
+                          <ChartFilterLabel year={activeYear} gender={activeGender} ageBand={activeAgeBand} />
                         </Card.Title>
                         <Card.Description>
                           per 1,000 people · bars = {activeYear ?? latestTrend?.year ?? '—'} · lines = 2006–{activeYear ?? latestTrend?.year ?? '2024'} trend
@@ -511,27 +514,12 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   </Card>
 
                   <Card>
-                    <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
-                      <div>
-                        <Card.Title>
-                          Demographic Heatmap{regionName ? ` · ${regionName}` : ''}
-                        </Card.Title>
-                        <Card.Description>
-                          per 1,000 people by gender &amp; age · {activeYear ?? latestTrend?.year ?? '—'}
-                        </Card.Description>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
-                        {regionName && (
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-4 h-1.5 rounded-full bg-teal-600 inline-block" />
-                            {regionName}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-4 h-1.5 rounded-full bg-blue-700 inline-block" />
-                          National
-                        </span>
-                      </div>
+                    <Card.Header className="px-4 pt-4 pb-0">
+                      <Card.Title>
+                        Heatmap · Age &amp; Gender
+                        <ChartFilterLabel year={activeYear} regionName={regionName} />
+                      </Card.Title>
+                      <Card.Description>per 1,000 people</Card.Description>
                     </Card.Header>
                     <Card.Content className="p-0">
                       {loading ? (
@@ -558,10 +546,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                   <Card>
                     <Card.Header className="px-4 pt-4 pb-0 flex-row items-start justify-between">
                       <div>
-                        <Card.Title>Dispensing Intensity Map</Card.Title>
-                        <Card.Description>
-                          per 1,000 inhabitants
-                        </Card.Description>
+                        <Card.Title>
+                          Dispensing Intensity Map
+                          <ChartFilterLabel year={activeYear} gender={activeGender} ageBand={activeAgeBand} />
+                        </Card.Title>
+                        <Card.Description>per 1,000 inhabitants</Card.Description>
                       </div>
                       <div className="flex flex-col items-start gap-1 pt-0.5 shrink-0 text-[10px]">
                         <div className="flex items-center gap-1.5">
@@ -610,10 +599,11 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
                   <Card>
                     <Card.Header className="px-4 pt-4 pb-0 shrink-0">
-                      <Card.Title>Regional Ranking</Card.Title>
-                      <Card.Description>
-                        Dispensings per 1,000 residents · descending
-                      </Card.Description>
+                      <Card.Title>
+                        Regional Ranking
+                        <ChartFilterLabel year={activeYear} gender={activeGender} ageBand={activeAgeBand} />
+                      </Card.Title>
+                      <Card.Description>Dispensings per 1,000 residents · descending</Card.Description>
                     </Card.Header>
                     <Card.Content className="p-0 overflow-hidden">
                       <RegionalRanking
@@ -636,12 +626,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                       <div>
                         <Card.Title>
                           Patient Gender Gap
-                          {regionName ? ` · ${regionName}` : ''}
-                          {demographicLabel ? ` · ${demographicLabel}` : ''}
+                          <ChartFilterLabel regionName={regionName} ageBand={activeAgeBand} />
                         </Card.Title>
-                        <Card.Description>
-                          per 1,000 inhabitants · all years{regionName ? ` · ${regionName}` : ''}
-                        </Card.Description>
+                        <Card.Description>per 1,000 inhabitants · all years</Card.Description>
                       </div>
                     </Card.Header>
                     <Card.Content className="p-0">

@@ -119,11 +119,12 @@ export default function AgeBandSparklines({
 
     const first = trendSeries.at(0)
     const last = trendSeries.at(-1)
-    const trendPct = first && last && first > 0 ? ((last - first) / first) * 100 : null
+    const trendPct = first != null && last != null && trendSeries.length >= 2 && first > 0 ? ((last - first) / first) * 100 : null
     const dir = trendPct == null ? 'flat' : trendPct > 5 ? 'up' : trendPct < -5 ? 'down' : 'flat'
     const lineColor = dir === 'up' ? COLOR_TREND_UP : dir === 'down' ? COLOR_TREND_DOWN : COLOR_TREND_FLAT
     const trendClass = dir === 'up' ? 'text-orange-700' : dir === 'down' ? 'text-gray-500' : 'text-gray-400'
-    const trendLabel = trendPct == null ? '' : `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}%`
+    const firstYear = sparkYears.at(0)
+    const trendLabel = trendPct == null ? '' : `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}% since '${String(firstYear).slice(2)}`
 
     const isUserAge = user?.ageGroupId != null && user.ageGroupId === id
     const isFiltered = !!filterAgeBand && filterAgeBand === name
@@ -229,7 +230,7 @@ export default function AgeBandSparklines({
           </svg>
 
           {/* Trend % */}
-          <span className={`text-[10px] font-semibold w-8 text-right shrink-0 leading-none ${trendClass}`}>
+          <span className={`text-[10px] font-semibold w-20 text-right shrink-0 leading-none ${trendClass}`}>
             {trendLabel}
           </span>
         </div>
@@ -250,13 +251,13 @@ export default function AgeBandSparklines({
       {/* Legend */}
       <div className="px-4 pb-3 flex items-center gap-4 text-[10px] text-gray-400 border-t border-gray-100 pt-2">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-0.5 rounded bg-green-500" /> Growing
+          <span className="inline-block w-4 h-0.5 rounded" style={{ background: COLOR_TREND_UP }} /> Growing
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-0.5 rounded bg-amber-400" /> Shrinking
+          <span className="inline-block w-4 h-0.5 rounded" style={{ background: COLOR_TREND_DOWN }} /> Shrinking
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-0.5 rounded bg-gray-300" /> Stable
+          <span className="inline-block w-4 h-0.5 rounded" style={{ background: COLOR_TREND_FLAT }} /> Stable
         </span>
         {hasRegional && (
           <>
