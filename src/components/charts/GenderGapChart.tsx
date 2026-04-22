@@ -29,12 +29,6 @@ function isMaleLike(g: string) {
   return l === 'men' || l === 'man' || l === 'male' || l === 'män' || l === 'm'
 }
 
-function displayLabel(g: string) {
-  const l = g.toLowerCase()
-  if (l === 'män' || l === 'man' || l === 'male') return 'Men'
-  if (l === 'kvinnor' || l === 'kvinna' || l === 'female' || l === 'woman') return 'Women'
-  return g
-}
 
 const W = 500
 const PAD = { top: 16, right: 12, bottom: 8, left: 12 }

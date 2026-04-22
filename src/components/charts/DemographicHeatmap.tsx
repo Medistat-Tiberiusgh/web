@@ -97,8 +97,6 @@ export default function DemographicHeatmap({ data, regionalData, regionName, fil
   ])
   const maxVal = Math.max(...allValues, 1)
 
-  const displayMap = hasRegional ? regMap : natMap
-
   const showMen = !filterGender || isMaleLike(filterGender)
   const showWomen = !filterGender || !isMaleLike(filterGender)
   const colLayout = showMen && showWomen ? 'grid-cols-[1fr_1fr_1fr]' : 'grid-cols-[1fr_1fr]'
