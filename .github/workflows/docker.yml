@@ -44,6 +44,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_GRAPHQL_URL=${{ secrets.VITE_GRAPHQL_URL }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
 
   deploy:
     runs-on: ubuntu-latest
