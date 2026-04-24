@@ -27,7 +27,11 @@ export default function App() {
     fetch(`${API_URL}/auth/github/exchange`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, codeVerifier: verifier, redirectUri: redirectUri() }),
+      body: JSON.stringify({
+        code,
+        codeVerifier: verifier,
+        redirectUri: redirectUri()
+      })
     })
       .then((r) => r.json())
       .then((data: { token?: string }) => {
