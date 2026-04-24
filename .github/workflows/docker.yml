@@ -47,6 +47,7 @@ jobs:
           build-args: |
             VITE_GRAPHQL_URL=${{ secrets.VITE_GRAPHQL_URL }}
             VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_GITHUB_CLIENT_ID=${{ secrets.VITE_GITHUB_CLIENT_ID }}
 
   deploy:
     runs-on: ubuntu-latest
