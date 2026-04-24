@@ -152,6 +152,8 @@ export const UPDATE_MEDICATION_MUTATION = `
 
 export const REMOVE_MEDICATION_MUTATION = `
   mutation RemoveMedication($atc: String!) {
-    removeMedication(atc: $atc)
+    removeMedication(atc: $atc) {
+      atc
+    }
   }
 `
