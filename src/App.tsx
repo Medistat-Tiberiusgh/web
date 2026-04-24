@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
-import LoginPage from './components/LoginPage'
+import LoginPage, { VERIFIER_KEY, redirectUri } from './components/LoginPage'
 import { UserContext } from './context/UserContext'
 import { getToken, saveToken, clearToken, decodeToken } from './lib/auth'
 import type { User } from './context/UserContext'
+
+const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -13,12 +15,26 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const token = params.get('token')
-    if (token) {
-      saveToken(token)
-      setUser(decodeToken(token))
-      window.history.replaceState({}, '', window.location.pathname)
-    }
+    const code = params.get('code')
+    if (!code) return
+
+    const verifier = sessionStorage.getItem(VERIFIER_KEY)
+    sessionStorage.removeItem(VERIFIER_KEY)
+    window.history.replaceState({}, '', window.location.pathname)
+
+    if (!verifier) return
+
+    fetch(`${API_URL}/auth/github/exchange`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, codeVerifier: verifier, redirectUri: redirectUri() }),
+    })
+      .then((r) => r.json())
+      .then((data: { token?: string }) => {
+        if (!data.token) return
+        saveToken(data.token)
+        setUser(decodeToken(data.token))
+      })
   }, [])
 
   function handleLogout() {

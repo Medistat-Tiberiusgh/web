@@ -1,6 +1,6 @@
 import { getToken } from './auth'
 
-const GRAPHQL_URL = import.meta.env.VITE_GRAPHQL_URL as string
+const GRAPHQL_URL = `${import.meta.env.VITE_API_URL}/graphql`
 
 export async function gqlFetch<T>(
   query: string,
