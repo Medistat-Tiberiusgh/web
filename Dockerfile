@@ -1,13 +1,17 @@
 # Stage 1 — build
 FROM node:lts-alpine AS builder
 
+ARG VITE_API_URL
+ARG VITE_GRAPHQL_URL
+ARG VITE_GITHUB_CLIENT_ID
+
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+RUN VITE_API_URL=$VITE_API_URL VITE_GRAPHQL_URL=$VITE_GRAPHQL_URL VITE_GITHUB_CLIENT_ID=$VITE_GITHUB_CLIENT_ID npm run build
 
 
 # Stage 2 — serve
