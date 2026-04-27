@@ -10,6 +10,7 @@ import RegionalRanking from './charts/RegionalRanking'
 import KpiCard from './KpiCard'
 import DrugInfoCard from './DrugInfoCard'
 import ChartFilterLabel from './ChartFilterLabel'
+import Footer from './Footer'
 import { useDashboard } from '../hooks/useDashboard'
 import { fmtPer1000, fmtPer1000Delta, fmtDelta } from '../lib/format'
 
@@ -450,6 +451,8 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </>
           )}
+
+          <Footer className="mt-auto pt-4 pb-2" />
         </main>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { COLOR_BRAND } from '../theme'
 import { generateVerifier, computeChallenge } from '../lib/pkce'
+import Footer from './Footer'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string
 const VERIFIER_KEY = 'medistat_pkce_verifier'
@@ -25,7 +26,7 @@ async function startGithubLogin() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center relative">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 flex flex-col items-center gap-6 w-full max-w-sm">
         <div className="flex flex-col items-center gap-1">
           <span className="text-2xl font-bold" style={{ color: COLOR_BRAND }}>
@@ -46,6 +47,8 @@ export default function LoginPage() {
           Continue with GitHub
         </button>
       </div>
+
+      <Footer className="absolute bottom-4 left-0 right-0" />
     </div>
   )
 }
