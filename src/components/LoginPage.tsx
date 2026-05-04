@@ -1,13 +1,9 @@
 import { COLOR_BRAND } from '../theme'
 import { generateVerifier, computeChallenge } from '../lib/pkce'
+import { VERIFIER_KEY, redirectUri } from '../lib/oauth'
 import Footer from './Footer'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string
-const VERIFIER_KEY = 'medistat_pkce_verifier'
-
-function redirectUri(): string {
-  return `${window.location.origin}/`
-}
 
 async function startGithubLogin() {
   const verifier = generateVerifier()
@@ -52,5 +48,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
-export { VERIFIER_KEY, redirectUri }

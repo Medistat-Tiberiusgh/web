@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
-import LoginPage, { VERIFIER_KEY, redirectUri } from './components/LoginPage'
+import LoginPage from './components/LoginPage'
 import { UserContext } from './context/UserContext'
 import { getToken, saveToken, clearToken, decodeToken } from './lib/auth'
+import { VERIFIER_KEY, redirectUri } from './lib/oauth'
 import type { User } from './context/UserContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
