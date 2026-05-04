@@ -2,17 +2,14 @@ import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import LoginPage from './components/LoginPage'
 import { UserContext } from './context/UserContext'
-import { getToken, saveToken, clearToken, decodeToken } from './lib/auth'
+import { saveToken, clearToken, decodeToken, loadCurrentUser } from './lib/auth'
 import { VERIFIER_KEY, redirectUri } from './lib/oauth'
 import type { User } from './context/UserContext'
 
 const API_URL = import.meta.env.VITE_API_URL as string
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(() => {
-    const token = getToken()
-    return token ? decodeToken(token) : null
-  })
+  const [user, setUser] = useState<User | null>(loadCurrentUser)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

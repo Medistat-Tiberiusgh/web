@@ -14,7 +14,17 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY)
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const { exp } = JSON.parse(atob(token.split('.')[1]))
+    return typeof exp === 'number' && exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
 export function decodeToken(token: string): User | null {
+  if (isTokenExpired(token)) return null
   try {
     const payload = token.split('.')[1]
     const decoded = JSON.parse(atob(payload))
@@ -29,4 +39,12 @@ export function decodeToken(token: string): User | null {
   } catch {
     return null
   }
+}
+
+export function loadCurrentUser(): User | null {
+  const token = getToken()
+  if (!token) return null
+  const user = decodeToken(token)
+  if (!user) clearToken()
+  return user
 }
