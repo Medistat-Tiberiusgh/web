@@ -9,6 +9,7 @@ import { COLOR_REGIONAL, COLOR_AXIS } from '../../theme'
 
 interface Props {
   regions: RegionalStat[]
+  nationalAverage: number | null
   selectedRegionId?: number | null
   hoveredRegionId?: number | null
   onHoverRegion?: (id: number | null) => void
@@ -51,6 +52,7 @@ const HEIGHT = 700
 
 export default function MapView({
   regions,
+  nationalAverage,
   selectedRegionId,
   hoveredRegionId,
   onHoverRegion,
@@ -73,24 +75,22 @@ export default function MapView({
     load()
   }, [])
 
-  const filtered = regions.filter((r) => r.regionId !== 0)
-  const values = filtered.map((r) => r.per1000)
+  const values = regions.map((r) => r.per1000)
   const min = Math.min(...values)
   const max = Math.max(...values)
 
   const userRegion =
     user?.regionId != null
-      ? (filtered.find((r) => r.regionId === user.regionId) ?? null)
+      ? (regions.find((r) => r.regionId === user.regionId) ?? null)
       : null
   const userPer1000 = userRegion?.per1000 ?? null
 
   // When the user has no region, center the color scale on the national average
-  const natPer1000 = regions.find((r) => r.regionId === 0)?.per1000 ?? null
-  const centerPer1000 = userPer1000 ?? natPer1000 ?? (min + max) / 2
-  const regionById = new Map(filtered.map((r) => [r.regionId, r]))
+  const centerPer1000 = userPer1000 ?? nationalAverage ?? (min + max) / 2
+  const regionById = new Map(regions.map((r) => [r.regionId, r]))
 
   // Rank: 1 = highest per1000
-  const sorted = [...filtered].sort((a, b) => b.per1000 - a.per1000)
+  const sorted = [...regions].sort((a, b) => b.per1000 - a.per1000)
   const rankById = new Map(sorted.map((r, i) => [r.regionId, i + 1]))
 
   const projection = geoJson
@@ -106,7 +106,7 @@ export default function MapView({
 
   return (
     <div className="flex flex-col h-full">
-      {filtered.length === 0 ? (
+      {regions.length === 0 ? (
         <div className="flex-1 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-sm">
           {geoJson ? 'Select a medication to see the map' : 'Loading map…'}
         </div>
@@ -230,7 +230,7 @@ export default function MapView({
               const isUserRegion =
                 user?.regionId != null && hovered.regionId === user.regionId
               const rank = rankById.get(hovered.regionId)
-              const total = filtered.length
+              const total = regions.length
               const hasUserRegion = userPer1000 !== null
 
               // delta vs user's region (only when user has a region and it's not the hovered one)

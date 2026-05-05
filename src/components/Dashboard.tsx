@@ -368,6 +368,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                     >
                       <MapView
                         regions={db.mapRegions}
+                        nationalAverage={db.nationalAverage}
                         selectedRegionId={db.activeRegion?.id ?? null}
                         hoveredRegionId={db.hoveredRegionId}
                         onHoverRegion={db.setHoveredRegionId}
@@ -393,6 +394,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
                     <Card.Content className="p-0 overflow-hidden">
                       <RegionalRanking
                         regions={db.mapRegions}
+                        nationalAverage={db.nationalAverage}
                         selectedRegionId={db.activeRegion?.id ?? null}
                         hoveredRegionId={db.hoveredRegionId}
                         onHoverRegion={db.setHoveredRegionId}

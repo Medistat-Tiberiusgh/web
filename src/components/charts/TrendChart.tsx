@@ -151,8 +151,8 @@ export default function TrendChart({
         </defs>
 
         {/* Grid lines */}
-        {yTicks.map(({ val, y }) => (
-          <g key={val}>
+        {yTicks.map(({ val, y }, i) => (
+          <g key={i}>
             <line
               x1={PAD.left}
               y1={y}

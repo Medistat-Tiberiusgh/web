@@ -239,17 +239,8 @@ export function useDashboard() {
     )
   }, [regGrid, activeGender])
 
-  // Inject the national average as a pseudo-region so MapView and
-  // RegionalRanking can display it alongside real regions.
-  const mapRegions = useMemo(() => {
-    const base = national?.regionalPopularity ?? []
-    if (natLatest?.per1000 != null)
-      return [
-        ...base,
-        { regionId: 0, regionName: 'National', per1000: natLatest.per1000 }
-      ]
-    return base
-  }, [national?.regionalPopularity, natLatest?.per1000])
+  const mapRegions = national?.regionalPopularity ?? []
+  const nationalAverage = natLatest?.per1000 ?? null
 
   return {
     // Filters
@@ -303,6 +294,7 @@ export function useDashboard() {
     natGenderSplit,
     regGenderSplit,
     mapRegions,
+    nationalAverage,
     // User
     user
   }
