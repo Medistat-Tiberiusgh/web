@@ -59,6 +59,7 @@ export const DRUG_INSIGHTS_QUERY = `
       }
       genderSplit {
         year
+        genderId
         gender
         per1000
       }
@@ -69,6 +70,7 @@ export const DRUG_INSIGHTS_QUERY = `
         per1000
       }
       demographicGrid {
+        genderId
         gender
         ageGroupId
         ageGroupName
@@ -100,6 +102,7 @@ export const DEMOGRAPHIC_GRID_QUERY = `
   query DemographicGrid($atcCode: String!, $year: Int, $region: Int) {
     drugInsights(atcCode: $atcCode, year: $year, region: $region) {
       demographicGrid {
+        genderId
         gender
         ageGroupId
         ageGroupName

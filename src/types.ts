@@ -13,11 +13,13 @@ export interface TrendPoint {
 
 export interface GenderSplitPoint {
   year: number
+  genderId: number
   gender: string
   per1000: number
 }
 
 export interface DemographicCell {
+  genderId: number
   gender: string // "Män" || "Kvinnor"
   ageGroupId: number
   ageGroupName: string

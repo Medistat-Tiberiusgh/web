@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import type { AgeSplitPoint } from '../types'
-import { gqlFetch } from '../lib/graphql'
-import { AGE_SPLIT_QUERY } from '../lib/queries'
+import type { AgeSplitPoint } from '../../types'
+import { gqlFetch } from '../../lib/graphql'
+import { AGE_SPLIT_QUERY } from '../../lib/queries'
 
 /**
  * Fetches the full age band split for a drug, always returning all age bands.

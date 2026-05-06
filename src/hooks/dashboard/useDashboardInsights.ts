@@ -1,4 +1,4 @@
-import { useDrugInsights } from './useDrugInsights'
+import { useDrugInsights } from '../useDrugInsights'
 
 /**
  * Fetches both national and regional drug insights in one call.

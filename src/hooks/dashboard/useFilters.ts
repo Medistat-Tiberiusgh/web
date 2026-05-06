@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Drug, Region } from '../types'
+import type { Drug, Region } from '../../types'
 
 export interface AgeBand {
   name: string

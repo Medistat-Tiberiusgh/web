@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import type { DemographicCell } from '../types'
-import { gqlFetch } from '../lib/graphql'
-import { DEMOGRAPHIC_GRID_QUERY } from '../lib/queries'
+import type { DemographicCell } from '../../types'
+import { gqlFetch } from '../../lib/graphql'
+import { DEMOGRAPHIC_GRID_QUERY } from '../../lib/queries'
 
 /**
  * Fetches the demographic grid (gender × age) for a specific year.
