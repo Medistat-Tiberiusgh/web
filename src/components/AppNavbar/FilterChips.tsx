@@ -1,5 +1,5 @@
 import { GENDER_OPTIONS } from './SearchResultList'
-import type { AgeBand } from '../../hooks/useFilters'
+import type { AgeBand } from '../../hooks/dashboard/useFilters'
 import type { Drug, Region } from '../../types'
 
 const YEARS = Array.from({ length: 19 }, (_, i) => 2024 - i)

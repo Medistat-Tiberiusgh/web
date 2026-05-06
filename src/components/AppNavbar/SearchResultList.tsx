@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react'
-import type { AgeBand } from '../../hooks/useFilters'
+import type { AgeBand } from '../../hooks/dashboard/useFilters'
 import type { Drug, Region } from '../../types'
 
 export const GENDER_OPTIONS = [

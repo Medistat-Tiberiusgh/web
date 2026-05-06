@@ -5,7 +5,7 @@ import Footer from '../Footer'
 import KpiSection from './KpiSection'
 import ChartsGridSection from './ChartsGridSection'
 import GenderAndDrugSection from './GenderAndDrugSection'
-import { useDashboard } from '../../hooks/useDashboard'
+import { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   const db = useDashboard()

@@ -1,7 +1,7 @@
 import { Card, Skeleton } from '@heroui/react'
 import KpiCard from '../KpiCard'
 import { fmtPer1000, fmtPer1000Delta, fmtDelta } from '../../lib/format'
-import type { useDashboard } from '../../hooks/useDashboard'
+import type { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 type Db = ReturnType<typeof useDashboard>
 

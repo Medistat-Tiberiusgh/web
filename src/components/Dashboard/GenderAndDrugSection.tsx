@@ -1,16 +1,31 @@
+import { useRef, useState, useEffect } from 'react'
 import { Card, Skeleton } from '@heroui/react'
 import GenderGapChart from '../charts/GenderGapChart'
 import DrugInfoCard from '../DrugInfoCard'
 import ChartFilterLabel from '../ChartFilterLabel'
-import type { useDashboard } from '../../hooks/useDashboard'
+import type { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 type Db = ReturnType<typeof useDashboard>
 
 export default function GenderAndDrugSection({ db }: { db: Db }) {
+  const chartCardRef = useRef<HTMLDivElement>(null)
+  const [chartCardHeight, setChartCardHeight] = useState<number | undefined>(
+    undefined
+  )
+  useEffect(() => {
+    const el = chartCardRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) =>
+      setChartCardHeight(e.contentRect.height)
+    )
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [db.activeDrug?.atcCode])
+
   return (
     <div className="flex gap-3 items-start">
       <div
-        ref={db.chartCardRef}
+        ref={chartCardRef}
         style={{ width: '560px' }}
         className="shrink-0"
       >
@@ -43,7 +58,7 @@ export default function GenderAndDrugSection({ db }: { db: Db }) {
         </Card>
       </div>
 
-      <div className="flex-1" style={{ height: db.chartCardHeight }}>
+      <div className="flex-1" style={{ height: chartCardHeight }}>
         <DrugInfoCard
           atcCode={db.activeDrug!.atcCode}
           drugName={db.activeDrug!.name}

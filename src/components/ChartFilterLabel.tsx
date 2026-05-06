@@ -1,4 +1,4 @@
-import type { AgeBand } from '../hooks/useFilters'
+import type { AgeBand } from '../hooks/dashboard/useFilters'
 import {
   COLOR_YEAR,
   COLOR_REGIONAL,

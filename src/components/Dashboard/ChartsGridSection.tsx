@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card, Skeleton } from '@heroui/react'
 import TrendChart from '../charts/TrendChart'
 import AgeBandSparklines from '../charts/AgeBandSparklines'
@@ -5,11 +6,18 @@ import DemographicHeatmap from '../charts/DemographicHeatmap'
 import MapView from '../charts/MapView'
 import RegionalRanking from '../charts/RegionalRanking'
 import ChartFilterLabel from '../ChartFilterLabel'
-import type { useDashboard } from '../../hooks/useDashboard'
+import type { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 type Db = ReturnType<typeof useDashboard>
 
 export default function ChartsGridSection({ db }: { db: Db }) {
+  const [hoveredRegionId, setHoveredRegionId] = useState<number | null>(null)
+
+  function handleRegionClick(regionId: number, regionName: string) {
+    if (db.activeRegion?.id === regionId) db.setActiveRegion(null)
+    else db.setActiveRegion({ id: regionId, regionName })
+  }
+
   return (
     <div className="flex flex-col lg:flex-row gap-3">
       {/* Left column */}
@@ -187,9 +195,9 @@ export default function ChartsGridSection({ db }: { db: Db }) {
               regions={db.mapRegions}
               nationalAverage={db.nationalAverage}
               selectedRegionId={db.activeRegion?.id ?? null}
-              hoveredRegionId={db.hoveredRegionId}
-              onHoverRegion={db.setHoveredRegionId}
-              onRegionClick={db.handleRegionClick}
+              hoveredRegionId={hoveredRegionId}
+              onHoverRegion={setHoveredRegionId}
+              onRegionClick={handleRegionClick}
             />
           </Card.Content>
         </Card>
@@ -213,9 +221,9 @@ export default function ChartsGridSection({ db }: { db: Db }) {
               regions={db.mapRegions}
               nationalAverage={db.nationalAverage}
               selectedRegionId={db.activeRegion?.id ?? null}
-              hoveredRegionId={db.hoveredRegionId}
-              onHoverRegion={db.setHoveredRegionId}
-              onRegionClick={db.handleRegionClick}
+              hoveredRegionId={hoveredRegionId}
+              onHoverRegion={setHoveredRegionId}
+              onRegionClick={handleRegionClick}
             />
           </Card.Content>
         </Card>
