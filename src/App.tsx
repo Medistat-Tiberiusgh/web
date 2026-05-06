@@ -9,8 +9,10 @@ export default function App() {
   const [user, setUser] = useState<User | null>(loadCurrentUser)
 
   useEffect(() => {
-    completeLogin().then((user) => {
-      if (user) setUser(user)
+    const hasCode = new URLSearchParams(window.location.search).has('code')
+    if (!hasCode) return
+    completeLogin().then((u) => {
+      if (u) setUser(u)
     })
   }, [])
 
