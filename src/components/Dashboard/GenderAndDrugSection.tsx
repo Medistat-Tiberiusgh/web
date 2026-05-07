@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
 import { Card, Skeleton } from '@heroui/react'
 import GenderGapChart from '../charts/GenderGapChart'
-import DrugInfoCard from './DrugInfoCard'
-import ChartFilterLabel from './ChartFilterLabel'
+import DrugInfoCard from '../DrugInfoCard'
+import ChartFilterLabel from '../ChartFilterLabel'
 import type { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 type Db = ReturnType<typeof useDashboard>

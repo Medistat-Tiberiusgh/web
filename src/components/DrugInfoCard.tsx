@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Card, Chip, Modal, Skeleton } from '@heroui/react'
-import { useDrugInfo } from '../../hooks/useDrugInfo'
+import { useDrugInfo } from '../hooks/useDrugInfo'
 
 interface Props {
   atcCode: string
@@ -73,7 +73,7 @@ function ModalContent({
   narcoticClass?: string | null
   atcCode: string
   data: NonNullable<
-    ReturnType<typeof import('../../hooks/useDrugInfo').useDrugInfo>['data']
+    ReturnType<typeof import('../hooks/useDrugInfo').useDrugInfo>['data']
   >
 }) {
   const cachedDate = data.cachedAt

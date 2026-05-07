@@ -5,7 +5,7 @@ import AgeBandSparklines from '../charts/AgeBandSparklines'
 import DemographicHeatmap from '../charts/DemographicHeatmap'
 import MapView from '../charts/MapView'
 import RegionalRanking from '../charts/RegionalRanking'
-import ChartFilterLabel from './ChartFilterLabel'
+import ChartFilterLabel from '../ChartFilterLabel'
 import type { useDashboard } from '../../hooks/dashboard/useDashboard'
 
 type Db = ReturnType<typeof useDashboard>
