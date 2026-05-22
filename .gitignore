@@ -191,5 +191,8 @@ $RECYCLE.BIN/
 
 docs
 
+.claude
+
+
 
 # End of https://www.gitignore.io/api/node,linux,macos,windows,visualstudiocode
