@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Card, Skeleton } from '@heroui/react'
-import TrendChart from '../charts/TrendChart'
-import AgeBandSparklines from '../charts/AgeBandSparklines'
+import DispensingTrend from '../charts/DispensingTrend'
+import AgeBandTrends from '../charts/AgeBandTrends'
 import DemographicHeatmap from '../charts/DemographicHeatmap'
-import MapView from '../charts/MapView'
+import DispensingIntensityMap from '../charts/DispensingIntensityMap'
 import RegionalRanking from '../charts/RegionalRanking'
 import ChartFilterLabel from '../ChartFilterLabel'
 import type { useDashboard } from '../../hooks/dashboard/useDashboard'
@@ -51,7 +51,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
             {db.loading ? (
               <Skeleton className="h-48 m-4 rounded" />
             ) : (
-              <TrendChart
+              <DispensingTrend
                 data={db.effectiveNatTrend}
                 regionalData={db.effectiveRegTrend}
                 regionName={db.regionName}
@@ -100,7 +100,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 ))}
               </div>
             ) : (
-              <AgeBandSparklines
+              <AgeBandTrends
                 data={db.natAgeSplit}
                 regionalData={
                   db.regAgeSplit.length > 0 ? db.regAgeSplit : undefined
@@ -117,7 +117,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
         <Card>
           <Card.Header className="px-4 pt-4 pb-0">
             <Card.Title>
-              Heatmap · Age &amp; Gender
+              Demographic Heatmap
               <ChartFilterLabel
                 year={db.activeYear}
                 regionName={db.regionName}
@@ -191,7 +191,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
             className="pt-3 px-0 pb-0 overflow-hidden"
             style={{ height: '630px' }}
           >
-            <MapView
+            <DispensingIntensityMap
               regions={db.mapRegions}
               nationalAverage={db.nationalAverage}
               selectedRegionId={db.activeRegion?.id ?? null}

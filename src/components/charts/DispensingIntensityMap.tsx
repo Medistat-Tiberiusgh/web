@@ -50,7 +50,7 @@ interface TooltipState {
 const WIDTH = 320
 const HEIGHT = 700
 
-export default function MapView({
+export default function DispensingIntensityMap({
   regions,
   nationalAverage,
   selectedRegionId,

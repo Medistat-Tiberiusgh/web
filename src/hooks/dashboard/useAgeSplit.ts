@@ -6,7 +6,7 @@ import { AGE_SPLIT_QUERY } from '../../lib/queries'
 /**
  * Fetches the full age band split for a drug, always returning all age bands.
  * Kept separate from useDrugInsights so an age band filter never collapses
- * AgeBandSparklines to a single row — the component highlights instead.
+ * AgeBandTrends to a single row — the component highlights instead.
  */
 export function useAgeSplit(
   atcCode: string | null,

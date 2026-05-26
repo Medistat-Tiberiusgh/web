@@ -38,7 +38,7 @@ const PAD = { top: 20, right: 16, bottom: 40, left: 48 }
 const INNER_W = W - PAD.left - PAD.right
 const INNER_H = H - PAD.top - PAD.bottom
 
-export default function TrendChart({
+export default function DispensingTrend({
   data,
   regionalData,
   regionName,

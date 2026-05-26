@@ -6,7 +6,7 @@ import { DEMOGRAPHIC_GRID_QUERY } from '../../lib/queries'
 /**
  * Fetches the demographic grid (gender × age) for a specific year.
  * Kept separate from useDrugInsights so a year filter can be applied here
- * without limiting the full trend series used by TrendChart.
+ * without limiting the full trend series used by DispensingTrend.
  */
 export function useDemographicGrid(
   atcCode: string | null,

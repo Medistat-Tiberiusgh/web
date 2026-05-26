@@ -55,7 +55,7 @@ function sparkPath(values: number[], W: number, H: number): string {
   )
 }
 
-export default function AgeBandSparklines({
+export default function AgeBandTrends({
   data,
   regionalData,
   latestYear,

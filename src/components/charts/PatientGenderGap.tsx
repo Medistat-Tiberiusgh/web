@@ -59,7 +59,7 @@ function buildYearMap(data: GenderSplitPoint[]) {
   return map
 }
 
-export default function GenderGapChart({
+export default function PatientGenderGap({
   data,
   regionalData,
   regionName,

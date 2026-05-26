@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { Card, Skeleton } from '@heroui/react'
-import GenderGapChart from '../charts/GenderGapChart'
+import PatientGenderGap from '../charts/PatientGenderGap'
 import DrugInfoCard from '../DrugInfoCard'
 import ChartFilterLabel from '../ChartFilterLabel'
 import type { useDashboard } from '../../hooks/dashboard/useDashboard'
@@ -46,7 +46,7 @@ export default function GenderAndDrugSection({ db }: { db: Db }) {
             {db.loading ? (
               <Skeleton className="h-48 m-4 rounded" />
             ) : (
-              <GenderGapChart
+              <PatientGenderGap
                 data={db.natGenderSplit}
                 regionalData={db.regGenderSplit}
                 regionName={db.regionName}
