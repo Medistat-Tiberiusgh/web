@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { scaleLinear } from 'd3-scale'
+import { max as d3Max } from 'd3-array'
 import type { GenderSplitPoint } from '../../types'
 import { useUser } from '../../context/UserContext'
 import ChartTooltip from './ChartTooltip'
@@ -89,14 +91,13 @@ export default function GenderGapChart({
   const primaryByYear = hasRegional ? regByYear : natByYear
   const years = Array.from(natByYear.keys()).sort((a, b) => a - b)
 
-  const allVals = [
-    ...Array.from(natByYear.values()).flatMap((v) => [
-      v.men ?? 0,
-      v.women ?? 0
-    ]),
-    ...Array.from(regByYear.values()).flatMap((v) => [v.men ?? 0, v.women ?? 0])
-  ]
-  const maxVal = Math.max(...allVals, 1)
+  const maxVal =
+    d3Max(
+      [
+        ...Array.from(natByYear.values()),
+        ...Array.from(regByYear.values())
+      ].flatMap((v) => [v.men ?? 0, v.women ?? 0])
+    ) ?? 1
 
   const rowH = BAR_H + BAR_GAP
   const dynBarH = BAR_H
@@ -119,6 +120,8 @@ export default function GenderGapChart({
       : PAD.left + CENTER_W / 2
     : centerX
   const effectiveBarArea = singleGender ? BAR_AREA * 2 : BAR_AREA
+
+  const barLen = scaleLinear().domain([0, maxVal]).range([0, effectiveBarArea])
 
   return (
     <div className="relative pt-1">
@@ -159,8 +162,8 @@ export default function GenderGapChart({
           const isHovered = tooltip?.year === year
           const isSelected = selectedYear === year
 
-          const regMenLen = ((primary.men ?? 0) / maxVal) * effectiveBarArea
-          const regWomenLen = ((primary.women ?? 0) / maxVal) * effectiveBarArea
+          const regMenLen = barLen(primary.men ?? 0)
+          const regWomenLen = barLen(primary.women ?? 0)
 
           const menOpacity = isHovered ? 1 : 0.75
           const womenOpacity = isHovered ? 1 : 0.75

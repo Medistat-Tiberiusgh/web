@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { scaleLinear } from 'd3-scale'
+import { interpolateRgb } from 'd3-interpolate'
+import { max as d3Max } from 'd3-array'
 import type { DemographicCell } from '../../types'
 import { useUser } from '../../context/UserContext'
 import ChartTooltip from './ChartTooltip'
@@ -28,23 +31,19 @@ function isMaleLike(g: string) {
   return l === 'män' || l === 'man' || l === 'male' || l === 'men' || l === 'm'
 }
 
-/** Map a 0–1 intensity to a colour in a given hue family. */
+// Men: sky-100 → sky-800. Women: rose-100 → rose-800.
+const menColorScale = scaleLinear<string>()
+  .domain([0, 1])
+  .range(['#e0f2fe', '#075985'])
+  .interpolate(interpolateRgb)
+
+const womenColorScale = scaleLinear<string>()
+  .domain([0, 1])
+  .range(['#ffe4e6', '#9f1239'])
+  .interpolate(interpolateRgb)
+
 function cellColor(intensity: number, isMale: boolean): string {
-  // Men: sky family.  Women: rose family.
-  // At intensity=0 we use a very light tint; at 1 we use a saturated dark shade.
-  if (isMale) {
-    // sky-100 (#e0f2fe) → sky-800 (#075985)
-    const r = Math.round(224 - intensity * (224 - 7))
-    const g = Math.round(242 - intensity * (242 - 89))
-    const b = Math.round(254 - intensity * (254 - 133))
-    return `rgb(${r},${g},${b})`
-  } else {
-    // #ffe4e6 (rose-100) → #9f1239 (rose-800)
-    const r = Math.round(255 - intensity * (255 - 159))
-    const g = Math.round(228 - intensity * (228 - 18))
-    const b = Math.round(230 - intensity * (230 - 57))
-    return `rgb(${r},${g},${b})`
-  }
+  return isMale ? menColorScale(intensity) : womenColorScale(intensity)
 }
 
 /** Pick a readable text colour based on intensity (dark text on light cells, light on dark). */
@@ -104,11 +103,13 @@ export default function DemographicHeatmap({
   const ageGroups = [...natMap.entries()].sort((a, b) => a[0] - b[0])
 
   // Find the global max across all cells to normalise colour intensity
-  const allValues = [...natMap.values(), ...regMap.values()].flatMap((v) => [
-    v.men ?? 0,
-    v.women ?? 0
-  ])
-  const maxVal = Math.max(...allValues, 1)
+  const maxVal =
+    d3Max(
+      [...natMap.values(), ...regMap.values()].flatMap((v) => [
+        v.men ?? 0,
+        v.women ?? 0
+      ])
+    ) ?? 1
 
   const showMen = !filterGender || isMaleLike(filterGender)
   const showWomen = !filterGender || !isMaleLike(filterGender)

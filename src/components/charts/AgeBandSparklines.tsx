@@ -6,6 +6,9 @@
  *   label | thin bar (current year) | sparkline (full trend) | ±trend%
  */
 import { useState } from 'react'
+import { scaleLinear } from 'd3-scale'
+import { line as d3Line } from 'd3-shape'
+import { extent } from 'd3-array'
 import { useUser } from '../../context/UserContext'
 import type { AgeSplitPoint } from '../../types'
 import ChartTooltip from './ChartTooltip'
@@ -38,17 +41,18 @@ interface TooltipState {
 
 function sparkPath(values: number[], W: number, H: number): string {
   if (values.length < 2) return ''
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
   const pad = 2
-  return values
-    .map((v, i) => {
-      const x = (i / (values.length - 1)) * W
-      const y = H - pad - ((v - min) / range) * (H - pad * 2)
-      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`
-    })
-    .join(' ')
+  const [min = 0, max = 0] = extent(values) as [number, number]
+  const safeMax = max === min ? min + 1 : max
+  const x = scaleLinear()
+    .domain([0, values.length - 1])
+    .range([0, W])
+  const y = scaleLinear().domain([min, safeMax]).range([H - pad, pad])
+  return (
+    d3Line<number>()
+      .x((_, i) => x(i))
+      .y((v) => y(v))(values) ?? ''
+  )
 }
 
 export default function AgeBandSparklines({

@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { scaleLinear } from 'd3-scale'
+import { line as d3Line, area as d3Area, curveMonotoneX } from 'd3-shape'
+import { extent, max as d3Max } from 'd3-array'
 import type { TrendPoint } from '../../types'
 import ChartTooltip from './ChartTooltip'
 import { fmtPer1000 } from '../../lib/format'
@@ -35,43 +38,6 @@ const PAD = { top: 20, right: 16, bottom: 40, left: 48 }
 const INNER_W = W - PAD.left - PAD.right
 const INNER_H = H - PAD.top - PAD.bottom
 
-function scaleX(year: number, minYear: number, maxYear: number) {
-  return PAD.left + ((year - minYear) / (maxYear - minYear || 1)) * INNER_W
-}
-
-function scaleY(value: number, minVal: number, maxVal: number) {
-  return (
-    PAD.top + INNER_H - ((value - minVal) / (maxVal - minVal || 1)) * INNER_H
-  )
-}
-
-// Smooth cubic bezier path through points
-function buildSmoothedPath(points: { x: number; y: number }[]) {
-  if (points.length === 0) return ''
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`
-  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1]
-    const curr = points[i]
-    const cpx = (prev.x + curr.x) / 2
-    d += ` C ${cpx.toFixed(1)} ${prev.y.toFixed(1)}, ${cpx.toFixed(1)} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`
-  }
-  return d
-}
-
-function buildAreaPath(
-  linePath: string,
-  points: { x: number; y: number }[],
-  baseY: number
-) {
-  if (!linePath || points.length === 0) return ''
-  return (
-    linePath +
-    ` L ${points[points.length - 1].x.toFixed(1)} ${baseY.toFixed(1)}` +
-    ` L ${points[0].x.toFixed(1)} ${baseY.toFixed(1)} Z`
-  )
-}
-
 export default function TrendChart({
   data,
   regionalData,
@@ -89,40 +55,36 @@ export default function TrendChart({
     )
   }
 
-  const years = data.map((d) => d.year)
-  const minYear = Math.min(...years)
-  const maxYear = Math.max(...years)
-
-  const allPer1000 = [
-    ...data.map((d) => d.per1000),
-    ...(regionalData ?? []).map((d) => d.per1000)
-  ]
-  const maxVal = Math.max(...allPer1000) * 1.08
-  const minVal = 0
+  const [minYear, maxYear] = extent(data, (d) => d.year) as [number, number]
+  const maxVal =
+    (d3Max([...data, ...(regionalData ?? [])], (d) => d.per1000) ?? 0) * 1.08
   const baseY = PAD.top + INNER_H
 
-  const natPoints = data.map((d) => ({
-    x: scaleX(d.year, minYear, maxYear),
-    y: scaleY(d.per1000, minVal, maxVal),
-    year: d.year,
-    per1000: d.per1000
-  }))
+  const x = scaleLinear()
+    .domain([minYear, maxYear])
+    .range([PAD.left, PAD.left + INNER_W])
 
-  const regPoints = (regionalData ?? []).map((d) => ({
-    x: scaleX(d.year, minYear, maxYear),
-    y: scaleY(d.per1000, minVal, maxVal),
-    year: d.year,
-    per1000: d.per1000
-  }))
+  const y = scaleLinear().domain([0, maxVal]).range([baseY, PAD.top])
 
-  const natPath = buildSmoothedPath(natPoints)
-  const regPath = buildSmoothedPath(regPoints)
-  const natAreaPath = buildAreaPath(natPath, natPoints, baseY)
-  const regAreaPath = buildAreaPath(regPath, regPoints, baseY)
+  const lineGen = d3Line<TrendPoint>()
+    .x((d) => x(d.year))
+    .y((d) => y(d.per1000))
+    .curve(curveMonotoneX)
+
+  const areaGen = d3Area<TrendPoint>()
+    .x((d) => x(d.year))
+    .y0(baseY)
+    .y1((d) => y(d.per1000))
+    .curve(curveMonotoneX)
+
+  const natPath = lineGen(data) ?? ''
+  const natAreaPath = areaGen(data) ?? ''
+  const regPath = regionalData ? (lineGen(regionalData) ?? '') : ''
+  const regAreaPath = regionalData ? (areaGen(regionalData) ?? '') : ''
 
   const yTicks = Array.from({ length: 5 }, (_, i) => {
     const val = (maxVal / 4) * i
-    return { val, y: scaleY(val, minVal, maxVal) }
+    return { val, y: y(val) }
   })
 
   const xTicks = data.filter((_, i) => i % 3 === 0 || data[i].year === maxYear)
@@ -151,19 +113,19 @@ export default function TrendChart({
         </defs>
 
         {/* Grid lines */}
-        {yTicks.map(({ val, y }, i) => (
+        {yTicks.map(({ val, y: ty }, i) => (
           <g key={i}>
             <line
               x1={PAD.left}
-              y1={y}
+              y1={ty}
               x2={PAD.left + INNER_W}
-              y2={y}
+              y2={ty}
               stroke={COLOR_GRID}
               strokeWidth={1}
             />
             <text
               x={PAD.left - 8}
-              y={y}
+              y={ty}
               textAnchor="end"
               dominantBaseline="middle"
               fontSize={FONT_TICK}
@@ -202,11 +164,11 @@ export default function TrendChart({
         {selectedYear &&
           data.some((d) => d.year === selectedYear) &&
           (() => {
-            const x = scaleX(selectedYear, minYear, maxYear)
+            const sx = x(selectedYear)
             return (
               <g>
                 <rect
-                  x={x - colWidth / 2}
+                  x={sx - colWidth / 2}
                   y={PAD.top}
                   width={colWidth}
                   height={INNER_H}
@@ -215,16 +177,16 @@ export default function TrendChart({
                   rx={2}
                 />
                 <line
-                  x1={x}
+                  x1={sx}
                   y1={PAD.top}
-                  x2={x}
+                  x2={sx}
                   y2={baseY}
                   stroke={COLOR_YEAR}
                   strokeWidth={1.5}
                   strokeDasharray="3 2"
                 />
                 <text
-                  x={x}
+                  x={sx}
                   y={PAD.top - 6}
                   textAnchor="middle"
                   fontSize={FONT_LABEL}
@@ -240,9 +202,9 @@ export default function TrendChart({
         {/* Hover crosshair */}
         {tooltip && (
           <line
-            x1={scaleX(tooltip.year, minYear, maxYear)}
+            x1={x(tooltip.year)}
             y1={PAD.top}
-            x2={scaleX(tooltip.year, minYear, maxYear)}
+            x2={x(tooltip.year)}
             y2={baseY}
             stroke={COLOR_AXIS_LABEL}
             strokeWidth={1}
@@ -251,24 +213,26 @@ export default function TrendChart({
         )}
 
         {/* Dots — only visible on hovered year */}
-        {natPoints.map(({ x, y, year, per1000 }) => {
-          const hovered = tooltip?.year === year
+        {data.map((d) => {
+          const hovered = tooltip?.year === d.year
+          const cx = x(d.year)
+          const cy = y(d.per1000)
           return (
-            <g key={year}>
+            <g key={d.year}>
               {hovered && (
                 <>
                   <circle
-                    cx={x}
-                    cy={y}
+                    cx={cx}
+                    cy={cy}
                     r={6}
                     fill="white"
                     stroke={COLOR_NATIONAL}
                     strokeWidth={2}
                   />
-                  {regByYear.has(year) && (
+                  {regByYear.has(d.year) && (
                     <circle
-                      cx={x}
-                      cy={scaleY(regByYear.get(year)!, minVal, maxVal)}
+                      cx={cx}
+                      cy={y(regByYear.get(d.year)!)}
                       r={6}
                       fill="white"
                       stroke={COLOR_REGIONAL}
@@ -278,7 +242,7 @@ export default function TrendChart({
                 </>
               )}
               <rect
-                x={x - colWidth / 2}
+                x={cx - colWidth / 2}
                 y={PAD.top}
                 width={colWidth}
                 height={INNER_H}
@@ -288,22 +252,22 @@ export default function TrendChart({
                   setTooltip({
                     x: e.clientX,
                     y: e.clientY,
-                    year,
-                    national: per1000,
-                    regional: regByYear.get(year) ?? null
+                    year: d.year,
+                    national: d.per1000,
+                    regional: regByYear.get(d.year) ?? null
                   })
                 }
                 onMouseMove={(e) =>
                   setTooltip({
                     x: e.clientX,
                     y: e.clientY,
-                    year,
-                    national: per1000,
-                    regional: regByYear.get(year) ?? null
+                    year: d.year,
+                    national: d.per1000,
+                    regional: regByYear.get(d.year) ?? null
                   })
                 }
                 onClick={() =>
-                  onYearChange?.(selectedYear === year ? null : year)
+                  onYearChange?.(selectedYear === d.year ? null : d.year)
                 }
               />
             </g>
@@ -314,7 +278,7 @@ export default function TrendChart({
         {xTicks.map((d) => (
           <text
             key={d.year}
-            x={scaleX(d.year, minYear, maxYear)}
+            x={x(d.year)}
             y={baseY + 20}
             textAnchor="middle"
             fontSize={FONT_TICK}
