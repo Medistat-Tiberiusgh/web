@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
-import LoginPage from './components/LoginPage'
 import { UserContext } from './context/UserContext'
 import { clearToken, loadCurrentUser, completeLogin } from './lib/auth'
 import type { User } from './context/UserContext'
@@ -20,8 +19,6 @@ export default function App() {
     clearToken()
     setUser(null)
   }
-
-  if (!user) return <LoginPage />
 
   return (
     <UserContext.Provider value={user}>

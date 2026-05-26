@@ -7,12 +7,15 @@ export async function gqlFetch<T>(
   variables?: Record<string, unknown>,
   signal?: AbortSignal
 ): Promise<T> {
+  const token = getToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  }
+  if (token) headers.Authorization = `Bearer ${token}`
+
   const res = await fetch(GRAPHQL_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`
-    },
+    headers,
     body: JSON.stringify({ query, variables }),
     signal
   })

@@ -3,6 +3,7 @@ import { COLOR_BRAND } from '../../theme'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
 import { gqlFetch } from '../../lib/graphql'
+import { startGithubLogin } from '../../lib/oauth'
 import { SEARCH_DRUGS_QUERY } from '../../lib/queries'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
@@ -266,39 +267,50 @@ export default function AppNavbar({
           </div>
 
           <div className="flex items-center justify-end gap-3">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.username}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+            {user ? (
+              <>
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.username}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    {user.username[0]?.toUpperCase() ?? '?'}
+                  </div>
+                )}
+                <span className="text-base font-semibold text-gray-900">
+                  {user.username}
+                </span>
+                <button
+                  title="Log out"
+                  onClick={onLogout}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                    />
+                  </svg>
+                </button>
+              </>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                {user?.username?.[0]?.toUpperCase() ?? '?'}
-              </div>
-            )}
-            <span className="text-base font-semibold text-gray-900">
-              {user?.username ?? 'Guest'}
-            </span>
-            <button
-              title="Log out"
-              onClick={onLogout}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <button
+                onClick={startGithubLogin}
+                className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
-                />
-              </svg>
-            </button>
+                Sign in
+              </button>
+            )}
           </div>
         </div>
 

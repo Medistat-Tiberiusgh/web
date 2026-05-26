@@ -11,7 +11,7 @@ import { useRegions } from '../useRegions'
  * KPI calculations so the Dashboard component only deals with layout.
  */
 export function useDashboard() {
-  const user = useUser()!
+  const user = useUser()
 
   const filters = useFilters()
   const {
@@ -36,7 +36,7 @@ export function useDashboard() {
   const { regions } = useRegions()
 
   // Effective region: explicit filter → user's home region → none
-  const effectiveRegionId = activeRegion?.id ?? user.regionId ?? null
+  const effectiveRegionId = activeRegion?.id ?? user?.regionId ?? null
 
   // Numeric IDs for API — gender and age band are mutually exclusive (useFilters enforces this)
   const genderId =

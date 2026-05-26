@@ -171,7 +171,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                   }}
                 />
                 <span className="text-slate-600 whitespace-nowrap">
-                  {db.user.regionId != null ? 'Less than yours' : 'Below average'}
+                  {db.user?.regionId != null ? 'Less than yours' : 'Below average'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -182,7 +182,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                   }}
                 />
                 <span className="text-orange-700 whitespace-nowrap">
-                  {db.user.regionId != null ? 'More than yours' : 'Above average'}
+                  {db.user?.regionId != null ? 'More than yours' : 'Above average'}
                 </span>
               </div>
             </div>

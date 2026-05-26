@@ -1,7 +1,24 @@
 export const VERIFIER_KEY = 'medistat_pkce_verifier'
 
+const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string
+
 export function redirectUri(): string {
   return `${window.location.origin}/`
+}
+
+export async function startGithubLogin(): Promise<void> {
+  const verifier = generateVerifier()
+  const challenge = await computeChallenge(verifier)
+  sessionStorage.setItem(VERIFIER_KEY, verifier)
+
+  const params = new URLSearchParams({
+    client_id: GITHUB_CLIENT_ID,
+    redirect_uri: redirectUri(),
+    scope: 'read:user',
+    code_challenge: challenge,
+    code_challenge_method: 'S256'
+  })
+  window.location.href = `https://github.com/login/oauth/authorize?${params}`
 }
 
 export function claimCallback(): { code: string; verifier: string } | null {

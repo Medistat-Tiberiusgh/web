@@ -1,28 +1,6 @@
 import { COLOR_BRAND } from '../theme'
-import {
-  generateVerifier,
-  computeChallenge,
-  VERIFIER_KEY,
-  redirectUri
-} from '../lib/oauth'
+import { startGithubLogin } from '../lib/oauth'
 import Footer from './Footer'
-
-const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string
-
-async function startGithubLogin() {
-  const verifier = generateVerifier()
-  const challenge = await computeChallenge(verifier)
-  sessionStorage.setItem(VERIFIER_KEY, verifier)
-
-  const params = new URLSearchParams({
-    client_id: GITHUB_CLIENT_ID,
-    redirect_uri: redirectUri(),
-    scope: 'read:user',
-    code_challenge: challenge,
-    code_challenge_method: 'S256'
-  })
-  window.location.href = `https://github.com/login/oauth/authorize?${params}`
-}
 
 export default function LoginPage() {
   return (
