@@ -43,33 +43,69 @@ export const MY_MEDICATIONS_QUERY = `
   }
 `
 
-export const DRUG_INSIGHTS_QUERY = `
-  query DrugInsights($atcCode: String!, $year: Int, $region: Int, $gender: Int, $ageGroup: Int) {
-    drugInsights(atcCode: $atcCode, year: $year, region: $region, gender: $gender, ageGroup: $ageGroup) {
-      trend {
+// Single query that drives the entire dashboard. The `reg` alias is only
+// requested when a region filter is active (see $hasRegion @include directive).
+export const DASHBOARD_QUERY = `
+  query Dashboard(
+    $atcCode: String!
+    $region: Int
+    $gender: Int
+    $ageGroup: Int
+    $year: Int
+    $hasRegion: Boolean!
+  ) {
+    nat: drugInsights(atcCode: $atcCode) {
+      trend(gender: $gender, ageGroup: $ageGroup) {
         year
         totalPrescriptions
         totalPatients
         per1000
       }
-      regionalPopularity {
-        regionId
-        regionName
-        per1000
-      }
-      genderSplit {
+      genderSplit(ageGroup: $ageGroup) {
         year
         genderId
         gender
         per1000
       }
-      ageSplit {
+      regionalPopularity(gender: $gender, ageGroup: $ageGroup) {
+        regionId
+        regionName
+        per1000
+      }
+      ageSplit(gender: $gender) {
         year
         ageGroupId
         ageGroupName
         per1000
       }
-      demographicGrid {
+      demographicGrid(year: $year) {
+        genderId
+        gender
+        ageGroupId
+        ageGroupName
+        per1000
+      }
+    }
+    reg: drugInsights(atcCode: $atcCode) @include(if: $hasRegion) {
+      trend(region: $region, gender: $gender, ageGroup: $ageGroup) {
+        year
+        totalPrescriptions
+        totalPatients
+        per1000
+      }
+      genderSplit(region: $region, ageGroup: $ageGroup) {
+        year
+        genderId
+        gender
+        per1000
+      }
+      ageSplit(region: $region, gender: $gender) {
+        year
+        ageGroupId
+        ageGroupName
+        per1000
+      }
+      demographicGrid(year: $year, region: $region) {
         genderId
         gender
         ageGroupId
@@ -92,35 +128,6 @@ export const DRUG_INFO_QUERY = `
       otherInfo
       sourceUrl
       cachedAt
-    }
-  }
-`
-
-// Lightweight query — only fetches demographicGrid, so it can accept a year
-// filter without affecting the full trend series.
-export const DEMOGRAPHIC_GRID_QUERY = `
-  query DemographicGrid($atcCode: String!, $year: Int, $region: Int) {
-    drugInsights(atcCode: $atcCode, year: $year, region: $region) {
-      demographicGrid {
-        genderId
-        gender
-        ageGroupId
-        ageGroupName
-        per1000
-      }
-    }
-  }
-`
-
-export const AGE_SPLIT_QUERY = `
-  query AgeSplit($atcCode: String!, $region: Int, $gender: Int) {
-    drugInsights(atcCode: $atcCode, region: $region, gender: $gender) {
-      ageSplit {
-        year
-        ageGroupId
-        ageGroupName
-        per1000
-      }
     }
   }
 `

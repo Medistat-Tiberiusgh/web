@@ -1,9 +1,7 @@
 import { useMemo } from 'react'
 import { useUser } from '../../context/UserContext'
 import { useFilters } from './useFilters'
-import { useDashboardInsights } from './useDashboardInsights'
-import { useAgeSplit } from './useAgeSplit'
-import { useDemographicGrid } from './useDemographicGrid'
+import { useDashboardData } from './useDashboardData'
 import { useDashboardKPIs } from './useDashboardKPIs'
 import { useMedications } from '../useMedications'
 import { useRegions } from '../useRegions'
@@ -45,36 +43,13 @@ export function useDashboard() {
     activeGender === 'men' ? 1 : activeGender === 'women' ? 2 : null
   const ageBandId = activeAgeBand?.id ?? null
 
-  const { national, regional, loading } = useDashboardInsights(
+  // Single GraphQL request fetches every chart's data — field-level args mean
+  // each section gets its own filter shape without needing separate queries.
+  const { national, regional, loading } = useDashboardData(
     activeDrug?.atcCode ?? null,
     effectiveRegionId,
     genderId,
-    ageBandId
-  )
-
-  // Age split always fetches all bands so AgeBandSparklines can highlight
-  // the selected band rather than collapsing to a single row.
-  const { ageSplit: natAgeSplit } = useAgeSplit(
-    activeDrug?.atcCode ?? null,
-    null,
-    genderId
-  )
-  const { ageSplit: regAgeSplit } = useAgeSplit(
-    effectiveRegionId != null ? (activeDrug?.atcCode ?? null) : null,
-    effectiveRegionId,
-    genderId
-  )
-
-  // Demographic grid fetched separately to support year filtering without
-  // limiting the full trend series used by TrendChart.
-  const { grid: natGrid } = useDemographicGrid(
-    activeDrug?.atcCode ?? null,
-    null,
-    activeYear
-  )
-  const { grid: regGrid } = useDemographicGrid(
-    effectiveRegionId != null ? (activeDrug?.atcCode ?? null) : null,
-    effectiveRegionId,
+    ageBandId,
     activeYear
   )
 
@@ -83,14 +58,14 @@ export function useDashboard() {
     [regions, effectiveRegionId]
   )
 
-  // Always-complete list for the age band dropdown — no ageGroup filter applied
+  // Always-complete list for the age band dropdown — ageSplit is never filtered by ageGroup
   const availableAgeBands = useMemo(() => {
     const seen = new Set<number>()
-    return [...natAgeSplit]
+    return [...(national?.ageSplit ?? [])]
       .sort((a, b) => a.ageGroupId - b.ageGroupId)
       .filter((pt) => !seen.has(pt.ageGroupId) && seen.add(pt.ageGroupId))
       .map((pt) => ({ name: pt.ageGroupName, id: pt.ageGroupId }))
-  }, [natAgeSplit])
+  }, [national?.ageSplit])
 
   const demographicLabel =
     activeGender === 'men'
@@ -119,22 +94,27 @@ export function useDashboard() {
   }, [national?.genderSplit, genderId])
 
   const regGenderSplit = useMemo(() => {
-    if (!regional?.genderSplit) return undefined
-    if (genderId == null) return regional.genderSplit
-    return regional.genderSplit.filter((pt) => pt.genderId === genderId)
+    const split = regional?.genderSplit
+    if (!split) return undefined
+    if (genderId == null) return split
+    return split.filter((pt) => pt.genderId === genderId)
   }, [regional?.genderSplit, genderId])
 
   // Heatmap always shows all age bands — only apply gender filter
   const filteredNatGrid = useMemo(() => {
-    if (genderId == null) return natGrid
-    return natGrid.filter((cell) => cell.genderId === genderId)
-  }, [natGrid, genderId])
+    const grid = national?.demographicGrid ?? []
+    if (genderId == null) return grid
+    return grid.filter((cell) => cell.genderId === genderId)
+  }, [national?.demographicGrid, genderId])
 
   const filteredRegGrid = useMemo(() => {
-    if (genderId == null) return regGrid
-    return regGrid.filter((cell) => cell.genderId === genderId)
-  }, [regGrid, genderId])
+    const grid = regional?.demographicGrid ?? []
+    if (genderId == null) return grid
+    return grid.filter((cell) => cell.genderId === genderId)
+  }, [regional?.demographicGrid, genderId])
 
+  const natAgeSplit = national?.ageSplit ?? []
+  const regAgeSplit = regional?.ageSplit ?? []
   const mapRegions = national?.regionalPopularity ?? []
   const nationalAverage = kpis.natLatest?.per1000 ?? null
 

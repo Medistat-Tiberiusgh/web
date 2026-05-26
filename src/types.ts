@@ -26,14 +26,6 @@ export interface DemographicCell {
   per1000: number
 }
 
-export interface DrugInsights {
-  regionalPopularity: RegionalStat[]
-  trend: TrendPoint[]
-  genderSplit: GenderSplitPoint[]
-  ageSplit: AgeSplitPoint[]
-  demographicGrid: DemographicCell[]
-}
-
 export interface AgeSplitPoint {
   year: number
   ageGroupId: number

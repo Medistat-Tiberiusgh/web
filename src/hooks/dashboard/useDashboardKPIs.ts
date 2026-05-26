@@ -1,9 +1,13 @@
 import { useMemo } from 'react'
-import type { DrugInsights } from '../../types'
+import type { TrendPoint } from '../../types'
+
+interface HasTrend {
+  trend: TrendPoint[]
+}
 
 export function useDashboardKPIs(
-  national: DrugInsights | null,
-  regional: DrugInsights | null,
+  national: HasTrend | null,
+  regional: HasTrend | null,
   activeYear: number | null
 ) {
   return useMemo(() => {
