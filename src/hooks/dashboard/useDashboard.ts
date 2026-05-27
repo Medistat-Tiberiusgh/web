@@ -45,13 +45,13 @@ export function useDashboard() {
 
   // Single GraphQL request fetches every chart's data — field-level args mean
   // each section gets its own filter shape without needing separate queries.
-  const { national, regional, loading } = useDashboardData(
-    activeDrug?.atcCode ?? null,
-    effectiveRegionId,
-    genderId,
-    ageBandId,
-    activeYear
-  )
+  const { national, regional, loading } = useDashboardData({
+    atcCode: activeDrug?.atcCode ?? null,
+    region: effectiveRegionId,
+    gender: genderId,
+    ageGroup: ageBandId,
+    year: activeYear
+  })
 
   const regionName = useMemo(
     () => regions.find((r) => r.id === effectiveRegionId)?.regionName ?? null,
