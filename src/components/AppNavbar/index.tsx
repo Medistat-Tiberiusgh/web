@@ -7,13 +7,14 @@ import { startGithubLogin } from '../../lib/oauth'
 import { SEARCH_DRUGS_QUERY } from '../../lib/queries'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
+import SavedMedicationsButton from './SavedMedicationsButton'
 import SearchResultList, {
   buildSearchResults,
   buildFlatActions
 } from './SearchResultList'
 import type { SearchHandlers } from './SearchResultList'
 import type { AgeBand } from '../../hooks/dashboard/useFilters'
-import type { Drug, Region } from '../../types'
+import type { Drug, Region, UserMedication } from '../../types'
 
 interface Props {
   onLogout: () => void
@@ -24,12 +25,15 @@ interface Props {
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
   savedAtcCodes: Set<string>
+  medications: UserMedication[]
+  medsLoading: boolean
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: AgeBand | null) => void
   onSaveDrug: (drug: Drug) => void
+  onRemoveMedication: (atcCode: string) => void
 }
 
 export default function AppNavbar({
@@ -41,12 +45,15 @@ export default function AppNavbar({
   activeAgeBand,
   availableAgeBands,
   savedAtcCodes,
+  medications,
+  medsLoading,
   onDrugChange,
   onRegionChange,
   onYearChange,
   onGenderChange,
   onAgeBandChange,
-  onSaveDrug
+  onSaveDrug,
+  onRemoveMedication
 }: Props) {
   const user = useUser()
   const { regions } = useRegions()
@@ -269,6 +276,13 @@ export default function AppNavbar({
           <div className="flex items-center justify-end gap-3">
             {user ? (
               <>
+                <SavedMedicationsButton
+                  medications={medications}
+                  loading={medsLoading}
+                  activeDrugAtcCode={activeDrug?.atcCode ?? null}
+                  onSelect={onDrugChange}
+                  onRemove={onRemoveMedication}
+                />
                 {user.avatarUrl ? (
                   <img
                     src={user.avatarUrl}

@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { Card, Skeleton } from '@heroui/react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import DispensingTrend from '../charts/DispensingTrend'
 import AgeBandTrends from '../charts/AgeBandTrends'
 import DemographicHeatmap from '../charts/DemographicHeatmap'
@@ -22,17 +29,17 @@ export default function ChartsGridSection({ db }: { db: Db }) {
     <div className="flex flex-col lg:flex-row gap-3">
       {/* Left column */}
       <div className="flex-1 min-w-0 flex flex-col gap-3">
-        <Card>
-          <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+        <Card className="py-0 gap-0">
+          <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-0">
             <div>
-              <Card.Title>
+              <CardTitle>
                 Dispensing Trend · 2006–2024
                 <ChartFilterLabel
                   gender={db.activeGender}
                   ageBand={db.activeAgeBand}
                 />
-              </Card.Title>
-              <Card.Description>per 1,000 inhabitants</Card.Description>
+              </CardTitle>
+              <CardDescription>per 1,000 inhabitants</CardDescription>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
               {db.regionName && (
@@ -46,8 +53,8 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 National
               </span>
             </div>
-          </Card.Header>
-          <Card.Content className="p-0">
+          </CardHeader>
+          <CardContent className="p-0">
             {db.loading ? (
               <Skeleton className="h-48 m-4 rounded" />
             ) : (
@@ -59,25 +66,25 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 onYearChange={db.setActiveYear}
               />
             )}
-          </Card.Content>
+          </CardContent>
         </Card>
 
-        <Card>
-          <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+        <Card className="py-0 gap-0">
+          <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-0">
             <div>
-              <Card.Title>
+              <CardTitle>
                 Age Band Trends
                 <ChartFilterLabel
                   year={db.activeYear}
                   gender={db.activeGender}
                   ageBand={db.activeAgeBand}
                 />
-              </Card.Title>
-              <Card.Description>
+              </CardTitle>
+              <CardDescription>
                 per 1,000 people · bars ={' '}
                 {db.activeYear ?? db.latestTrend?.year ?? '—'} · lines = 2006–
                 {db.activeYear ?? db.latestTrend?.year ?? '2024'} trend
-              </Card.Description>
+              </CardDescription>
             </div>
             {db.regionName && (
               <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
@@ -91,8 +98,8 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 </span>
               </div>
             )}
-          </Card.Header>
-          <Card.Content className="p-0">
+          </CardHeader>
+          <CardContent className="p-0">
             {db.loading ? (
               <div className="flex flex-col gap-2 p-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -111,21 +118,21 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 filterAgeBand={db.activeAgeBand?.name ?? null}
               />
             )}
-          </Card.Content>
+          </CardContent>
         </Card>
 
-        <Card>
-          <Card.Header className="px-4 pt-4 pb-0">
-            <Card.Title>
+        <Card className="py-0 gap-0">
+          <CardHeader className="px-4 pt-4 pb-0">
+            <CardTitle>
               Demographic Heatmap
               <ChartFilterLabel
                 year={db.activeYear}
                 regionName={db.regionName}
               />
-            </Card.Title>
-            <Card.Description>per 1,000 people</Card.Description>
-          </Card.Header>
-          <Card.Content className="p-0">
+            </CardTitle>
+            <CardDescription>per 1,000 people</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
             {db.loading ? (
               <div className="grid grid-cols-3 gap-1 p-4">
                 {Array.from({ length: 54 }).map((_, i) => (
@@ -143,24 +150,24 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 highlightAgeBand={db.activeAgeBand?.id ?? null}
               />
             )}
-          </Card.Content>
+          </CardContent>
         </Card>
       </div>
 
       {/* Right column: map + ranking */}
       <div className="flex flex-col gap-3 w-full lg:w-80 xl:w-96 lg:shrink-0">
-        <Card>
-          <Card.Header className="px-4 pt-4 pb-0 flex-row items-start justify-between">
+        <Card className="py-0 gap-0">
+          <CardHeader className="px-4 pt-4 pb-0 flex flex-row items-start justify-between">
             <div>
-              <Card.Title>
+              <CardTitle>
                 Dispensing Intensity Map
                 <ChartFilterLabel
                   year={db.activeYear}
                   gender={db.activeGender}
                   ageBand={db.activeAgeBand}
                 />
-              </Card.Title>
-              <Card.Description>per 1,000 inhabitants</Card.Description>
+              </CardTitle>
+              <CardDescription>per 1,000 inhabitants</CardDescription>
             </div>
             <div className="flex flex-col items-start gap-1 pt-0.5 shrink-0 text-[10px]">
               <div className="flex items-center gap-1.5">
@@ -186,8 +193,8 @@ export default function ChartsGridSection({ db }: { db: Db }) {
                 </span>
               </div>
             </div>
-          </Card.Header>
-          <Card.Content
+          </CardHeader>
+          <CardContent
             className="pt-3 px-0 pb-0 overflow-hidden"
             style={{ height: '630px' }}
           >
@@ -199,24 +206,24 @@ export default function ChartsGridSection({ db }: { db: Db }) {
               onHoverRegion={setHoveredRegionId}
               onRegionClick={handleRegionClick}
             />
-          </Card.Content>
+          </CardContent>
         </Card>
 
-        <Card>
-          <Card.Header className="px-4 pt-4 pb-0 shrink-0">
-            <Card.Title>
+        <Card className="py-0 gap-0">
+          <CardHeader className="px-4 pt-4 pb-0 shrink-0">
+            <CardTitle>
               Regional Ranking
               <ChartFilterLabel
                 year={db.activeYear}
                 gender={db.activeGender}
                 ageBand={db.activeAgeBand}
               />
-            </Card.Title>
-            <Card.Description>
+            </CardTitle>
+            <CardDescription>
               Dispensings per 1,000 residents · descending
-            </Card.Description>
-          </Card.Header>
-          <Card.Content className="p-0 overflow-hidden">
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 overflow-hidden">
             <RegionalRanking
               regions={db.mapRegions}
               nationalAverage={db.nationalAverage}
@@ -225,7 +232,7 @@ export default function ChartsGridSection({ db }: { db: Db }) {
               onHoverRegion={setHoveredRegionId}
               onRegionClick={handleRegionClick}
             />
-          </Card.Content>
+          </CardContent>
         </Card>
       </div>
     </div>
