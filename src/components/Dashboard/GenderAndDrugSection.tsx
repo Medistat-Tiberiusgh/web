@@ -1,5 +1,12 @@
 import { useRef, useState, useEffect } from 'react'
-import { Card, Skeleton } from '@heroui/react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import PatientGenderGap from '../charts/PatientGenderGap'
 import DrugInfoCard from '../DrugInfoCard'
 import ChartFilterLabel from '../ChartFilterLabel'
@@ -29,20 +36,20 @@ export default function GenderAndDrugSection({ db }: { db: Db }) {
         style={{ width: '560px' }}
         className="shrink-0"
       >
-        <Card>
-          <Card.Header className="flex-row items-start justify-between px-4 pt-4 pb-0">
+        <Card className="py-0 gap-0">
+          <CardHeader className="flex flex-row items-start justify-between px-4 pt-4 pb-0">
             <div>
-              <Card.Title>
+              <CardTitle>
                 Patient Gender Gap
                 <ChartFilterLabel
                   regionName={db.regionName}
                   ageBand={db.activeAgeBand}
                 />
-              </Card.Title>
-              <Card.Description>per 1,000 inhabitants · all years</Card.Description>
+              </CardTitle>
+              <CardDescription>per 1,000 inhabitants · all years</CardDescription>
             </div>
-          </Card.Header>
-          <Card.Content className="p-0">
+          </CardHeader>
+          <CardContent className="p-0">
             {db.loading ? (
               <Skeleton className="h-48 m-4 rounded" />
             ) : (
@@ -54,7 +61,7 @@ export default function GenderAndDrugSection({ db }: { db: Db }) {
                 selectedYear={db.activeYear}
               />
             )}
-          </Card.Content>
+          </CardContent>
         </Card>
       </div>
 

@@ -1,4 +1,4 @@
-import { Card } from '@heroui/react'
+import { Card, CardContent } from '@/components/ui/card'
 import AppNavbar from '../AppNavbar'
 import Footer from '../Footer'
 import KpiSection from './KpiSection'
@@ -36,10 +36,10 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
         {!db.activeDrug ? (
           <Card>
-            <Card.Content className="flex items-center justify-center h-64 text-gray-400 text-sm">
+            <CardContent className="flex items-center justify-center h-64 text-gray-400 text-sm">
               Search for a medication or pick one from your saved list to
               explore dispensing data
-            </Card.Content>
+            </CardContent>
           </Card>
         ) : (
           <>

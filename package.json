@@ -13,8 +13,6 @@
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
-    "@heroui/react": "^3.0.2",
-    "@heroui/styles": "^3.0.2",
     "@tailwindcss/vite": "^4.2.2",
     "@types/d3-geo": "^3.1.0",
     "class-variance-authority": "^0.7.1",

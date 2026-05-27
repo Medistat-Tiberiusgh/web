@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { Card, Chip, Modal, Skeleton } from '@heroui/react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useDrugInfo } from '../hooks/useDrugInfo'
 
 interface Props {
@@ -82,15 +90,13 @@ function ModalContent({
 
   return (
     <>
-      <Modal.Header className="px-6 pt-6 pb-0">
+      <DialogHeader className="px-6 pt-6 pb-0">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <Modal.Heading className="text-base font-semibold text-gray-900">
+            <DialogTitle className="text-base font-semibold text-gray-900">
               {drugName}
-            </Modal.Heading>
-            <Chip size="sm" variant="soft">
-              {atcCode}
-            </Chip>
+            </DialogTitle>
+            <Badge variant="secondary">{atcCode}</Badge>
             {narcoticClass && (
               <span className="text-xs font-bold text-red-600">
                 Narcotic {narcoticClass}
@@ -99,9 +105,9 @@ function ModalContent({
           </div>
           <p className="text-xs text-gray-400">Drug information</p>
         </div>
-      </Modal.Header>
+      </DialogHeader>
 
-      <Modal.Body className="px-6 py-4 flex flex-col gap-4">
+      <div className="px-6 py-4 flex flex-col gap-4">
         <Section label="Indications" text={data.indication} />
 
         {data.indication && (data.precautions || data.sideEffects) && (
@@ -128,9 +134,9 @@ function ModalContent({
         {data.otherInfo && (
           <Section label="Other Information" text={data.otherInfo} />
         )}
-      </Modal.Body>
+      </div>
 
-      <Modal.Footer className="px-6 pb-5 pt-0 flex items-center justify-between gap-4">
+      <div className="px-6 pb-5 pt-0 flex items-center justify-between gap-4">
         <p className="text-[10px] text-gray-400 flex-1">
           Drug information sourced from{' '}
           <a
@@ -154,7 +160,7 @@ function ModalContent({
             View source →
           </a>
         )}
-      </Modal.Footer>
+      </div>
     </>
   )
 }
@@ -181,20 +187,18 @@ export default function DrugInfoCard({
   return (
     <>
       <Card
-        className="flex flex-col cursor-pointer"
+        className="flex flex-col cursor-pointer py-0 gap-0"
         style={{ height: '100%' }}
         onClick={() => hasContent && setIsOpen(true)}
       >
         {/* Header */}
-        <Card.Header className="px-4 pt-4 pb-3 flex-row items-start justify-between gap-2 shrink-0">
+        <CardHeader className="flex flex-row items-start justify-between gap-2 shrink-0 px-4 pt-4 pb-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-semibold text-gray-900 leading-tight">
               {drugName}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <Chip size="sm" variant="soft">
-                {atcCode}
-              </Chip>
+              <Badge variant="secondary">{atcCode}</Badge>
               {narcoticClass && (
                 <span className="text-xs font-bold text-red-600">
                   Narcotic {narcoticClass}
@@ -207,10 +211,10 @@ export default function DrugInfoCard({
               Read more →
             </span>
           )}
-        </Card.Header>
+        </CardHeader>
 
         {/* Preview body */}
-        <Card.Content className="flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-0 relative flex flex-col gap-4">
+        <CardContent className="flex-1 min-h-0 overflow-hidden px-4 pb-4 pt-0 relative flex flex-col gap-4">
           {loading ? (
             <div className="flex flex-col gap-2">
               <Skeleton className="h-2.5 w-20 rounded-full" />
@@ -262,25 +266,22 @@ export default function DrugInfoCard({
           ) : (
             <p className="text-xs text-gray-400">No information available.</p>
           )}
-        </Card.Content>
+        </CardContent>
       </Card>
 
       {/* Modal */}
-      <Modal.Backdrop isOpen={isOpen} onOpenChange={setIsOpen} variant="blur">
-        <Modal.Container scroll="inside">
-          <Modal.Dialog className="w-full sm:max-w-3xl">
-            <Modal.CloseTrigger />
-            {data && hasContent && (
-              <ModalContent
-                drugName={drugName}
-                narcoticClass={narcoticClass}
-                atcCode={atcCode}
-                data={data}
-              />
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="w-full sm:max-w-3xl p-0 gap-0 max-h-[90vh] overflow-y-auto">
+          {data && hasContent && (
+            <ModalContent
+              drugName={drugName}
+              narcoticClass={narcoticClass}
+              atcCode={atcCode}
+              data={data}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

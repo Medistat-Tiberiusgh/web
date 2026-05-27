@@ -1,4 +1,9 @@
-import { Card, Popover } from '@heroui/react'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
 
 interface Props {
   label: string
@@ -25,26 +30,24 @@ export default function KpiCard({
   info
 }: Props) {
   return (
-    <Card>
-      <Card.Content className="p-3">
+    <Card className="py-0 gap-0">
+      <CardContent className="p-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">
               {label}
             </span>
             <Popover>
-              <Popover.Trigger aria-label="More information">
+              <PopoverTrigger asChild aria-label="More information">
                 <button className="w-5 h-5 rounded-full border border-gray-300 text-gray-400 text-[11px] font-bold leading-none flex items-center justify-center hover:border-gray-500 hover:text-gray-600 transition-colors">
                   i
                 </button>
-              </Popover.Trigger>
-              <Popover.Content className="max-w-64">
-                <Popover.Dialog>
-                  <div className="text-xs text-gray-500 leading-relaxed">
-                    {info}
-                  </div>
-                </Popover.Dialog>
-              </Popover.Content>
+              </PopoverTrigger>
+              <PopoverContent className="max-w-64">
+                <div className="text-xs text-gray-500 leading-relaxed">
+                  {info}
+                </div>
+              </PopoverContent>
             </Popover>
           </div>
 
@@ -78,7 +81,7 @@ export default function KpiCard({
             )}
           </div>
         </div>
-      </Card.Content>
+      </CardContent>
     </Card>
   )
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Bookmark } from 'lucide-react'
-import { Skeleton } from '@heroui/react'
 import {
   Popover,
   PopoverContent,
@@ -8,6 +7,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import MedicationRow from '../MedicationList/MedicationRow'
 import type { Drug, UserMedication } from '../../types'
 
