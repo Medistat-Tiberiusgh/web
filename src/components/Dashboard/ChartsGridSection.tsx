@@ -54,12 +54,12 @@ export default function ChartsGridSection({ db }: { db: Db }) {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 h-65">
             {db.loading ? (
               <Skeleton className="h-48 m-4 rounded" />
             ) : (
               <DispensingTrend
-                data={db.effectiveNatTrend}
+                nationalData={db.effectiveNatTrend}
                 regionalData={db.effectiveRegTrend}
                 regionName={db.regionName}
                 selectedYear={db.activeYear}
