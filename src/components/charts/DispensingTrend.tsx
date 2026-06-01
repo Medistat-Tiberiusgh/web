@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { fmtPer1000 } from '../../lib/format'
+import { chartTooltipOptions, formatChartTooltip } from '../../lib/echartsTooltip'
 import {
   COLOR_AXIS,
   COLOR_AXIS_LABEL,
@@ -148,7 +149,7 @@ type TooltipItem = {
   axisValue?: string | number
 }
 
-function regionalDiffLine(items: TooltipItem[]): string {
+function regionalDiffNote(items: TooltipItem[]): string | undefined {
   const nationalItem = items.find((p) => p.seriesName === 'National')
   const regionalItem = items.find((p) => p.seriesName !== 'National')
   const nationalValue = nationalItem?.value
@@ -159,26 +160,26 @@ function regionalDiffLine(items: TooltipItem[]): string {
     typeof regionalValue !== 'number' ||
     nationalValue <= 0
   ) {
-    return ''
+    return undefined
   }
 
   const percent = ((regionalValue - nationalValue) / nationalValue) * 100
   const direction = percent > 0 ? 'higher' : 'lower'
   const regionalLabel = regionalItem?.seriesName ?? 'Regional'
-  return `<br/><span style="color:#9ca3af;font-size:11px">${regionalLabel} ${Math.abs(percent).toFixed(0)}% ${direction} than national</span>`
+  return `${regionalLabel} ${Math.abs(percent).toFixed(0)}% ${direction} than national`
 }
 
 function formatTooltip(params: unknown): string {
   const items = (Array.isArray(params) ? params : [params]) as TooltipItem[]
-  const year = items[0]?.axisValue ?? ''
-  const rows = items
-    .map((p) => {
-      const formatted =
-        typeof p.value === 'number' ? fmtPer1000(p.value) : '—'
-      return `${p.marker ?? ''} ${p.seriesName ?? ''}: <b>${formatted}</b>`
-    })
-    .join('<br/>')
-  return `<b>${year}</b><br/>${rows}${regionalDiffLine(items)}`
+  return formatChartTooltip({
+    title: String(items[0]?.axisValue ?? ''),
+    rows: items.map((p) => ({
+      marker: p.marker,
+      label: p.seriesName ?? '',
+      value: typeof p.value === 'number' ? fmtPer1000(p.value) : '—'
+    })),
+    note: regionalDiffNote(items)
+  })
 }
 
 function yearAtClick(
@@ -235,7 +236,8 @@ function buildOption(
     },
     tooltip: {
       trigger: 'axis',
-      formatter: formatTooltip
+      formatter: formatTooltip,
+      ...chartTooltipOptions
     },
     series: buildSeries(prep, regionName)
   }

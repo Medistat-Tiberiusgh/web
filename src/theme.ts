@@ -45,3 +45,19 @@ export const COLOR_AXIS_LABEL = '#9ca3af' // gray-400
 export const FONT_TICK = 10
 /** Secondary SVG text — axis title, in-bar year labels, column headers */
 export const FONT_LABEL = 9
+
+// ── Chart tooltip styling ─────────────────────────────────────────────────────
+// ECharts tooltips render as HTML strings, so colors/sizes can't use Tailwind.
+
+/** Tooltip card background */
+export const COLOR_TOOLTIP_BG = '#ffffff'
+/** Tooltip card border and section dividers */
+export const COLOR_TOOLTIP_BORDER = '#e5e7eb' // gray-200
+/** Primary tooltip body text (year, gender labels, values) */
+export const COLOR_TOOLTIP_TEXT = '#1f2937' // gray-800
+/** Font size for tooltip body text (px) */
+export const FONT_TOOLTIP = 12
+/** Muted secondary text inside a tooltip — e.g. "Dispensed to men 12% more" */
+export const COLOR_TOOLTIP_NOTE = '#9ca3af' // gray-400
+/** Font size for tooltip note text (px) */
+export const FONT_TOOLTIP_NOTE = 11
