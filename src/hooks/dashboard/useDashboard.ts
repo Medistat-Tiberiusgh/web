@@ -87,18 +87,9 @@ export function useDashboard() {
 
   // ── Chart data ───────────────────────────────────────────────────────────────
 
-  const natGenderSplit = useMemo(() => {
-    const split = national?.genderSplit ?? []
-    if (genderId == null) return split
-    return split.filter((pt) => pt.genderId === genderId)
-  }, [national?.genderSplit, genderId])
-
-  const regGenderSplit = useMemo(() => {
-    const split = regional?.genderSplit
-    if (!split) return undefined
-    if (genderId == null) return split
-    return split.filter((pt) => pt.genderId === genderId)
-  }, [regional?.genderSplit, genderId])
+  // GenderGap chart always shows both genders — ignore the gender filter
+  const natGenderSplit = national?.genderSplit ?? []
+  const regGenderSplit = regional?.genderSplit
 
   // Heatmap always shows all age bands — only apply gender filter
   const filteredNatGrid = useMemo(() => {
