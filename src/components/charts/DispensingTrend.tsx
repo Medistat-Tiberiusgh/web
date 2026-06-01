@@ -4,6 +4,7 @@ import ReactECharts from 'echarts-for-react'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { fmtPer1000 } from '../../lib/format'
 import { chartTooltipOptions, formatChartTooltip } from '../../lib/echartsTooltip'
+import EmptyChartState from './EmptyChartState'
 import {
   COLOR_AXIS,
   COLOR_AXIS_LABEL,
@@ -270,11 +271,7 @@ export default function DispensingTrend({
   }, [chart, nationalData, selectedYear, onYearChange])
 
   if (nationalData.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-full text-sm text-gray-400">
-        No trend data available
-      </div>
-    )
+    return <EmptyChartState message="No trend data available" />
   }
 
   return (
