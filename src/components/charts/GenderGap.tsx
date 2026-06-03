@@ -13,7 +13,8 @@ import {
 } from '../../theme'
 import {
   chartTooltipOptions,
-  formatChartTooltip
+  formatChartTooltip,
+  percentGap
 } from '../../lib/echartsTooltip'
 import EmptyChartState from './EmptyChartState'
 
@@ -117,12 +118,6 @@ function absoluteOrNull(item: GenderTooltipItem | undefined): number | null {
 
 // Statistic significant
 const SIMILAR_RATE_THRESHOLD_PERCENT = 5
-
-function percentGap(a: number, b: number): number {
-  const max = Math.max(a, b)
-  const min = Math.min(a, b)
-  return ((max - min) / min) * 100
-}
 
 function genderGapNote(items: GenderTooltipItem[]): string | undefined {
   const men = absoluteOrNull(items.find((p) => p.seriesName === 'Men'))

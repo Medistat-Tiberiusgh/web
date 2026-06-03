@@ -26,6 +26,35 @@ export type TooltipRow = {
 }
 
 /**
+ * Colored circle marker HTML — matches ECharts' default series marker. Use in
+ * a TooltipRow's `marker` when the chart's series doesn't carry a single color
+ * (e.g. heatmap cells whose color comes from visualMap, not from the series).
+ */
+export function colorDot(color: string): string {
+  return `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:6px;vertical-align:middle"></span>`
+}
+
+/**
+ * Percent difference between two positive numbers, measured against the smaller.
+ * Unsigned magnitude — always positive. Use when neither value is a baseline
+ * (e.g. men vs women, age band vs age band).
+ */
+export function percentGap(a: number, b: number): number {
+  const max = Math.max(a, b)
+  const min = Math.min(a, b)
+  return ((max - min) / min) * 100
+}
+
+/**
+ * Signed percent change of `value` relative to `baseline`. Positive when value
+ * is above baseline, negative when below. Use when one side is the reference
+ * (e.g. regional vs national).
+ */
+export function percentChange(value: number, baseline: number): number {
+  return ((value - baseline) / baseline) * 100
+}
+
+/**
  * Produces an HTML string for an ECharts tooltip formatter.
  * Layout: title (with bottom border) | rows | optional muted footer note (with top border).
  */

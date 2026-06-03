@@ -3,7 +3,11 @@ import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { fmtPer1000 } from '../../lib/format'
-import { chartTooltipOptions, formatChartTooltip } from '../../lib/echartsTooltip'
+import {
+  chartTooltipOptions,
+  formatChartTooltip,
+  percentChange
+} from '../../lib/echartsTooltip'
 import EmptyChartState from './EmptyChartState'
 import {
   COLOR_AXIS,
@@ -164,7 +168,7 @@ function regionalDiffNote(items: TooltipItem[]): string | undefined {
     return undefined
   }
 
-  const percent = ((regionalValue - nationalValue) / nationalValue) * 100
+  const percent = percentChange(regionalValue, nationalValue)
   const direction = percent > 0 ? 'higher' : 'lower'
   const regionalLabel = regionalItem?.seriesName ?? 'Regional'
   return `${regionalLabel} ${Math.abs(percent).toFixed(0)}% ${direction} than national`
