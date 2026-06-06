@@ -1,26 +1,25 @@
-/**
- * Option A — Age Band Bars + Sparklines
- *
- * Two-column layout (same split as AgeBandChart) so the list never runs
- * taller than the existing chart. Each row shows:
- *   label | thin bar (current year) | sparkline (full trend) | ±trend%
- */
-import { useState } from 'react'
-import { scaleLinear } from 'd3-scale'
-import { line as d3Line } from 'd3-shape'
-import { extent } from 'd3-array'
-import { useUser } from '../../context/UserContext'
+import { useMemo } from 'react'
+import type { CSSProperties } from 'react'
+import ReactECharts from 'echarts-for-react'
+import type { EChartsOption } from 'echarts'
 import type { AgeSplitPoint } from '../../types'
-import ChartTooltip from './ChartTooltip'
+import EmptyChartState from './EmptyChartState'
 import { fmtPer1000 } from '../../lib/format'
 import {
+  chartTooltipOptions,
+  colorDot,
+  formatChartTooltip,
+  percentChange
+} from '../../lib/echartsTooltip'
+import {
+  COLOR_AGE_BAND,
+  COLOR_AGE_LABEL,
+  COLOR_AXIS,
+  COLOR_AXIS_LABEL,
+  COLOR_GRID,
+  COLOR_NATIONAL,
   COLOR_REGIONAL,
-  COLOR_SPARK_NAT,
-  COLOR_YEAR,
-  COLOR_TREND_UP,
-  COLOR_TREND_DOWN,
-  COLOR_TREND_FLAT,
-  COLOR_AGE_BAND
+  FONT_TICK
 } from '../../theme'
 
 interface Props {
@@ -32,27 +31,292 @@ interface Props {
   filterAgeBand?: string | null
 }
 
-interface TooltipState {
-  x: number
-  y: number
-  ageGroupName: string
-  yearData: { year: number; national: number; regional: number | null }[]
+// Chart fills its parent — actual height comes from the parent component
+const wrapperStyle: CSSProperties = { width: '100%', height: '100%' }
+
+// Below this magnitude the trend is treated as flat (no clear direction)
+const TREND_FLAT_THRESHOLD_PERCENT = 5
+
+const NATIONAL_SERIES_NAME = 'National'
+const DEFAULT_REGIONAL_SERIES_NAME = 'Regional'
+
+type AgeBandRow = {
+  id: number
+  name: string
+  national: number | null
+  regional: number | null
+  trendArrow: string
+  trendLabel: string
+  trendFromRegional: boolean
 }
 
-function sparkPath(values: number[], W: number, H: number): string {
-  if (values.length < 2) return ''
-  const pad = 2
-  const [min = 0, max = 0] = extent(values) as [number, number]
-  const safeMax = max === min ? min + 1 : max
-  const x = scaleLinear()
-    .domain([0, values.length - 1])
-    .range([0, W])
-  const y = scaleLinear().domain([min, safeMax]).range([H - pad, pad])
-  return (
-    d3Line<number>()
-      .x((_, i) => x(i))
-      .y((v) => y(v))(values) ?? ''
+type YearLookup = Map<number, Map<number, number>>
+
+function buildLookup(points: AgeSplitPoint[]): YearLookup {
+  const map: YearLookup = new Map()
+  for (const point of points) {
+    if (!map.has(point.ageGroupId)) map.set(point.ageGroupId, new Map())
+    map.get(point.ageGroupId)!.set(point.year, point.per1000)
+  }
+  return map
+}
+
+function uniqueYears(points: AgeSplitPoint[]): number[] {
+  return [...new Set(points.map((p) => p.year))].sort((a, b) => a - b)
+}
+
+function uniqueAgeGroups(points: AgeSplitPoint[]): [number, string][] {
+  const byId = new Map<number, string>()
+  for (const point of [...points].sort((a, b) => a.ageGroupId - b.ageGroupId)) {
+    byId.set(point.ageGroupId, point.ageGroupName)
+  }
+  return [...byId.entries()]
+}
+
+function valuesAcrossYears(
+  id: number,
+  years: number[],
+  lookup: YearLookup
+): number[] {
+  return years
+    .map((year) => lookup.get(id)?.get(year) ?? null)
+    .filter((value): value is number => value !== null)
+}
+
+function trendArrowFor(percent: number | null): string {
+  if (percent === null) return '→'
+  if (percent > TREND_FLAT_THRESHOLD_PERCENT) return '↑'
+  if (percent < -TREND_FLAT_THRESHOLD_PERCENT) return '↓'
+  return '→'
+}
+
+function buildTrend(
+  series: number[],
+  firstYear: number | null
+): { arrow: string; label: string } {
+  if (series.length < 2 || firstYear === null) return { arrow: '→', label: '' }
+  const first = series[0]
+  const last = series.at(-1)!
+  if (first <= 0) return { arrow: '→', label: '' }
+  const percent = percentChange(last, first)
+  const arrow = trendArrowFor(percent)
+  const sign = percent > 0 ? '+' : ''
+  return {
+    arrow,
+    label: `${sign}${percent.toFixed(0)}% since '${String(firstYear).slice(2)}`
+  }
+}
+
+function pickEffectiveYear(
+  years: number[],
+  latestYear: number | null
+): number | null {
+  if (years.length === 0) return null
+  if (latestYear != null && years.includes(latestYear)) return latestYear
+  return years.at(-1) ?? null
+}
+
+function pickRowYear(
+  allYears: number[],
+  regionalYears: number[],
+  latestYear: number | null
+): number | null {
+  const sharedYears =
+    regionalYears.length > 0
+      ? allYears.filter((year) => regionalYears.includes(year))
+      : allYears
+  const yearPool = sharedYears.length > 0 ? sharedYears : allYears
+  return pickEffectiveYear(yearPool, latestYear)
+}
+
+type RowContext = {
+  effectiveYear: number | null
+  trendYears: number[]
+  firstTrendYear: number | null
+  nationalLookup: YearLookup
+  regionalLookup: YearLookup
+  hasRegional: boolean
+}
+
+function buildRowFor(
+  id: number,
+  name: string,
+  context: RowContext
+): AgeBandRow {
+  const national =
+    context.nationalLookup.get(id)?.get(context.effectiveYear ?? -1) ?? null
+  const regional =
+    context.regionalLookup.get(id)?.get(context.effectiveYear ?? -1) ?? null
+
+  // Trend uses the primary data source (regional if available, else national)
+  const nationalSeries = valuesAcrossYears(
+    id,
+    context.trendYears,
+    context.nationalLookup
   )
+  const regionalSeries = valuesAcrossYears(
+    id,
+    context.trendYears,
+    context.regionalLookup
+  )
+  const trendFromRegional = context.hasRegional && regionalSeries.length > 0
+  const primarySeries = trendFromRegional ? regionalSeries : nationalSeries
+
+  const { arrow, label } = buildTrend(primarySeries, context.firstTrendYear)
+  return {
+    id,
+    name,
+    national,
+    regional,
+    trendArrow: arrow,
+    trendLabel: label,
+    trendFromRegional
+  }
+}
+
+function buildRows(
+  data: AgeSplitPoint[],
+  regionalData: AgeSplitPoint[] | undefined,
+  latestYear: number | null,
+  selectedYear: number | null | undefined
+): AgeBandRow[] {
+  const ageGroups = uniqueAgeGroups(data)
+  const allYears = uniqueYears(data)
+  const nationalLookup = buildLookup(data)
+  const regionalLookup = buildLookup(regionalData ?? [])
+  const hasRegional = (regionalData ?? []).length > 0
+  const regionalYears = hasRegional ? uniqueYears(regionalData ?? []) : []
+
+  const effectiveYear = pickRowYear(allYears, regionalYears, latestYear)
+  const trendYears = selectedYear
+    ? allYears.filter((year) => year <= selectedYear)
+    : allYears
+  const firstTrendYear = trendYears.at(0) ?? null
+
+  const context: RowContext = {
+    effectiveYear,
+    trendYears,
+    firstTrendYear,
+    nationalLookup,
+    regionalLookup,
+    hasRegional
+  }
+  return ageGroups.map(([id, name]) => buildRowFor(id, name, context))
+}
+
+function seriesColor(seriesName: string, regionalSeriesName: string): string {
+  return seriesName === regionalSeriesName ? COLOR_REGIONAL : COLOR_NATIONAL
+}
+
+function formatPer1000OrDash(value: number): string {
+  return typeof value === 'number' && value > 0 ? fmtPer1000(value) : '—'
+}
+
+// Names the source so the user knows the % change is for the region they picked
+function trendNote(
+  row: AgeBandRow,
+  regionalSeriesName: string
+): string | undefined {
+  if (!row.trendLabel) return undefined
+  const source = row.trendFromRegional ? regionalSeriesName : NATIONAL_SERIES_NAME
+  return `${row.trendArrow} ${source}: ${row.trendLabel}`
+}
+
+function tooltipFormatter(
+  rows: AgeBandRow[],
+  regionalSeriesName: string
+): (params: unknown) => string {
+  return (params) => {
+    const items = params as {
+      axisValue: string
+      value: number
+      seriesName: string
+    }[]
+    if (items.length === 0) return ''
+
+    const ageBandName = items[0].axisValue
+    const row = rows.find((r) => r.name === ageBandName)
+    if (!row) return ''
+
+    return formatChartTooltip({
+      title: ageBandName,
+      rows: items.map((item) => ({
+        marker: colorDot(seriesColor(item.seriesName, regionalSeriesName)),
+        label: item.seriesName,
+        value: formatPer1000OrDash(item.value)
+      })),
+      note: trendNote(row, regionalSeriesName)
+    })
+  }
+}
+
+function buildOption(
+  rows: AgeBandRow[],
+  hasRegional: boolean,
+  regionName: string | null,
+  filterAgeBand: string | null
+): EChartsOption {
+  const regionalSeriesName = regionName ?? DEFAULT_REGIONAL_SERIES_NAME
+
+  const categories = rows.map((r) => r.name)
+
+  const series: EChartsOption['series'] = []
+  if (hasRegional) {
+    series.push({
+      name: regionalSeriesName,
+      type: 'bar',
+      data: rows.map((r) => r.regional),
+      itemStyle: { color: COLOR_REGIONAL, borderRadius: [0, 3, 3, 0] }
+    })
+  }
+  series.push({
+    name: NATIONAL_SERIES_NAME,
+    type: 'bar',
+    data: rows.map((r) => r.national),
+    itemStyle: { color: COLOR_NATIONAL, borderRadius: [0, 3, 3, 0] }
+  })
+
+  return {
+    animationDurationUpdate: 0,
+    grid: { left: 60, right: 16, top: 8, bottom: 24 },
+    xAxis: {
+      type: 'value',
+      axisLabel: {
+        color: COLOR_AXIS_LABEL,
+        fontSize: FONT_TICK,
+        formatter: (v: number) => fmtPer1000(v)
+      },
+      axisLine: { lineStyle: { color: COLOR_AXIS } },
+      splitLine: { lineStyle: { color: COLOR_GRID } }
+    },
+    yAxis: {
+      type: 'category',
+      data: categories,
+      inverse: true,
+      axisLine: { lineStyle: { color: COLOR_AXIS } },
+      axisTick: { show: false },
+      axisLabel: {
+        fontSize: FONT_TICK,
+        formatter: (value: string) =>
+          filterAgeBand === value ? `{filtered|${value}}` : `{label|${value}}`,
+        rich: {
+          label: { color: COLOR_AGE_LABEL, fontSize: FONT_TICK },
+          filtered: {
+            color: COLOR_AGE_BAND,
+            fontSize: FONT_TICK,
+            fontWeight: 'bold'
+          }
+        }
+      }
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: tooltipFormatter(rows, regionalSeriesName),
+      ...chartTooltipOptions
+    },
+    series
+  }
 }
 
 export default function AgeBandTrends({
@@ -63,441 +327,36 @@ export default function AgeBandTrends({
   regionName,
   filterAgeBand
 }: Props) {
-  const user = useUser()
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null)
-
-  const years = [...new Set(data.map((d) => d.year))].sort()
-  const ageGroups = [
-    ...new Map(
-      [...data]
-        .sort((a, b) => a.ageGroupId - b.ageGroupId)
-        .map((d) => [d.ageGroupId, d.ageGroupName])
-    ).entries()
-  ]
-
-  const natLookup = new Map<number, Map<number, number>>()
-  for (const pt of data) {
-    if (!natLookup.has(pt.ageGroupId)) natLookup.set(pt.ageGroupId, new Map())
-    natLookup.get(pt.ageGroupId)!.set(pt.year, pt.per1000)
-  }
-
-  const regLookup = new Map<number, Map<number, number>>()
-  for (const pt of regionalData ?? []) {
-    if (!regLookup.has(pt.ageGroupId)) regLookup.set(pt.ageGroupId, new Map())
-    regLookup.get(pt.ageGroupId)!.set(pt.year, pt.per1000)
-  }
-
   const hasRegional = (regionalData ?? []).length > 0
-  const regYears = hasRegional
-    ? [...new Set((regionalData ?? []).map((d) => d.year))].sort()
-    : []
 
-  // Pick a year that actually exists in both datasets so bars always fill
-  const sharedYears = hasRegional
-    ? years.filter((y) => regYears.includes(y))
-    : years
-  const effectiveYear = (() => {
-    const pool = sharedYears.length > 0 ? sharedYears : years
-    const target = latestYear ?? null
-    if (target != null && pool.includes(target)) return target
-    return pool.at(-1) ?? null
-  })()
-
-  const allLatest = ageGroups.flatMap(([id]) => [
-    natLookup.get(id)?.get(effectiveYear ?? -1) ?? 0,
-    regLookup.get(id)?.get(effectiveYear ?? -1) ?? 0
+  const option = useMemo(() => {
+    const rows = buildRows(data, regionalData, latestYear, selectedYear)
+    return buildOption(
+      rows,
+      hasRegional,
+      regionName ?? null,
+      filterAgeBand ?? null
+    )
+  }, [
+    data,
+    regionalData,
+    latestYear,
+    selectedYear,
+    regionName,
+    filterAgeBand,
+    hasRegional
   ])
-  const maxBar = Math.max(...allLatest, 1)
 
   if (data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-32 text-sm text-gray-400">
-        No age band data available
-      </div>
-    )
-  }
-
-  const SW = 72
-  const SH = 24
-
-  const half = Math.ceil(ageGroups.length / 2)
-  const columns = [ageGroups.slice(0, half), ageGroups.slice(half)]
-
-  function renderRow([id, name]: [number, string]) {
-    const natVal = natLookup.get(id)?.get(effectiveYear ?? -1) ?? null
-    const regVal = regLookup.get(id)?.get(effectiveYear ?? -1) ?? null
-
-    const sparkYears = selectedYear
-      ? years.filter((y) => y <= selectedYear)
-      : years
-    const natSeries = sparkYears
-      .map((y) => natLookup.get(id)?.get(y) ?? null)
-      .filter((v): v is number => v !== null)
-    const regSeries = sparkYears
-      .map((y) => regLookup.get(id)?.get(y) ?? null)
-      .filter((v): v is number => v !== null)
-    const trendSeries =
-      hasRegional && regSeries.length > 0 ? regSeries : natSeries
-
-    const first = trendSeries.at(0)
-    const last = trendSeries.at(-1)
-    const trendPct =
-      first != null && last != null && trendSeries.length >= 2 && first > 0
-        ? ((last - first) / first) * 100
-        : null
-    const dir =
-      trendPct == null
-        ? 'flat'
-        : trendPct > 5
-          ? 'up'
-          : trendPct < -5
-            ? 'down'
-            : 'flat'
-    const lineColor =
-      dir === 'up'
-        ? COLOR_TREND_UP
-        : dir === 'down'
-          ? COLOR_TREND_DOWN
-          : COLOR_TREND_FLAT
-    const trendClass =
-      dir === 'up'
-        ? 'text-orange-700'
-        : dir === 'down'
-          ? 'text-gray-500'
-          : 'text-gray-400'
-    const firstYear = sparkYears.at(0)
-    const trendLabel =
-      trendPct == null
-        ? ''
-        : `${trendPct > 0 ? '+' : ''}${trendPct.toFixed(0)}% since '${String(firstYear).slice(2)}`
-
-    const isUserAge = user?.ageGroupId != null && user.ageGroupId === id
-    const isFiltered = !!filterAgeBand && filterAgeBand === name
-
-    const natSparkPath = sparkPath(natSeries, SW, SH)
-    const regSparkPath = hasRegional ? sparkPath(regSeries, SW, SH) : ''
-
-    return (
-      <li
-        key={id}
-        className="relative rounded-md px-2 py-1 -mx-2 cursor-default hover:bg-gray-100"
-        style={
-          isFiltered
-            ? { backgroundColor: `${COLOR_AGE_BAND}14` }
-            : isUserAge
-              ? { backgroundColor: '#0d948814' }
-              : undefined
-        }
-        onMouseEnter={(e) =>
-          setTooltip({
-            x: e.clientX,
-            y: e.clientY,
-            ageGroupName: name,
-            yearData: years.map((y) => ({
-              year: y,
-              national: natLookup.get(id)?.get(y) ?? 0,
-              regional: regLookup.get(id)?.get(y) ?? null
-            }))
-          })
-        }
-        onMouseMove={(e) =>
-          setTooltip((t) => (t ? { ...t, x: e.clientX, y: e.clientY } : null))
-        }
-        onMouseLeave={() => setTooltip(null)}
-      >
-        {/* Label + "you" badge */}
-        <div className="flex items-center gap-1 mb-0.5">
-          <span
-            className="text-xs font-medium truncate leading-none"
-            style={{
-              color: isFiltered
-                ? COLOR_AGE_BAND
-                : isUserAge
-                  ? '#0f766e'
-                  : '#4b5563',
-              fontWeight: isFiltered || isUserAge ? 600 : 400
-            }}
-          >
-            {name}
-          </span>
-          {isUserAge && (
-            <span className="text-[10px] font-semibold text-teal-600 bg-teal-50/60 px-1 rounded-full shrink-0 leading-snug">
-              you
-            </span>
-          )}
-        </div>
-
-        {/* Bar + sparkline row */}
-        <div className="flex items-center gap-2">
-          {/* Bars — two stacked when regional available, one (national/blue) otherwise */}
-          <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-            {hasRegional && (
-              <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${isUserAge ? 'bg-teal-600' : 'bg-teal-500'}`}
-                  style={{
-                    width: `${regVal != null ? (regVal / maxBar) * 100 : 0}%`
-                  }}
-                />
-              </div>
-            )}
-            <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-blue-700 transition-all"
-                style={{
-                  width: `${natVal != null ? (natVal / maxBar) * 100 : 0}%`
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Values */}
-          <div className="flex flex-col items-end shrink-0">
-            {hasRegional && (
-              <span className="text-[10px] font-semibold text-teal-600 leading-none">
-                {regVal != null ? fmtPer1000(regVal) : '—'}
-              </span>
-            )}
-            <span
-              className={`text-[10px] font-medium leading-none ${hasRegional ? 'text-blue-600' : 'text-gray-600'}`}
-            >
-              {natVal != null ? fmtPer1000(natVal) : '—'}
-            </span>
-          </div>
-
-          {/* Sparkline */}
-          <svg
-            width={SW}
-            height={SH}
-            viewBox={`0 0 ${SW} ${SH}`}
-            className="shrink-0 overflow-visible"
-          >
-            {/* National — dashed gray behind (always present) */}
-            {natSparkPath && (
-              <path
-                d={natSparkPath}
-                fill="none"
-                stroke={COLOR_SPARK_NAT}
-                strokeWidth={1}
-                strokeDasharray="2 2"
-                strokeLinecap="round"
-              />
-            )}
-            {/* Primary line: regional teal when selected, else national colored by trend */}
-            {hasRegional
-              ? regSparkPath && (
-                  <path
-                    d={regSparkPath}
-                    fill="none"
-                    stroke={COLOR_REGIONAL}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )
-              : natSparkPath && (
-                  <path
-                    d={natSparkPath}
-                    fill="none"
-                    stroke={lineColor}
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                )}
-            {/* Selected year marker — always at the right edge when year is filtered */}
-            {selectedYear &&
-              trendSeries.length > 0 &&
-              (() => {
-                const x = SW
-                const min = Math.min(...trendSeries)
-                const max = Math.max(...trendSeries)
-                const val = trendSeries.at(-1)
-                if (val == null) return null
-                const y = SH - 2 - ((val - min) / (max - min || 1)) * (SH - 4)
-                return (
-                  <g>
-                    <line
-                      x1={x}
-                      y1={0}
-                      x2={x}
-                      y2={SH}
-                      stroke={COLOR_YEAR}
-                      strokeWidth={1}
-                      strokeDasharray="2 2"
-                    />
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={2.5}
-                      fill="white"
-                      stroke={COLOR_YEAR}
-                      strokeWidth={1.5}
-                    />
-                  </g>
-                )
-              })()}
-          </svg>
-
-          {/* Trend % */}
-          <span
-            className={`text-[10px] font-semibold w-20 text-right shrink-0 leading-none ${trendClass}`}
-          >
-            {trendLabel}
-          </span>
-        </div>
-      </li>
-    )
+    return <EmptyChartState message="No age band data available" />
   }
 
   return (
-    <div onMouseLeave={() => setTooltip(null)}>
-      <div className="flex gap-6 px-4 pb-3 pt-2">
-        {columns.map((col, ci) => (
-          <ul key={ci} className="flex-1 flex flex-col gap-0.5">
-            {col.map(renderRow)}
-          </ul>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="px-4 pb-3 flex items-center gap-4 text-[10px] text-gray-400 border-t border-gray-100 pt-2">
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block w-4 h-0.5 rounded"
-            style={{ background: COLOR_TREND_UP }}
-          />{' '}
-          Growing
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block w-4 h-0.5 rounded"
-            style={{ background: COLOR_TREND_DOWN }}
-          />{' '}
-          Shrinking
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block w-4 h-0.5 rounded"
-            style={{ background: COLOR_TREND_FLAT }}
-          />{' '}
-          Stable
-        </span>
-        {hasRegional && (
-          <>
-            <span className="flex items-center gap-1.5">
-              <svg width={16} height={6}>
-                <line
-                  x1={0}
-                  y1={3}
-                  x2={16}
-                  y2={3}
-                  stroke={COLOR_REGIONAL}
-                  strokeWidth={1.5}
-                />
-              </svg>
-              {regionName ?? 'Region'}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg width={16} height={6}>
-                <line
-                  x1={0}
-                  y1={3}
-                  x2={16}
-                  y2={3}
-                  stroke={COLOR_SPARK_NAT}
-                  strokeWidth={1}
-                  strokeDasharray="2 2"
-                />
-              </svg>
-              National
-            </span>
-          </>
-        )}
-        <span className="ml-auto">
-          {years.at(0)}→{selectedYear ?? years.at(-1)}
-        </span>
-      </div>
-
-      {/* Tooltip */}
-      {tooltip && (
-        <ChartTooltip
-          x={tooltip.x}
-          y={tooltip.y}
-          width={hasRegional ? 300 : 180}
-        >
-          <div className="px-3 py-2 border-b border-gray-100">
-            <span className="font-semibold text-gray-800">
-              {tooltip.ageGroupName}
-            </span>
-            <span className="text-gray-400 ml-2 text-[10px]">
-              per 1,000 · all years
-            </span>
-          </div>
-          {/* Flat grid — regional column gets a continuous teal background */}
-          {(() => {
-            const sorted = [...tooltip.yearData].reverse()
-            const pinned = selectedYear
-              ? sorted.find((d) => d.year === selectedYear)
-              : null
-            const rest = sorted
-              .filter((d) => d.year !== selectedYear)
-              .slice(0, pinned ? 7 : 8)
-            const rows = [...(pinned ? [pinned] : []), ...rest]
-            const cols = hasRegional
-              ? 'grid-cols-[auto_1fr_1fr]'
-              : 'grid-cols-[auto_1fr]'
-            return (
-              <div className={`grid ${cols} text-xs`}>
-                {/* Header row */}
-                <div className="px-3 pt-2 pb-1" />
-                {hasRegional && (
-                  <div className="bg-teal-50/60 px-3 pt-2 pb-1 text-[10px] font-semibold tracking-widest text-teal-600 uppercase text-right">
-                    {regionName ?? 'Region'}
-                  </div>
-                )}
-                <div className="px-3 pt-2 pb-1 text-[10px] font-semibold tracking-widest text-gray-400 uppercase text-right">
-                  National
-                </div>
-
-                {/* Data rows */}
-                {rows.flatMap(({ year, national, regional }) => {
-                  const isPinned = year === selectedYear
-                  return [
-                    <span
-                      key={`${year}-y`}
-                      className={`px-3 py-0.5 ${isPinned ? 'bg-violet-50 text-violet-600 font-semibold' : 'text-gray-400'}`}
-                    >
-                      {year}
-                    </span>,
-                    ...(hasRegional
-                      ? [
-                          <span
-                            key={`${year}-r`}
-                            className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-100 text-violet-700 font-bold' : 'bg-teal-50/60 text-teal-700'}`}
-                          >
-                            {regional != null ? fmtPer1000(regional) : '—'}
-                          </span>
-                        ]
-                      : []),
-                    <span
-                      key={`${year}-n`}
-                      className={`px-3 py-0.5 text-right font-medium ${isPinned ? 'bg-violet-50 text-violet-700 font-bold' : 'text-gray-700'}`}
-                    >
-                      {fmtPer1000(national)}
-                    </span>
-                  ]
-                })}
-
-                {/* Bottom padding row to close off the teal column cleanly */}
-                <div className="px-3 pb-2" />
-                {hasRegional && <div className="bg-teal-50/60 pb-2" />}
-                <div className="pb-2" />
-              </div>
-            )
-          })()}
-        </ChartTooltip>
-      )}
-    </div>
+    <ReactECharts
+      option={option}
+      style={wrapperStyle}
+      opts={{ renderer: 'svg' }}
+      notMerge
+    />
   )
 }

@@ -37,6 +37,24 @@ export const COLOR_GRID = '#f3f4f6' // gray-100
 export const COLOR_AXIS = '#e5e7eb' // gray-200
 /** SVG axis tick label text */
 export const COLOR_AXIS_LABEL = '#9ca3af' // gray-400
+/** Age band row label in the demographic heatmap */
+export const COLOR_AGE_LABEL = '#6b7280' // gray-500
+/** Demographic heatmap men cell — lowest rate */
+export const COLOR_HEATMAP_MEN_LOW = '#e0f2fe' // sky-100
+/** Demographic heatmap men cell — highest rate */
+export const COLOR_HEATMAP_MEN_HIGH = '#075985' // sky-800
+/** Demographic heatmap women cell — lowest rate */
+export const COLOR_HEATMAP_WOMEN_LOW = '#ffe4e6' // rose-100
+/** Demographic heatmap women cell — highest rate */
+export const COLOR_HEATMAP_WOMEN_HIGH = '#9f1239' // rose-800
+/** Demographic heatmap cell border — separates adjacent cells */
+export const COLOR_HEATMAP_CELL_BORDER = '#ffffff'
+/** Demographic heatmap cell value text on dark cells */
+export const COLOR_HEATMAP_TEXT_LIGHT = '#ffffff'
+/** Demographic heatmap cell value text on light cells */
+export const COLOR_HEATMAP_TEXT_DARK = '#374151' // gray-700
+/** Demographic heatmap label font size — axis labels and cell values */
+export const FONT_HEATMAP = 11
 
 // ── SVG font sizes (px) ───────────────────────────────────────────────────────
 // Use in fontSize={} on SVG <text> elements. Do NOT use Tailwind classes there.
@@ -45,6 +63,8 @@ export const COLOR_AXIS_LABEL = '#9ca3af' // gray-400
 export const FONT_TICK = 10
 /** Secondary SVG text — axis title, in-bar year labels, column headers */
 export const FONT_LABEL = 9
+/** Small chart text — value labels, trend %, legend (px) */
+export const FONT_SMALL_LABEL = 10
 
 // ── Chart tooltip styling ─────────────────────────────────────────────────────
 // ECharts tooltips render as HTML strings, so colors/sizes can't use Tailwind.
