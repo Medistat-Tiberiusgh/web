@@ -22,7 +22,7 @@ import {
 
 type TrendChartPoint = { year: number; per1000: number }
 
-export interface DispensingTrendProps {
+export interface YearlyTrendProps {
   nationalData: TrendChartPoint[]
   regionalData?: TrendChartPoint[]
   regionName: string | null
@@ -248,13 +248,13 @@ function buildOption(
   }
 }
 
-export default function DispensingTrend({
+export default function YearlyTrend({
   nationalData,
   regionalData,
   regionName,
   selectedYear,
   onYearChange
-}: DispensingTrendProps) {
+}: YearlyTrendProps) {
   const option = useMemo(
     () => buildOption(nationalData, regionalData, regionName, selectedYear),
     [nationalData, regionalData, regionName, selectedYear]
