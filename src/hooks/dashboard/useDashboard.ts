@@ -91,18 +91,9 @@ export function useDashboard() {
   const natGenderSplit = national?.genderSplit ?? []
   const regGenderSplit = regional?.genderSplit
 
-  // Heatmap always shows all age bands — only apply gender filter
-  const filteredNatGrid = useMemo(() => {
-    const grid = national?.demographicGrid ?? []
-    if (genderId == null) return grid
-    return grid.filter((cell) => cell.genderId === genderId)
-  }, [national?.demographicGrid, genderId])
-
-  const filteredRegGrid = useMemo(() => {
-    const grid = regional?.demographicGrid ?? []
-    if (genderId == null) return grid
-    return grid.filter((cell) => cell.genderId === genderId)
-  }, [regional?.demographicGrid, genderId])
+  // DemographicHeatmap chart always shows both genders — ignore the gender filter
+  const nationalGrid = national?.demographicGrid ?? []
+  const regionalGrid = regional?.demographicGrid ?? []
 
   const natAgeSplit = national?.ageSplit ?? []
   const regAgeSplit = regional?.ageSplit ?? []
@@ -139,8 +130,8 @@ export function useDashboard() {
     effectiveRegTrend,
     natAgeSplit,
     regAgeSplit,
-    filteredNatGrid,
-    filteredRegGrid,
+    nationalGrid,
+    regionalGrid,
     natGenderSplit,
     regGenderSplit,
     mapRegions,
