@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { fmtPer1000 } from '../../lib/format'
+import { hexToRgb } from '../../lib/color'
 import {
   chartTooltipOptions,
   formatChartTooltip,
@@ -35,9 +36,7 @@ export interface YearlyTrendProps {
 const wrapperStyle: CSSProperties = { width: '100%', height: '100%' }
 
 function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
+  const [r, g, b] = hexToRgb(hex)
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
