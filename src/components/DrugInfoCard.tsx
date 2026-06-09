@@ -9,6 +9,18 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDrugInfo } from '../hooks/useDrugInfo'
+import {
+  TEXT_HEADING,
+  TEXT_BODY,
+  TEXT_MUTED,
+  TEXT_DANGER,
+  TEXT_LINK,
+  TEXT_DRUG,
+  BORDER_SUBTLE,
+  SURFACE_WARNING,
+  BORDER_WARNING,
+  TEXT_WARNING
+} from '@/theme'
 
 interface Props {
   atcCode: string
@@ -27,7 +39,7 @@ function TextBlock({ text }: { text: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       {paras.map((p, i) => (
-        <p key={i} className="text-xs text-gray-700 leading-relaxed">
+        <p key={i} className={`text-xs leading-relaxed ${TEXT_BODY}`}>
           {p}
         </p>
       ))}
@@ -45,7 +57,7 @@ function Section({
   if (!text) return null
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+      <p className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}>
         {label}
       </p>
       <TextBlock text={text} />
@@ -56,8 +68,12 @@ function Section({
 function PrecautionsSection({ text }: { text: string | null | undefined }) {
   if (!text) return null
   return (
-    <div className="flex flex-col gap-2 bg-amber-50 border-l-2 border-amber-300 rounded-r-lg px-3 py-2.5">
-      <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">
+    <div
+      className={`flex flex-col gap-2 border-l-2 rounded-r-lg px-3 py-2.5 ${SURFACE_WARNING} ${BORDER_WARNING}`}
+    >
+      <p
+        className={`text-xs font-bold uppercase tracking-widest ${TEXT_WARNING}`}
+      >
         Precautions
       </p>
       <TextBlock text={text} />
@@ -66,7 +82,7 @@ function PrecautionsSection({ text }: { text: string | null | undefined }) {
 }
 
 function Divider() {
-  return <div className="border-t border-gray-100" />
+  return <div className={`border-t ${BORDER_SUBTLE}`} />
 }
 
 // ── Modal content ─────────────────────────────────────────────────────────────
@@ -93,17 +109,19 @@ function ModalContent({
       <DialogHeader className="px-6 pt-6 pb-0">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <DialogTitle className="text-base font-semibold text-gray-900">
+            <DialogTitle
+              className={`text-base font-semibold ${TEXT_HEADING}`}
+            >
               {drugName}
             </DialogTitle>
             <Badge variant="secondary">{atcCode}</Badge>
             {narcoticClass && (
-              <span className="text-xs font-bold text-red-600">
+              <span className={`text-xs font-bold ${TEXT_DANGER}`}>
                 Narcotic {narcoticClass}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-400">Drug information</p>
+          <p className={`text-xs ${TEXT_MUTED}`}>Drug information</p>
         </div>
       </DialogHeader>
 
@@ -137,13 +155,13 @@ function ModalContent({
       </div>
 
       <div className="px-6 pb-5 pt-0 flex items-center justify-between gap-4">
-        <p className="text-[10px] text-gray-400 flex-1">
+        <p className={`text-xs flex-1 ${TEXT_MUTED}`}>
           Drug information sourced from{' '}
           <a
             href="https://medlineplus.gov"
             target="_blank"
             rel="noreferrer"
-            className="text-teal-600 hover:underline"
+            className={`hover:underline ${TEXT_LINK}`}
           >
             MedlinePlus
           </a>
@@ -155,7 +173,7 @@ function ModalContent({
             href={data.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] text-teal-600 hover:underline shrink-0"
+            className={`text-xs hover:underline shrink-0 ${TEXT_LINK}`}
           >
             View source →
           </a>
@@ -194,20 +212,24 @@ export default function DrugInfoCard({
         {/* Header */}
         <CardHeader className="flex flex-row items-start justify-between gap-2 shrink-0 px-4 pt-4 pb-3">
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold text-gray-900 leading-tight">
+            <span
+              className={`text-sm font-semibold leading-tight ${TEXT_HEADING}`}
+            >
               {drugName}
             </span>
             <div className="flex items-center gap-1.5 flex-wrap">
               <Badge variant="secondary">{atcCode}</Badge>
               {narcoticClass && (
-                <span className="text-xs font-bold text-red-600">
+                <span className={`text-xs font-bold ${TEXT_DANGER}`}>
                   Narcotic {narcoticClass}
                 </span>
               )}
             </div>
           </div>
           {hasContent && (
-            <span className="text-[10px] text-indigo-500 shrink-0 mt-0.5 font-medium">
+            <span
+              className={`text-xs shrink-0 mt-0.5 font-medium ${TEXT_DRUG}`}
+            >
               Read more →
             </span>
           )}
@@ -232,30 +254,30 @@ export default function DrugInfoCard({
             <>
               {data.indication && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <p className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}>
                     Indications
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${TEXT_BODY}`}>
                     {data.indication.replace(/\n+/g, ' ')}
                   </p>
                 </div>
               )}
               {data.precautions && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <p className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}>
                     Precautions
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${TEXT_BODY}`}>
                     {data.precautions.replace(/\n+/g, ' ')}
                   </p>
                 </div>
               )}
               {data.sideEffects && (
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <p className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}>
                     Side Effects
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed">
+                  <p className={`text-xs leading-relaxed ${TEXT_BODY}`}>
                     {data.sideEffects.replace(/\n+/g, ' ')}
                   </p>
                 </div>
@@ -264,7 +286,7 @@ export default function DrugInfoCard({
               <div className="absolute bottom-0 left-0 right-0 h-10 bg-linear-to-t from-white to-transparent pointer-events-none" />
             </>
           ) : (
-            <p className="text-xs text-gray-400">No information available.</p>
+            <p className={`text-xs ${TEXT_MUTED}`}>No information available.</p>
           )}
         </CardContent>
       </Card>

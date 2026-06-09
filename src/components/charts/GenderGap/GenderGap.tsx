@@ -2,21 +2,22 @@ import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
-import { fmtPer1000 } from '../../lib/format'
+import { fmtPer1000 } from '../../../lib/format'
 import {
   COLOR_AXIS,
   COLOR_AXIS_LABEL,
   COLOR_FEMALE,
   COLOR_GRID,
   COLOR_MALE,
-  FONT_TICK
-} from '../../theme'
+  FONT_TICK,
+  FONT_GENDER_HEADER
+} from '../../../theme'
 import {
   chartTooltipOptions,
   formatChartTooltip,
   percentGap
-} from '../../lib/echartsTooltip'
-import EmptyChartState from './EmptyChartState'
+} from '../../../lib/echartsTooltip'
+import EmptyChartState from '../EmptyChartState'
 
 type GenderChartPoint = {
   year: number
@@ -182,19 +183,40 @@ function buildOption(
 
   return {
     animationDurationUpdate: 0,
-    grid: { left: 56, right: 16, top: 16, bottom: 32 },
-    xAxis: {
-      type: 'value',
-      min: -prep.maxAbsValue,
-      max: prep.maxAbsValue,
-      axisLabel: {
-        color: COLOR_AXIS_LABEL,
-        fontSize: FONT_TICK,
-        formatter: (v: number) => fmtPer1000(Math.abs(v))
+    grid: { left: 56, right: 16, top: 32, bottom: 32 },
+    xAxis: [
+      {
+        type: 'value',
+        min: -prep.maxAbsValue,
+        max: prep.maxAbsValue,
+        axisLabel: {
+          color: COLOR_AXIS_LABEL,
+          fontSize: FONT_TICK,
+          formatter: (v: number) => fmtPer1000(Math.abs(v))
+        },
+        axisLine: { lineStyle: { color: COLOR_AXIS } },
+        splitLine: { lineStyle: { color: COLOR_GRID } }
       },
-      axisLine: { lineStyle: { color: COLOR_AXIS } },
-      splitLine: { lineStyle: { color: COLOR_GRID } }
-    },
+      // Mirrors the heatmap's Men/Women header; a 2-category axis centers its
+      // labels at 25%/75%, landing over the men (left) and women (right) halves
+      {
+        type: 'category',
+        position: 'top',
+        data: ['Men', 'Women'],
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          fontSize: FONT_GENDER_HEADER,
+          fontWeight: 'bold',
+          formatter: (value: string) =>
+            value === 'Men' ? `{men|${value}}` : `{women|${value}}`,
+          rich: {
+            men: { color: COLOR_MALE, fontWeight: 'bold' },
+            women: { color: COLOR_FEMALE, fontWeight: 'bold' }
+          }
+        }
+      }
+    ],
     yAxis: {
       type: 'category',
       data: prep.years.map(String),
@@ -205,7 +227,9 @@ function buildOption(
     },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' },
+      // axis: 'y' pins the shadow to the year rows; without it the second
+      // (Men/Women) category axis steals the pointer into vertical columns
+      axisPointer: { type: 'shadow', axis: 'y' },
       formatter: formatGenderTooltip,
       ...chartTooltipOptions
     },

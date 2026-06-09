@@ -157,8 +157,11 @@ function buildOption(
         projection: swedenProjection,
         roam: false,
         selectedMode: false,
+        // Sweden is tall and narrow; '100%' sizes to the box's shorter (width)
+        // side and leaves a big vertical gap. Scaling past 100% fills the
+        // taller dimension so the map uses its slot like the other charts.
         layoutCenter: ['50%', '50%'],
-        layoutSize: '100%',
+        layoutSize: '125%',
         label: { show: false },
         // Counties without data for the current selection
         itemStyle: {

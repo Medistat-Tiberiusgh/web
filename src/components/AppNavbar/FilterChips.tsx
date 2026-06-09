@@ -1,6 +1,24 @@
 import { GENDER_OPTIONS } from './SearchResultList'
 import type { AgeBand } from '../../hooks/dashboard/useFilters'
 import type { Drug, Region } from '../../types'
+import {
+  TEXT_MUTED,
+  TEXT_BODY_HOVER,
+  TEXT_DANGER,
+  TEXT_DRUG,
+  BORDER_SUBTLE,
+  CHIP_DRUG,
+  CHIP_DRUG_CLOSE,
+  CHIP_REGION,
+  CHIP_REGION_CLOSE,
+  CHIP_GENDER,
+  CHIP_GENDER_CLOSE,
+  CHIP_AGE,
+  CHIP_AGE_CLOSE,
+  CHIP_YEAR,
+  CHIP_YEAR_CLOSE,
+  CHIP_INACTIVE
+} from '../../theme'
 
 const YEARS = Array.from({ length: 19 }, (_, i) => 2024 - i)
 
@@ -37,11 +55,15 @@ export default function FilterChips({
     GENDER_OPTIONS.find((g) => g.key === key)?.label ?? key
 
   return (
-    <div className="px-8 py-2.5 flex flex-wrap items-center justify-center gap-2 border-t border-gray-100">
+    <div
+      className={`px-8 py-2.5 flex flex-wrap items-center justify-center gap-2 border-t ${BORDER_SUBTLE}`}
+    >
       {activeDrug && (
-        <span className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1.5 rounded-full">
+        <span
+          className={`inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-full ${CHIP_DRUG}`}
+        >
           <svg
-            className="w-3 h-3 shrink-0 text-indigo-500"
+            className={`w-3 h-3 shrink-0 ${TEXT_DRUG}`}
             fill="currentColor"
             viewBox="0 0 512 512"
           >
@@ -50,7 +72,7 @@ export default function FilterChips({
           </svg>
           <span className="max-w-48 truncate">{activeDrug.name}</span>
           {activeDrug.narcoticClass && (
-            <span className="text-red-600 font-bold text-xs shrink-0">
+            <span className={`font-bold text-xs shrink-0 ${TEXT_DANGER}`}>
               N{activeDrug.narcoticClass}
             </span>
           )}
@@ -78,7 +100,7 @@ export default function FilterChips({
           )}
           <button
             onClick={() => onDrugChange(null)}
-            className="text-indigo-400 hover:text-indigo-800 text-base leading-none ml-0.5"
+            className={`text-base leading-none ml-0.5 ${CHIP_DRUG_CLOSE}`}
             aria-label="Remove drug"
           >
             ×
@@ -87,7 +109,9 @@ export default function FilterChips({
       )}
 
       {activeRegion && (
-        <span className="inline-flex items-center gap-1.5 bg-teal-600 text-white text-sm font-semibold px-3 py-1.5 rounded-full">
+        <span
+          className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${CHIP_REGION}`}
+        >
           <svg
             className="w-3.5 h-3.5 shrink-0"
             fill="none"
@@ -109,7 +133,7 @@ export default function FilterChips({
           {activeRegion.regionName}
           <button
             onClick={() => onRegionChange(null)}
-            className="text-teal-200 hover:text-white text-base leading-none ml-0.5"
+            className={`text-base leading-none ml-0.5 ${CHIP_REGION_CLOSE}`}
             aria-label="Remove region"
           >
             ×
@@ -118,7 +142,9 @@ export default function FilterChips({
       )}
 
       {activeGender && (
-        <span className="inline-flex items-center gap-1.5 bg-rose-100 text-rose-800 text-sm font-semibold px-3 py-1.5 rounded-full">
+        <span
+          className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${CHIP_GENDER}`}
+        >
           <svg
             className="w-3.5 h-3.5 shrink-0"
             fill="none"
@@ -135,7 +161,7 @@ export default function FilterChips({
           {genderLabel(activeGender)}
           <button
             onClick={() => onGenderChange(null)}
-            className="text-rose-400 hover:text-rose-800 text-base leading-none ml-0.5"
+            className={`text-base leading-none ml-0.5 ${CHIP_GENDER_CLOSE}`}
             aria-label="Remove gender"
           >
             ×
@@ -144,7 +170,9 @@ export default function FilterChips({
       )}
 
       {activeAgeBand && (
-        <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 text-sm font-semibold px-3 py-1.5 rounded-full">
+        <span
+          className={`inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full ${CHIP_AGE}`}
+        >
           <svg
             className="w-3.5 h-3.5 shrink-0"
             fill="none"
@@ -161,7 +189,7 @@ export default function FilterChips({
           {activeAgeBand.name} yrs
           <button
             onClick={() => onAgeBandChange(null)}
-            className="text-amber-500 hover:text-amber-800 text-base leading-none ml-0.5"
+            className={`text-base leading-none ml-0.5 ${CHIP_AGE_CLOSE}`}
             aria-label="Remove age band"
           >
             ×
@@ -171,7 +199,7 @@ export default function FilterChips({
 
       <span
         className={`relative inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-full cursor-pointer transition-colors
-        ${activeYear !== null ? 'bg-violet-100 text-violet-800 hover:bg-violet-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+        ${activeYear !== null ? CHIP_YEAR : CHIP_INACTIVE}`}
       >
         <svg
           className="w-3.5 h-3.5 shrink-0 pointer-events-none"
@@ -189,7 +217,7 @@ export default function FilterChips({
         <span className="pointer-events-none">{activeYear ?? 'Year'}</span>
         {activeYear === null && (
           <svg
-            className="w-3 h-3 shrink-0 text-gray-400 pointer-events-none"
+            className={`w-3 h-3 shrink-0 pointer-events-none ${TEXT_MUTED}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -208,7 +236,7 @@ export default function FilterChips({
               e.stopPropagation()
               onYearChange(null)
             }}
-            className="relative z-10 text-violet-400 hover:text-violet-800 text-base leading-none ml-0.5"
+            className={`relative z-10 text-base leading-none ml-0.5 ${CHIP_YEAR_CLOSE}`}
             aria-label="Remove year"
           >
             ×
@@ -243,7 +271,7 @@ export default function FilterChips({
           onAgeBandChange(null)
           onYearChange(null)
         }}
-        className="text-xs text-gray-400 hover:text-gray-700 ml-1 transition-colors"
+        className={`text-xs ml-1 transition-colors ${TEXT_MUTED} ${TEXT_BODY_HOVER}`}
       >
         Clear all
       </button>

@@ -2,15 +2,15 @@ import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
-import type { AgeSplitPoint } from '../../types'
-import EmptyChartState from './EmptyChartState'
-import { fmtPer1000 } from '../../lib/format'
+import type { AgeSplitPoint } from '../../../types'
+import EmptyChartState from '../EmptyChartState'
+import { fmtPer1000 } from '../../../lib/format'
 import {
   chartTooltipOptions,
   colorDot,
   formatChartTooltip,
   percentChange
-} from '../../lib/echartsTooltip'
+} from '../../../lib/echartsTooltip'
 import {
   COLOR_AGE_BAND,
   COLOR_AGE_LABEL,
@@ -20,7 +20,7 @@ import {
   COLOR_NATIONAL,
   COLOR_REGIONAL,
   FONT_TICK
-} from '../../theme'
+} from '../../../theme'
 
 interface Props {
   data: AgeSplitPoint[]

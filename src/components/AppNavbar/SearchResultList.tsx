@@ -1,6 +1,18 @@
 import { useRef, useEffect } from 'react'
 import type { AgeBand } from '../../hooks/dashboard/useFilters'
 import type { Drug, Region } from '../../types'
+import {
+  TEXT_HEADING,
+  TEXT_MUTED,
+  TEXT_DANGER,
+  TEXT_REGION,
+  TEXT_DRUG,
+  TEXT_GENDER,
+  TEXT_AGE,
+  SURFACE_MUTED,
+  SURFACE_MUTED_HOVER,
+  BORDER_SUBTLE
+} from '../../theme'
 
 export const GENDER_OPTIONS = [
   { key: 'men', label: 'Men' },
@@ -138,7 +150,7 @@ export default function SearchResultList({
 
   if (!hasResults) {
     return (
-      <div className="px-4 py-3 text-base text-gray-400">
+      <div className={`px-4 py-3 text-base ${TEXT_MUTED}`}>
         No results for &ldquo;{query}&rdquo;
       </div>
     )
@@ -155,7 +167,7 @@ export default function SearchResultList({
 
   function itemClass(flatIdx: number, extra = '') {
     return `w-full text-left px-4 flex items-center gap-3 transition-colors ${
-      flatIdx === focusedIndex ? 'bg-blue-50' : 'hover:bg-gray-50'
+      flatIdx === focusedIndex ? 'bg-blue-50' : SURFACE_MUTED_HOVER
     } ${extra}`
   }
 
@@ -163,7 +175,9 @@ export default function SearchResultList({
     <div ref={listRef}>
       {regionResults.length > 0 && (
         <>
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
+          <div
+            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
+          >
             Regions
           </div>
           {regionResults.map((region, i) => (
@@ -175,7 +189,7 @@ export default function SearchResultList({
               onClick={() => select(() => handlers.onRegionChange(region))}
             >
               <svg
-                className="w-3.5 h-3.5 text-teal-600 shrink-0"
+                className={`w-3.5 h-3.5 shrink-0 ${TEXT_REGION}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -192,11 +206,11 @@ export default function SearchResultList({
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span className="text-base text-gray-900 flex-1">
+              <span className={`text-base flex-1 ${TEXT_HEADING}`}>
                 {region.regionName}
               </span>
               {activeRegion?.id === region.id && (
-                <span className="text-[10px] text-teal-600 font-semibold">
+                <span className={`text-xs font-semibold ${TEXT_REGION}`}>
                   active
                 </span>
               )}
@@ -207,11 +221,13 @@ export default function SearchResultList({
 
       {(drugResults.length > 0 || searching) && (
         <>
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
+          <div
+            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
+          >
             Medications
           </div>
           {searching && drugResults.length === 0 ? (
-            <div className="px-4 py-3 text-base text-gray-400">Searching…</div>
+            <div className={`px-4 py-3 text-base ${TEXT_MUTED}`}>Searching…</div>
           ) : (
             drugResults.map((drug, i) => (
               <button
@@ -222,19 +238,21 @@ export default function SearchResultList({
                 onClick={() => select(() => handlers.onDrugChange(drug))}
               >
                 <div className="flex flex-col min-w-0">
-                  <span className="text-base text-gray-900 truncate">
+                  <span className={`text-base truncate ${TEXT_HEADING}`}>
                     {drug.name}
                   </span>
-                  <span className="text-sm text-gray-400">{drug.atcCode}</span>
+                  <span className={`text-sm ${TEXT_MUTED}`}>
+                    {drug.atcCode}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {drug.narcoticClass && (
-                    <span className="text-sm font-bold text-red-600">
+                    <span className={`text-sm font-bold ${TEXT_DANGER}`}>
                       N{drug.narcoticClass}
                     </span>
                   )}
                   {activeDrug?.atcCode === drug.atcCode && (
-                    <span className="text-[10px] text-indigo-500 font-semibold">
+                    <span className={`text-xs font-semibold ${TEXT_DRUG}`}>
                       active
                     </span>
                   )}
@@ -247,10 +265,12 @@ export default function SearchResultList({
 
       {genderResults.length > 0 && (
         <>
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
+          <div
+            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
+          >
             Gender
             {activeAgeBand && (
-              <span className="ml-2 text-amber-500 normal-case font-normal">
+              <span className={`ml-2 normal-case font-normal ${TEXT_AGE}`}>
                 · replaces age band filter
               </span>
             )}
@@ -276,9 +296,9 @@ export default function SearchResultList({
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span className="text-base text-gray-900 flex-1">{g.label}</span>
+              <span className={`text-base flex-1 ${TEXT_HEADING}`}>{g.label}</span>
               {activeGender === g.key && (
-                <span className="text-[10px] text-rose-500 font-semibold">
+                <span className={`text-xs font-semibold ${TEXT_GENDER}`}>
                   active
                 </span>
               )}
@@ -289,10 +309,12 @@ export default function SearchResultList({
 
       {ageBandResults.length > 0 && (
         <>
-          <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50 border-b border-gray-100">
+          <div
+            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
+          >
             Age Band
             {activeGender && (
-              <span className="ml-2 text-rose-500 normal-case font-normal">
+              <span className={`ml-2 normal-case font-normal ${TEXT_GENDER}`}>
                 · replaces gender filter
               </span>
             )}
@@ -306,7 +328,7 @@ export default function SearchResultList({
               onClick={() => select(() => handlers.onAgeBandChange(ab))}
             >
               <svg
-                className="w-4 h-4 text-amber-500 shrink-0"
+                className={`w-4 h-4 shrink-0 ${TEXT_AGE}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -318,11 +340,11 @@ export default function SearchResultList({
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <span className="text-base text-gray-900 flex-1">
+              <span className={`text-base flex-1 ${TEXT_HEADING}`}>
                 {ab.name} yrs
               </span>
               {activeAgeBand?.id === ab.id && (
-                <span className="text-[10px] text-amber-500 font-semibold">
+                <span className={`text-xs font-semibold ${TEXT_AGE}`}>
                   active
                 </span>
               )}

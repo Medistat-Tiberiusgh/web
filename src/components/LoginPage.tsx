@@ -1,16 +1,26 @@
-import { COLOR_BRAND } from '../theme'
+import {
+  COLOR_BRAND,
+  TEXT_SECONDARY,
+  SURFACE_CARD,
+  SURFACE_MUTED,
+  BORDER_DEFAULT
+} from '../theme'
 import { startGithubLogin } from '../lib/oauth'
 import Footer from './Footer'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center relative">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 flex flex-col items-center gap-6 w-full max-w-sm">
+    <div
+      className={`min-h-screen flex items-center justify-center relative ${SURFACE_MUTED}`}
+    >
+      <div
+        className={`rounded-2xl shadow-sm border p-10 flex flex-col items-center gap-6 w-full max-w-sm ${SURFACE_CARD} ${BORDER_DEFAULT}`}
+      >
         <div className="flex flex-col items-center gap-1">
           <span className="text-2xl font-bold" style={{ color: COLOR_BRAND }}>
             Medistat
           </span>
-          <span className="text-sm text-gray-500">
+          <span className={`text-sm ${TEXT_SECONDARY}`}>
             Swedish prescription analytics
           </span>
         </div>

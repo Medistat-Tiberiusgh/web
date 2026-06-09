@@ -1,5 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { COLOR_BRAND } from '../../theme'
+import {
+  COLOR_BRAND,
+  TEXT_HEADING,
+  TEXT_BODY,
+  TEXT_MUTED,
+  TEXT_MUTED_HOVER,
+  TEXT_BODY_HOVER,
+  PLACEHOLDER_MUTED,
+  SURFACE_CARD,
+  SURFACE_MUTED,
+  BORDER_DEFAULT
+} from '../../theme'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
 import { gqlFetch } from '../../lib/graphql'
@@ -193,7 +204,7 @@ export default function AppNavbar({
 
   return (
     <>
-      <nav className="border-b border-gray-200 bg-white shrink-0">
+      <nav className={`border-b shrink-0 ${BORDER_DEFAULT} ${SURFACE_CARD}`}>
         {/* Row 1: Logo / Search / User */}
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-8 py-3">
           <span className="text-3xl font-bold" style={{ color: COLOR_BRAND }}>
@@ -205,11 +216,11 @@ export default function AppNavbar({
             className="relative w-full max-w-2xl justify-self-center"
           >
             <div
-              className="flex items-center gap-2 px-4 py-2.5 h-12 rounded-xl border border-gray-200 bg-gray-50 focus-within:border-blue-400 focus-within:bg-white cursor-text transition-colors"
+              className={`flex items-center gap-2 px-4 py-2.5 h-12 rounded-xl border focus-within:border-blue-400 focus-within:bg-white cursor-text transition-colors ${BORDER_DEFAULT} ${SURFACE_MUTED}`}
               onClick={() => inputRef.current?.focus()}
             >
               <svg
-                className="w-4 h-4 text-gray-400 shrink-0"
+                className={`w-4 h-4 shrink-0 ${TEXT_MUTED}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -231,7 +242,7 @@ export default function AppNavbar({
                 }}
                 onKeyDown={handleInlineKeyDown}
                 placeholder={placeholder}
-                className="flex-1 bg-transparent outline-none text-base text-gray-700 placeholder-gray-400"
+                className={`flex-1 bg-transparent outline-none text-base ${TEXT_BODY} ${PLACEHOLDER_MUTED}`}
               />
               {query ? (
                 <button
@@ -248,16 +259,18 @@ export default function AppNavbar({
               ) : (
                 <kbd
                   onClick={() => setCmdOpen(true)}
-                  className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-gray-200 bg-white text-[10px] text-gray-400 font-mono cursor-pointer hover:border-gray-300 hover:text-gray-600 transition-colors select-none"
+                  className={`hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-xs font-mono cursor-pointer hover:border-gray-300 transition-colors select-none ${BORDER_DEFAULT} ${SURFACE_CARD} ${TEXT_MUTED} ${TEXT_MUTED_HOVER}`}
                   title="Open command palette"
                 >
-                  <span className="text-[11px]">⌘</span>K
+                  <span className="text-xs">⌘</span>K
                 </kbd>
               )}
             </div>
 
             {showDropdown && (
-              <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden max-h-96 overflow-y-auto">
+              <div
+                className={`absolute top-full mt-1 left-0 right-0 border rounded-lg shadow-lg z-50 overflow-hidden max-h-96 overflow-y-auto ${SURFACE_CARD} ${BORDER_DEFAULT}`}
+              >
                 <SearchResultList
                   results={inlineResults}
                   handlers={searchHandlers}
@@ -294,13 +307,13 @@ export default function AppNavbar({
                     {user.username[0]?.toUpperCase() ?? '?'}
                   </div>
                 )}
-                <span className="text-base font-semibold text-gray-900">
+                <span className={`text-base font-semibold ${TEXT_HEADING}`}>
                   {user.username}
                 </span>
                 <button
                   title="Log out"
                   onClick={onLogout}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                  className={`p-1.5 rounded-md hover:bg-gray-100 transition-colors ${TEXT_MUTED} ${TEXT_BODY_HOVER}`}
                 >
                   <svg
                     className="w-4 h-4"

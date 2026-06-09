@@ -2,15 +2,15 @@ import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption } from 'echarts'
-import type { DemographicCell } from '../../types'
-import EmptyChartState from './EmptyChartState'
-import { fmtPer1000 } from '../../lib/format'
+import type { DemographicCell } from '../../../types'
+import EmptyChartState from '../EmptyChartState'
+import { fmtPer1000 } from '../../../lib/format'
 import {
   chartTooltipOptions,
   colorDot,
   formatChartTooltip,
   percentGap
-} from '../../lib/echartsTooltip'
+} from '../../../lib/echartsTooltip'
 import {
   COLOR_AGE_BAND,
   COLOR_AGE_LABEL,
@@ -23,8 +23,9 @@ import {
   COLOR_HEATMAP_WOMEN_HIGH,
   COLOR_HEATMAP_WOMEN_LOW,
   COLOR_MALE,
-  FONT_HEATMAP
-} from '../../theme'
+  FONT_HEATMAP,
+  FONT_GENDER_HEADER
+} from '../../../theme'
 
 interface Props {
   data: DemographicCell[]
@@ -161,7 +162,7 @@ function buildOption(
       axisTick: { show: false },
       splitArea: { show: false },
       axisLabel: {
-        fontSize: FONT_HEATMAP,
+        fontSize: FONT_GENDER_HEADER,
         fontWeight: 'bold',
         formatter: (value: string) =>
           value === 'Men' ? `{men|${value}}` : `{women|${value}}`,
@@ -238,9 +239,7 @@ function buildOption(
           ? {
               silent: true,
               itemStyle: { color: COLOR_AGE_BAND, opacity: 0.12 },
-              data: [
-                [{ yAxis: highlightedName }, { yAxis: highlightedName }]
-              ]
+              data: [[{ yAxis: highlightedName }, { yAxis: highlightedName }]]
             }
           : undefined
       }

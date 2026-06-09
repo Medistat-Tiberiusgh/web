@@ -8,6 +8,15 @@ import SearchResultList, {
 import type { SearchHandlers } from './SearchResultList'
 import type { AgeBand } from '../../hooks/dashboard/useFilters'
 import type { Drug, Region } from '../../types'
+import {
+  TEXT_MUTED,
+  TEXT_MUTED_HOVER,
+  PLACEHOLDER_MUTED,
+  SURFACE_CARD,
+  SURFACE_MUTED,
+  BORDER_DEFAULT,
+  BORDER_SUBTLE
+} from '../../theme'
 
 interface Props {
   open: boolean
@@ -112,10 +121,14 @@ export default function CommandPalette({
         onClick={handleClose}
       />
 
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[70vh]">
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+      <div
+        className={`relative w-full max-w-xl rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[70vh] ${SURFACE_CARD} ${BORDER_DEFAULT}`}
+      >
+        <div
+          className={`flex items-center gap-3 px-4 py-3 border-b ${BORDER_SUBTLE}`}
+        >
           <svg
-            className="w-5 h-5 text-gray-400 shrink-0"
+            className={`w-5 h-5 shrink-0 ${TEXT_MUTED}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -134,7 +147,7 @@ export default function CommandPalette({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search medications, regions, gender, age band…"
-            className="flex-1 bg-transparent outline-none text-base text-gray-800 placeholder-gray-400"
+            className={`flex-1 bg-transparent outline-none text-base text-gray-800 ${PLACEHOLDER_MUTED}`}
           />
           {query && (
             <button
@@ -142,7 +155,7 @@ export default function CommandPalette({
                 setQuery('')
                 setDrugResults([])
               }}
-              className="text-gray-400 hover:text-gray-600"
+              className={`${TEXT_MUTED} ${TEXT_MUTED_HOVER}`}
             >
               <svg
                 className="w-4 h-4"
@@ -163,7 +176,7 @@ export default function CommandPalette({
 
         <div className="overflow-y-auto flex-1">
           {query.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-gray-400">
+            <div className={`px-4 py-6 text-center text-sm ${TEXT_MUTED}`}>
               Start typing to search medications, regions, and more…
             </div>
           ) : (
@@ -176,15 +189,21 @@ export default function CommandPalette({
           )}
         </div>
 
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 flex items-center gap-4 text-[10px] text-gray-400">
+        <div
+          className={`px-4 py-2 border-t flex items-center gap-4 text-xs ${BORDER_SUBTLE} ${SURFACE_MUTED} ${TEXT_MUTED}`}
+        >
           <span>
-            <kbd className="font-mono bg-white border border-gray-200 rounded px-1">
+            <kbd
+              className={`font-mono rounded px-1 border ${SURFACE_CARD} ${BORDER_DEFAULT}`}
+            >
               ↵
             </kbd>{' '}
             select
           </span>
           <span>
-            <kbd className="font-mono bg-white border border-gray-200 rounded px-1">
+            <kbd
+              className={`font-mono rounded px-1 border ${SURFACE_CARD} ${BORDER_DEFAULT}`}
+            >
               esc
             </kbd>{' '}
             close

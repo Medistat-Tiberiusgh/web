@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import MedicationRow from '../MedicationList/MedicationRow'
 import type { Drug, UserMedication } from '../../types'
+import { TEXT_MUTED } from '../../theme'
 
 interface Props {
   medications: UserMedication[]
@@ -49,7 +50,7 @@ export default function SavedMedicationsButton({
           {medications.length > 0 && (
             <Badge
               variant="secondary"
-              className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full px-1 text-[10px] font-semibold tabular-nums"
+              className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full px-1 text-xs font-semibold tabular-nums"
             >
               {medications.length}
             </Badge>
@@ -59,7 +60,9 @@ export default function SavedMedicationsButton({
 
       <PopoverContent align="end" className="w-80 p-0">
         <div className="px-3 pt-3 pb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <h2
+            className={`text-xs font-semibold uppercase tracking-wider ${TEXT_MUTED}`}
+          >
             Saved medications
           </h2>
         </div>
@@ -73,7 +76,7 @@ export default function SavedMedicationsButton({
               </li>
             ))
           ) : medications.length === 0 ? (
-            <li className="px-3 py-6 text-center text-xs text-gray-400">
+            <li className={`px-3 py-6 text-center text-xs ${TEXT_MUTED}`}>
               No saved medications yet. Search for a drug and save it from the
               filter chip.
             </li>

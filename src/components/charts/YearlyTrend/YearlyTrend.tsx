@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import ReactECharts from 'echarts-for-react'
 import type { EChartsOption, EChartsType } from 'echarts'
-import { fmtPer1000 } from '../../lib/format'
-import { hexToRgb } from '../../lib/color'
+import { fmtPer1000 } from '../../../lib/format'
+import { hexToRgb } from '../../../lib/color'
 import {
   chartTooltipOptions,
   formatChartTooltip,
   percentChange
-} from '../../lib/echartsTooltip'
-import EmptyChartState from './EmptyChartState'
+} from '../../../lib/echartsTooltip'
+import EmptyChartState from '../EmptyChartState'
 import {
   COLOR_AXIS,
   COLOR_AXIS_LABEL,
@@ -19,7 +19,7 @@ import {
   COLOR_YEAR,
   FONT_LABEL,
   FONT_TICK
-} from '../../theme'
+} from '../../../theme'
 
 type TrendChartPoint = { year: number; per1000: number }
 
@@ -31,8 +31,7 @@ export interface YearlyTrendProps {
   onYearChange?: (year: number | null) => void
 }
 
-// Chart fills its parent — the actual height comes from the card slot in
-// ChartsGridSection
+// Chart fills its parent — the actual height comes from the card slot in ChartsGridSection
 const wrapperStyle: CSSProperties = { width: '100%', height: '100%' }
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -108,9 +107,7 @@ function prepareTrendData(
   const years = nationalData.map((d) => d.year)
   const nationalValues = nationalData.map((d) => d.per1000)
   const regionalValues = regionalData
-    ? years.map(
-        (y) => regionalData.find((d) => d.year === y)?.per1000 ?? null
-      )
+    ? years.map((y) => regionalData.find((d) => d.year === y)?.per1000 ?? null)
     : null
   return {
     years,
@@ -130,11 +127,7 @@ function buildSeries(
 
   if (prep.hasRegional && prep.regionalValues) {
     series.push(
-      lineSeries(
-        regionName ?? 'Regional',
-        prep.regionalValues,
-        COLOR_REGIONAL
-      )
+      lineSeries(regionName ?? 'Regional', prep.regionalValues, COLOR_REGIONAL)
     )
   }
 
@@ -193,9 +186,7 @@ function yearAtClick(
 ): number | null {
   const point: [number, number] = [event.offsetX, event.offsetY]
   if (!chart.containPixel('grid', point)) return null
-  const index = Math.round(
-    chart.convertFromPixel({ xAxisIndex: 0 }, point[0])
-  )
+  const index = Math.round(chart.convertFromPixel({ xAxisIndex: 0 }, point[0]))
   return nationalData[index]?.year ?? null
 }
 
