@@ -2,13 +2,23 @@ import { Skeleton } from '@/components/ui/skeleton'
 import DemographicHeatmap from './DemographicHeatmap'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
-import type { Db } from '../../../hooks/dashboard/useDashboard'
+import type { DemographicCell } from '../../../types'
 
 export default function DemographicHeatmapCard({
-  db,
+  loading,
+  year,
+  regionName,
+  highlightAgeBand,
+  nationalData,
+  regionalData,
   className
 }: {
-  db: Db
+  loading: boolean
+  year: number | null
+  regionName: string | null
+  highlightAgeBand: number | null
+  nationalData: DemographicCell[]
+  regionalData: DemographicCell[]
   className?: string
 }) {
   return (
@@ -18,12 +28,12 @@ export default function DemographicHeatmapCard({
       title={
         <>
           Demographic Heatmap
-          <ChartFilterLabel year={db.activeYear} regionName={db.regionName} />
+          <ChartFilterLabel year={year} regionName={regionName} />
         </>
       }
       description="per 1,000 people"
     >
-      {db.loading ? (
+      {loading ? (
         <div className="grid grid-cols-3 gap-1 p-4">
           {Array.from({ length: 54 }).map((_, index) => (
             <Skeleton key={index} className="h-5 rounded" />
@@ -31,11 +41,9 @@ export default function DemographicHeatmapCard({
         </div>
       ) : (
         <DemographicHeatmap
-          data={db.nationalGrid}
-          regionalData={
-            db.regionalGrid.length > 0 ? db.regionalGrid : undefined
-          }
-          highlightAgeBand={db.activeAgeBand?.id ?? null}
+          data={nationalData}
+          regionalData={regionalData.length > 0 ? regionalData : undefined}
+          highlightAgeBand={highlightAgeBand}
         />
       )}
     </ChartCard>

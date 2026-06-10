@@ -2,13 +2,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import GenderGap from './GenderGap'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
-import type { Db } from '../../../hooks/dashboard/useDashboard'
+import type { GenderSplitPoint } from '../../../types'
+import type { AgeBand } from '../../../types'
 
 export default function GenderGapCard({
-  db,
+  loading,
+  regionName,
+  ageBand,
+  nationalData,
+  regionalData,
   className
 }: {
-  db: Db
+  loading: boolean
+  regionName: string | null
+  ageBand: AgeBand | null
+  nationalData: GenderSplitPoint[]
+  regionalData?: GenderSplitPoint[]
   className?: string
 }) {
   return (
@@ -18,18 +27,15 @@ export default function GenderGapCard({
       title={
         <>
           Gender Gap
-          <ChartFilterLabel regionName={db.regionName} ageBand={db.activeAgeBand} />
+          <ChartFilterLabel regionName={regionName} ageBand={ageBand} />
         </>
       }
       description="per 1,000 inhabitants · all years"
     >
-      {db.loading ? (
+      {loading ? (
         <Skeleton className="h-48 m-4 rounded" />
       ) : (
-        <GenderGap
-          nationalData={db.natGenderSplit}
-          regionalData={db.regGenderSplit}
-        />
+        <GenderGap nationalData={nationalData} regionalData={regionalData} />
       )}
     </ChartCard>
   )

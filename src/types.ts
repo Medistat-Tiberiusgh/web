@@ -44,6 +44,11 @@ export interface Region {
   regionName: string
 }
 
+export interface AgeBand {
+  name: string
+  id: number
+}
+
 export interface UserMedication {
   notes: string | null
   addedAt: string

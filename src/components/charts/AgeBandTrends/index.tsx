@@ -3,16 +3,31 @@ import AgeBandTrends from './AgeBandTrends'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import { NationalRegionalLegend } from '../NationalRegionalLegend'
-import type { Db } from '../../../hooks/dashboard/useDashboard'
+import type { AgeSplitPoint } from '../../../types'
+import type { AgeBand } from '../../../types'
 
 export default function AgeBandTrendsCard({
-  db,
+  loading,
+  selectedYear,
+  latestTrendYear,
+  gender,
+  ageBand,
+  regionName,
+  nationalData,
+  regionalData,
   className
 }: {
-  db: Db
+  loading: boolean
+  selectedYear: number | null
+  latestTrendYear: number | null
+  gender: string | null
+  ageBand: AgeBand | null
+  regionName: string | null
+  nationalData: AgeSplitPoint[]
+  regionalData: AgeSplitPoint[]
   className?: string
 }) {
-  const latestYear = db.activeYear ?? db.latestTrend?.year ?? null
+  const latestYear = selectedYear ?? latestTrendYear
   return (
     <ChartCard
       className={className}
@@ -21,18 +36,18 @@ export default function AgeBandTrendsCard({
         <>
           Age Band Trends
           <ChartFilterLabel
-            year={db.activeYear}
-            gender={db.activeGender}
-            ageBand={db.activeAgeBand}
+            year={selectedYear}
+            gender={gender}
+            ageBand={ageBand}
           />
         </>
       }
       description="per 1,000 people"
       legend={
-        db.regionName ? <NationalRegionalLegend regionName={db.regionName} /> : undefined
+        regionName ? <NationalRegionalLegend regionName={regionName} /> : undefined
       }
     >
-      {db.loading ? (
+      {loading ? (
         <div className="flex flex-col gap-2 p-4">
           {Array.from({ length: 8 }).map((_, index) => (
             <Skeleton key={index} className="h-7 rounded" />
@@ -40,12 +55,12 @@ export default function AgeBandTrendsCard({
         </div>
       ) : (
         <AgeBandTrends
-          data={db.natAgeSplit}
-          regionalData={db.regAgeSplit.length > 0 ? db.regAgeSplit : undefined}
+          data={nationalData}
+          regionalData={regionalData.length > 0 ? regionalData : undefined}
           latestYear={latestYear}
-          selectedYear={db.activeYear}
-          regionName={db.regionName}
-          filterAgeBand={db.activeAgeBand?.name ?? null}
+          selectedYear={selectedYear}
+          regionName={regionName}
+          filterAgeBand={ageBand?.name ?? null}
         />
       )}
     </ChartCard>

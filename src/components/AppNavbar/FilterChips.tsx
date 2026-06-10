@@ -1,6 +1,5 @@
 import { GENDER_OPTIONS } from './SearchResultList'
-import type { AgeBand } from '../../hooks/dashboard/useFilters'
-import type { Drug, Region } from '../../types'
+import type { AgeBand, Drug, Region } from '../../types'
 import {
   TEXT_MUTED,
   TEXT_BODY_HOVER,

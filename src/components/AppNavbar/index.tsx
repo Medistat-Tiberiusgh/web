@@ -18,14 +18,15 @@ import { startGithubLogin } from '../../lib/oauth'
 import { SEARCH_DRUGS_QUERY } from '../../lib/queries'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
-import SavedMedicationsButton from './SavedMedicationsButton'
+import SavedMedicationsButton, {
+  type SavedMeds
+} from './SavedMedicationsButton'
 import SearchResultList, {
   buildSearchResults,
   buildFlatActions
 } from './SearchResultList'
 import type { SearchHandlers } from './SearchResultList'
-import type { AgeBand } from '../../hooks/dashboard/useFilters'
-import type { Drug, Region, UserMedication } from '../../types'
+import type { AgeBand, Drug, Region } from '../../types'
 
 interface Props {
   onLogout: () => void
@@ -36,15 +37,13 @@ interface Props {
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
   savedAtcCodes: Set<string>
-  medications: UserMedication[]
-  medsLoading: boolean
+  savedMeds: SavedMeds
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: AgeBand | null) => void
   onSaveDrug: (drug: Drug) => void
-  onRemoveMedication: (atcCode: string) => void
 }
 
 export default function AppNavbar({
@@ -56,15 +55,13 @@ export default function AppNavbar({
   activeAgeBand,
   availableAgeBands,
   savedAtcCodes,
-  medications,
-  medsLoading,
+  savedMeds,
   onDrugChange,
   onRegionChange,
   onYearChange,
   onGenderChange,
   onAgeBandChange,
-  onSaveDrug,
-  onRemoveMedication
+  onSaveDrug
 }: Props) {
   const user = useUser()
   const { regions } = useRegions()
@@ -290,11 +287,9 @@ export default function AppNavbar({
             {user ? (
               <>
                 <SavedMedicationsButton
-                  medications={medications}
-                  loading={medsLoading}
+                  savedMeds={savedMeds}
                   activeDrugAtcCode={activeDrug?.atcCode ?? null}
                   onSelect={onDrugChange}
-                  onRemove={onRemoveMedication}
                 />
                 {user.avatarUrl ? (
                   <img

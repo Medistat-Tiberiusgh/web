@@ -1,6 +1,5 @@
 import { useRef, useEffect } from 'react'
-import type { AgeBand } from '../../hooks/dashboard/useFilters'
-import type { Drug, Region } from '../../types'
+import type { AgeBand, Drug, Region } from '../../types'
 import {
   TEXT_HEADING,
   TEXT_MUTED,

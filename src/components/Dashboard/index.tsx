@@ -20,15 +20,17 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         activeAgeBand={db.activeAgeBand}
         availableAgeBands={db.availableAgeBands}
         savedAtcCodes={new Set(db.medications.map((m) => m.drugData.atcCode))}
-        medications={db.medications}
-        medsLoading={db.medsLoading}
+        savedMeds={{
+          medications: db.medications,
+          error: db.medsError,
+          onRemove: db.removeMedication
+        }}
         onDrugChange={db.setActiveDrug}
         onRegionChange={db.setActiveRegion}
         onYearChange={db.setActiveYear}
         onGenderChange={db.setActiveGender}
         onAgeBandChange={db.setActiveAgeBand}
         onSaveDrug={(drug) => db.addMedication(drug.atcCode)}
-        onRemoveMedication={db.removeMedication}
       />
 
       <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full">

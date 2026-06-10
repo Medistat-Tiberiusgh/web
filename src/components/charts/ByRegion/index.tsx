@@ -1,19 +1,27 @@
 import ByRegion from './ByRegion'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
-import type { Db } from '../../../hooks/dashboard/useDashboard'
+import type { RegionalStat, AgeBand } from '../../../types'
 
 export default function ByRegionCard({
-  db,
+  year,
+  gender,
+  ageBand,
+  regions,
+  nationalAverage,
+  selectedRegionId,
+  onRegionClick,
   className
 }: {
-  db: Db
+  year: number | null
+  gender: string | null
+  ageBand: AgeBand | null
+  regions: RegionalStat[]
+  nationalAverage: number | null
+  selectedRegionId: number | null
+  onRegionClick: (regionId: number, regionName: string) => void
   className?: string
 }) {
-  function handleRegionClick(regionId: number, regionName: string) {
-    if (db.activeRegion?.id === regionId) db.setActiveRegion(null)
-    else db.setActiveRegion({ id: regionId, regionName })
-  }
   return (
     <ChartCard
       className={className}
@@ -21,20 +29,16 @@ export default function ByRegionCard({
       title={
         <>
           By Region
-          <ChartFilterLabel
-            year={db.activeYear}
-            gender={db.activeGender}
-            ageBand={db.activeAgeBand}
-          />
+          <ChartFilterLabel year={year} gender={gender} ageBand={ageBand} />
         </>
       }
       description="per 1,000 inhabitants"
     >
       <ByRegion
-        regions={db.mapRegions}
-        nationalAverage={db.nationalAverage}
-        selectedRegionId={db.activeRegion?.id ?? null}
-        onRegionClick={handleRegionClick}
+        regions={regions}
+        nationalAverage={nationalAverage}
+        selectedRegionId={selectedRegionId}
+        onRegionClick={onRegionClick}
       />
     </ChartCard>
   )

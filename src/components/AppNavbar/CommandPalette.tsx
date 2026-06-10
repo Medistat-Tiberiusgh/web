@@ -6,8 +6,7 @@ import SearchResultList, {
   buildFlatActions
 } from './SearchResultList'
 import type { SearchHandlers } from './SearchResultList'
-import type { AgeBand } from '../../hooks/dashboard/useFilters'
-import type { Drug, Region } from '../../types'
+import type { AgeBand, Drug, Region } from '../../types'
 import {
   TEXT_MUTED,
   TEXT_MUTED_HOVER,

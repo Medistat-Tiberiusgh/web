@@ -3,13 +3,28 @@ import YearlyTrend from './YearlyTrend'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import { NationalRegionalLegend } from '../NationalRegionalLegend'
-import type { Db } from '../../../hooks/dashboard/useDashboard'
+import type { TrendPoint } from '../../../types'
+import type { AgeBand } from '../../../types'
 
 export default function YearlyTrendCard({
-  db,
+  loading,
+  gender,
+  ageBand,
+  regionName,
+  nationalData,
+  regionalData,
+  selectedYear,
+  onYearChange,
   className
 }: {
-  db: Db
+  loading: boolean
+  gender: string | null
+  ageBand: AgeBand | null
+  regionName: string | null
+  nationalData: TrendPoint[]
+  regionalData?: TrendPoint[]
+  selectedYear: number | null
+  onYearChange: (year: number | null) => void
   className?: string
 }) {
   return (
@@ -19,21 +34,21 @@ export default function YearlyTrendCard({
       title={
         <>
           Yearly Trend · 2006–2024
-          <ChartFilterLabel gender={db.activeGender} ageBand={db.activeAgeBand} />
+          <ChartFilterLabel gender={gender} ageBand={ageBand} />
         </>
       }
       description="per 1,000 inhabitants"
-      legend={<NationalRegionalLegend regionName={db.regionName} />}
+      legend={<NationalRegionalLegend regionName={regionName} />}
     >
-      {db.loading ? (
+      {loading ? (
         <Skeleton className="h-48 m-4 rounded" />
       ) : (
         <YearlyTrend
-          nationalData={db.effectiveNatTrend}
-          regionalData={db.effectiveRegTrend}
-          regionName={db.regionName}
-          selectedYear={db.activeYear}
-          onYearChange={db.setActiveYear}
+          nationalData={nationalData}
+          regionalData={regionalData}
+          regionName={regionName}
+          selectedYear={selectedYear}
+          onYearChange={onYearChange}
         />
       )}
     </ChartCard>
