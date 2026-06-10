@@ -45,7 +45,7 @@ export function useDashboard() {
 
   // Single GraphQL request fetches every chart's data — field-level args mean
   // each section gets its own filter shape without needing separate queries.
-  const { national, regional, loading } = useDashboardData({
+  const { national, regional, loading, error } = useDashboardData({
     atcCode: activeDrug?.atcCode ?? null,
     region: effectiveRegionId,
     gender: genderId,
@@ -123,6 +123,7 @@ export function useDashboard() {
     demographicLabel,
     // Loading
     loading,
+    error,
     // KPI values
     ...kpis,
     // Chart data

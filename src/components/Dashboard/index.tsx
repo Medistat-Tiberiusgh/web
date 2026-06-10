@@ -45,6 +45,14 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
               explore dispensing data
             </CardContent>
           </Card>
+        ) : db.error ? (
+          <Card>
+            <CardContent
+              className={`flex items-center justify-center h-64 text-sm ${TEXT_MUTED}`}
+            >
+              Couldn’t load dispensing data. Please try again.
+            </CardContent>
+          </Card>
         ) : (
           <ChartsSection db={db} />
         )}
