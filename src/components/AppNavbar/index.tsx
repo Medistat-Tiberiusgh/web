@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { Command as CommandPrimitive } from 'cmdk'
 import {
   COLOR_BRAND,
   TEXT_HEADING,
@@ -13,19 +14,16 @@ import {
 } from '../../theme'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
-import { gqlFetch } from '../../lib/graphql'
 import { startGithubLogin } from '../../lib/oauth'
-import { SEARCH_DRUGS_QUERY } from '../../lib/queries'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
 import SavedMedicationsButton, {
-  type SavedMeds
+  type SavedMedications
 } from './SavedMedicationsButton'
-import SearchResultList, {
-  buildSearchResults,
-  buildFlatActions
-} from './SearchResultList'
-import type { SearchHandlers } from './SearchResultList'
+import SearchResultList from './SearchResultList'
+import { buildSearchResults } from '../../lib/searchResults'
+import type { SearchHandlers } from '../../lib/searchResults'
+import { useDrugSearch } from '../../hooks/useDrugSearch'
 import type { AgeBand, Drug, Region } from '../../types'
 
 interface Props {
@@ -37,7 +35,7 @@ interface Props {
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
   savedAtcCodes: Set<string>
-  savedMeds: SavedMeds
+  savedMedications: SavedMedications
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
   onYearChange: (year: number | null) => void
@@ -55,7 +53,7 @@ export default function AppNavbar({
   activeAgeBand,
   availableAgeBands,
   savedAtcCodes,
-  savedMeds,
+  savedMedications,
   onDrugChange,
   onRegionChange,
   onYearChange,
@@ -66,16 +64,12 @@ export default function AppNavbar({
   const user = useUser()
   const { regions } = useRegions()
 
-  const [query, setQuery] = useState('')
+  const { query, setQuery, drugResults, searching, reset } = useDrugSearch()
   const [open, setOpen] = useState(false)
-  const [drugResults, setDrugResults] = useState<Drug[]>([])
-  const [searching, setSearching] = useState(false)
-  const [focusedIndex, setFocusedIndex] = useState(-1)
   const [cmdOpen, setCmdOpen] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const searchHandlers: SearchHandlers = {
     activeDrug,
@@ -87,36 +81,6 @@ export default function AppNavbar({
     onGenderChange,
     onAgeBandChange
   }
-
-  const searchDrugs = useCallback(async (q: string) => {
-    setSearching(true)
-    try {
-      const data = await gqlFetch<{ searchDrugs: Drug[] }>(SEARCH_DRUGS_QUERY, {
-        query: q
-      })
-      setDrugResults(data.searchDrugs)
-    } catch {
-      setDrugResults([])
-    } finally {
-      setSearching(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.length < 2) {
-      setDrugResults([])
-      return
-    }
-    debounceRef.current = setTimeout(() => searchDrugs(query), 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [query, searchDrugs])
-
-  useEffect(() => {
-    setFocusedIndex(-1)
-  }, [query])
 
   // Close inline dropdown on outside click
   useEffect(() => {
@@ -153,26 +117,9 @@ export default function AppNavbar({
     regions
   )
 
-  function handleInlineKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!open) return
-    const closeFn = () => {
-      setQuery('')
-      setDrugResults([])
-      setOpen(false)
-      setFocusedIndex(-1)
-    }
-    const actions = buildFlatActions(inlineResults, searchHandlers, closeFn)
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setFocusedIndex((i) => Math.min(i + 1, actions.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setFocusedIndex((i) => Math.max(i - 1, -1))
-    } else if (e.key === 'Enter' && focusedIndex >= 0) {
-      e.preventDefault()
-      actions[focusedIndex]?.()
-      setFocusedIndex(-1)
-    }
+  function closeInline() {
+    reset()
+    setOpen(false)
   }
 
   const placeholder = (() => {
@@ -208,8 +155,9 @@ export default function AppNavbar({
             Medistat
           </span>
 
-          <div
+          <CommandPrimitive
             ref={containerRef}
+            shouldFilter={false}
             className="relative w-full max-w-2xl justify-self-center"
           >
             <div
@@ -229,25 +177,19 @@ export default function AppNavbar({
                   d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
                 />
               </svg>
-              <input
+              <CommandPrimitive.Input
                 ref={inputRef}
-                type="text"
                 value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  setOpen(e.target.value.length >= 1)
+                onValueChange={(value) => {
+                  setQuery(value)
+                  setOpen(value.length >= 1)
                 }}
-                onKeyDown={handleInlineKeyDown}
                 placeholder={placeholder}
                 className={`flex-1 bg-transparent outline-none text-base ${TEXT_BODY} ${PLACEHOLDER_MUTED}`}
               />
               {query ? (
                 <button
-                  onClick={() => {
-                    setQuery('')
-                    setDrugResults([])
-                    setOpen(false)
-                  }}
+                  onClick={closeInline}
                   className="shrink-0 w-5 h-5 rounded-full bg-gray-300 hover:bg-gray-400 text-white flex items-center justify-center text-sm leading-none"
                   aria-label="Clear search"
                 >
@@ -265,29 +207,23 @@ export default function AppNavbar({
             </div>
 
             {showDropdown && (
-              <div
+              <CommandPrimitive.List
                 className={`absolute top-full mt-1 left-0 right-0 border rounded-lg shadow-lg z-50 overflow-hidden max-h-96 overflow-y-auto ${SURFACE_CARD} ${BORDER_DEFAULT}`}
               >
                 <SearchResultList
                   results={inlineResults}
                   handlers={searchHandlers}
-                  onClose={() => {
-                    setQuery('')
-                    setDrugResults([])
-                    setOpen(false)
-                    setFocusedIndex(-1)
-                  }}
-                  focusedIndex={focusedIndex}
+                  onClose={closeInline}
                 />
-              </div>
+              </CommandPrimitive.List>
             )}
-          </div>
+          </CommandPrimitive>
 
           <div className="flex items-center justify-end gap-3">
             {user ? (
               <>
                 <SavedMedicationsButton
-                  savedMeds={savedMeds}
+                  savedMedications={savedMedications}
                   activeDrugAtcCode={activeDrug?.atcCode ?? null}
                   onSelect={onDrugChange}
                 />

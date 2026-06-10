@@ -1,4 +1,4 @@
-import { GENDER_OPTIONS } from './SearchResultList'
+import { GENDER_OPTIONS } from '../../lib/searchResults'
 import type { AgeBand, Drug, Region } from '../../types'
 import {
   TEXT_MUTED,

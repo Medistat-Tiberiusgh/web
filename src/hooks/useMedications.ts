@@ -1,59 +1,84 @@
 import { useState, useEffect } from 'react'
+import type { User } from '../context/UserContext'
 import type { UserMedication } from '../types'
 import { gqlFetch } from '../lib/graphql'
 import {
   MY_MEDICATIONS_QUERY,
   ADD_MEDICATION_MUTATION,
-  UPDATE_MEDICATION_MUTATION,
   REMOVE_MEDICATION_MUTATION
 } from '../lib/queries'
 
-export function useMedications() {
+// ── GraphQL calls ────────────────────────────────────────────────────────────
+// Each talks to the API and hands back plain domain data — no React, no state.
+
+async function fetchSavedMedications() {
+  const data = await gqlFetch<{ me: { medications: UserMedication[] } }>(
+    MY_MEDICATIONS_QUERY
+  )
+  return data.me.medications
+}
+
+async function saveMedication(atcCode: string, notes?: string) {
+  const data = await gqlFetch<{ addMedication: UserMedication }>(
+    ADD_MEDICATION_MUTATION,
+    { atc: atcCode, notes }
+  )
+  return data.addMedication
+}
+
+function deleteMedication(atcCode: string) {
+  return gqlFetch(REMOVE_MEDICATION_MUTATION, { atc: atcCode })
+}
+
+// ── Hook ─────────────────────────────────────────────────────────────────────
+
+export function useMedications(user: User | null) {
   const [medications, setMedications] = useState<UserMedication[]>([])
-  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
+  // Reload whenever the logged-in identity changes — logging in updates the
+  // user in place (no remount), so this is what reloads the list after OAuth.
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await gqlFetch<{ me: { medications: UserMedication[] } }>(
-          MY_MEDICATIONS_QUERY
-        )
-        setMedications(data.me.medications)
-      } finally {
-        setLoading(false)
-      }
+    if (!user) {
+      setMedications([])
+      setError(false)
+      return
     }
-    load()
-  }, [])
 
-  async function addMedication(atc: string, notes?: string) {
-    const data = await gqlFetch<{ addMedication: UserMedication }>(
-      ADD_MEDICATION_MUTATION,
-      { atc, notes }
-    )
-    setMedications((prev) => [...prev, data.addMedication])
+    let cancelled = false
+    setError(false)
+
+    fetchSavedMedications()
+      .then((saved) => {
+        if (!cancelled) setMedications(saved)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setMedications([])
+        setError(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [user?.sub])
+
+  async function addMedication(atcCode: string, notes?: string) {
+    const saved = await saveMedication(atcCode, notes)
+    setMedications((current) => [...current, saved])
   }
 
-  async function updateMedication(atc: string, notes: string) {
-    const data = await gqlFetch<{ updateMedication: UserMedication }>(
-      UPDATE_MEDICATION_MUTATION,
-      { atc, notes }
+  async function removeMedication(atcCode: string) {
+    await deleteMedication(atcCode)
+    setMedications((current) =>
+      current.filter((medication) => medication.drugData?.atcCode !== atcCode)
     )
-    setMedications((prev) =>
-      prev.map((m) => (m.drugData?.atcCode === atc ? data.updateMedication : m))
-    )
-  }
-
-  async function removeMedication(atc: string) {
-    await gqlFetch(REMOVE_MEDICATION_MUTATION, { atc })
-    setMedications((prev) => prev.filter((m) => m.drugData?.atcCode !== atc))
   }
 
   return {
     medications,
-    loading,
+    error,
     addMedication,
-    updateMedication,
     removeMedication
   }
 }
