@@ -32,8 +32,8 @@ export default function KpiSection({ db }: { db: Db }) {
           db.patientsPct != null
             ? {
                 value: fmtDelta(db.patientsPct, '%'),
-                subLabel: db.prevTrend
-                  ? `(${db.prevTrend.totalPatients.toLocaleString()})`
+                subLabel: db.previousTrend
+                  ? `(${db.previousTrend.totalPatients.toLocaleString()})`
                   : undefined
               }
             : undefined
@@ -48,14 +48,16 @@ export default function KpiSection({ db }: { db: Db }) {
             </p>
             <p className="mt-2">
               National total:{' '}
-              {db.natLatest ? db.natLatest.totalPatients.toLocaleString() : '—'}{' '}
+              {db.nationalLatest
+                ? db.nationalLatest.totalPatients.toLocaleString()
+                : '—'}{' '}
               patients.
             </p>
-            {db.regLatest && (
+            {db.regionalLatest && (
               <p className="mt-2">
                 Total dispensings in {db.regionName ?? 'your region'} (
-                {db.regLatest.year}):{' '}
-                {db.regLatest.totalPrescriptions.toLocaleString()}.
+                {db.regionalLatest.year}):{' '}
+                {db.regionalLatest.totalPrescriptions.toLocaleString()}.
               </p>
             )}
           </>
@@ -69,49 +71,47 @@ export default function KpiSection({ db }: { db: Db }) {
           db.per1000Diff != null
             ? {
                 value: fmtPer1000Delta(db.per1000Diff),
-                subLabel: db.prevTrend
-                  ? `(${fmtPer1000(db.prevTrend.per1000)})`
+                subLabel: db.previousTrend
+                  ? `(${fmtPer1000(db.previousTrend.per1000)})`
                   : undefined
               }
             : undefined
         }
         nationalDelta={
-          db.per1000DeltaVsNat != null && db.natLatest
+          db.per1000DeltaVsNat != null && db.nationalLatest
             ? {
                 value: fmtDelta(db.per1000DeltaVsNat, '%'),
                 pct: db.per1000DeltaVsNat,
-                avgLabel: fmtPer1000(db.natLatest.per1000)
+                avgLabel: fmtPer1000(db.nationalLatest.per1000)
               }
             : null
         }
         info={
           db.demographicLabel
             ? `Dispensings per 1,000 ${db.demographicLabel}. The API filters the data for this demographic.`
-            : `Dispensings per 1,000 inhabitants in ${db.regionName ?? 'your region'}. National average: ${db.natLatest ? fmtPer1000(db.natLatest.per1000) : '—'}.`
+            : `Dispensings per 1,000 inhabitants in ${db.regionName ?? 'your region'}. National average: ${db.nationalLatest ? fmtPer1000(db.nationalLatest.per1000) : '—'}.`
         }
       />
 
       <KpiCard
         label={`Chronic Use Ratio${db.regionName ? ` · ${db.regionName}` : ''}`}
         value={
-          db.chronicUseRatio != null
-            ? `${db.chronicUseRatio.toFixed(2)}x`
-            : '—'
+          db.chronicUseRatio != null ? `${db.chronicUseRatio.toFixed(2)}x` : '—'
         }
         delta={
-          db.ratioDiff != null && db.prevTrend != null
+          db.ratioDiff != null && db.previousTrend != null
             ? {
                 value: fmtDelta(db.ratioDiff, 'x', 2),
-                subLabel: `(${(db.prevTrend.totalPrescriptions / db.prevTrend.totalPatients).toFixed(2)}x)`
+                subLabel: `(${(db.previousTrend.totalPrescriptions / db.previousTrend.totalPatients).toFixed(2)}x)`
               }
             : undefined
         }
         nationalDelta={
-          db.ratioDeltaVsNat != null && db.natChronicRatio != null
+          db.ratioDeltaVsNat != null && db.nationalChronicRatio != null
             ? {
                 value: fmtDelta(db.ratioDeltaVsNat, '%'),
                 pct: db.ratioDeltaVsNat,
-                avgLabel: `${db.natChronicRatio.toFixed(2)}x`
+                avgLabel: `${db.nationalChronicRatio.toFixed(2)}x`
               }
             : null
         }

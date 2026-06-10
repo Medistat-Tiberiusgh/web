@@ -29,10 +29,10 @@ export function useDashboard() {
 
   const {
     medications,
-    loading: medsLoading,
+    error: medicationsError,
     addMedication,
     removeMedication
-  } = useMedications()
+  } = useMedications(user)
   const { regions } = useRegions()
 
   // Effective region: explicit filter → user's home region → none
@@ -78,8 +78,8 @@ export function useDashboard() {
 
   // ── Trend arrays ────────────────────────────────────────────────────────────
 
-  const effectiveNatTrend = national?.trend ?? []
-  const effectiveRegTrend = regional?.trend
+  const effectiveNationalTrend = national?.trend ?? []
+  const effectiveRegionalTrend = regional?.trend
 
   // ── KPI values (delegated to useDashboardKPIs) ───────────────────────────────
 
@@ -88,17 +88,17 @@ export function useDashboard() {
   // ── Chart data ───────────────────────────────────────────────────────────────
 
   // GenderGap chart always shows both genders — ignore the gender filter
-  const natGenderSplit = national?.genderSplit ?? []
-  const regGenderSplit = regional?.genderSplit
+  const nationalGenderSplit = national?.genderSplit ?? []
+  const regionalGenderSplit = regional?.genderSplit
 
   // DemographicHeatmap chart always shows both genders — ignore the gender filter
   const nationalGrid = national?.demographicGrid ?? []
   const regionalGrid = regional?.demographicGrid ?? []
 
-  const natAgeSplit = national?.ageSplit ?? []
-  const regAgeSplit = regional?.ageSplit ?? []
+  const nationalAgeSplit = national?.ageSplit ?? []
+  const regionalAgeSplit = regional?.ageSplit ?? []
   const mapRegions = national?.regionalPopularity ?? []
-  const nationalAverage = kpis.natLatest?.per1000 ?? null
+  const nationalAverage = kpis.nationalLatest?.per1000 ?? null
 
   return {
     // Filters
@@ -114,7 +114,7 @@ export function useDashboard() {
     setActiveAgeBand,
     // Medications sidebar
     medications,
-    medsLoading,
+    medicationsError,
     addMedication,
     removeMedication,
     // Derived filters
@@ -126,17 +126,19 @@ export function useDashboard() {
     // KPI values
     ...kpis,
     // Chart data
-    effectiveNatTrend,
-    effectiveRegTrend,
-    natAgeSplit,
-    regAgeSplit,
+    effectiveNationalTrend,
+    effectiveRegionalTrend,
+    nationalAgeSplit,
+    regionalAgeSplit,
     nationalGrid,
     regionalGrid,
-    natGenderSplit,
-    regGenderSplit,
+    nationalGenderSplit,
+    regionalGenderSplit,
     mapRegions,
     nationalAverage,
     // User
     user
   }
 }
+
+export type Db = ReturnType<typeof useDashboard>

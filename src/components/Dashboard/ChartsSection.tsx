@@ -20,8 +20,8 @@ export default function ChartsSection({ db }: { db: Db }) {
         gender={db.activeGender}
         ageBand={db.activeAgeBand}
         regionName={db.regionName}
-        nationalData={db.effectiveNatTrend}
-        regionalData={db.effectiveRegTrend}
+        nationalData={db.effectiveNationalTrend}
+        regionalData={db.effectiveRegionalTrend}
         selectedYear={db.activeYear}
         onYearChange={db.setActiveYear}
       />
@@ -36,8 +36,8 @@ export default function ChartsSection({ db }: { db: Db }) {
         gender={db.activeGender}
         ageBand={db.activeAgeBand}
         regionName={db.regionName}
-        nationalData={db.natAgeSplit}
-        regionalData={db.regAgeSplit}
+        nationalData={db.nationalAgeSplit}
+        regionalData={db.regionalAgeSplit}
       />
 
       <DemographicHeatmapCard
@@ -55,8 +55,8 @@ export default function ChartsSection({ db }: { db: Db }) {
         loading={db.loading}
         regionName={db.regionName}
         ageBand={db.activeAgeBand}
-        nationalData={db.natGenderSplit}
-        regionalData={db.regGenderSplit}
+        nationalData={db.nationalGenderSplit}
+        regionalData={db.regionalGenderSplit}
       />
 
       <ByRegionCard

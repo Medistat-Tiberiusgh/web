@@ -20,9 +20,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         activeAgeBand={db.activeAgeBand}
         availableAgeBands={db.availableAgeBands}
         savedAtcCodes={new Set(db.medications.map((m) => m.drugData.atcCode))}
-        savedMeds={{
+        savedMedications={{
           medications: db.medications,
-          error: db.medsError,
+          error: db.medicationsError,
           onRemove: db.removeMedication
         }}
         onDrugChange={db.setActiveDrug}
