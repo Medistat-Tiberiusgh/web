@@ -24,18 +24,21 @@ export interface RegionalInsights {
   demographicGrid: DemographicCell[]
 }
 
+export interface DashboardFilters {
+  atcCode: string | null
+  region: number | null
+  gender: number | null
+  ageGroup: number | null
+  year: number | null
+}
+
 interface DashboardResponse {
   nat: NationalInsights
   reg?: RegionalInsights
 }
 
-export function useDashboardData(
-  atcCode: string | null,
-  region: number | null,
-  gender: number | null,
-  ageGroup: number | null,
-  year: number | null
-) {
+export function useDashboardData(filters: DashboardFilters) {
+  const { atcCode, region, gender, ageGroup, year } = filters
   const [national, setNational] = useState<NationalInsights | null>(null)
   const [regional, setRegional] = useState<RegionalInsights | null>(null)
   const [loading, setLoading] = useState(false)

@@ -2,9 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import KpiCard from '../KpiCard'
 import { fmtPer1000, fmtPer1000Delta, fmtDelta } from '../../lib/format'
-import type { useDashboard } from '../../hooks/dashboard/useDashboard'
-
-type Db = ReturnType<typeof useDashboard>
+import type { Db } from '../../hooks/dashboard/useDashboard'
 
 export default function KpiSection({ db }: { db: Db }) {
   if (db.loading) {

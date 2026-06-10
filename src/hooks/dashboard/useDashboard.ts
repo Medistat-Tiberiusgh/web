@@ -45,13 +45,13 @@ export function useDashboard() {
 
   // Single GraphQL request fetches every chart's data — field-level args mean
   // each section gets its own filter shape without needing separate queries.
-  const { national, regional, loading } = useDashboardData(
-    activeDrug?.atcCode ?? null,
-    effectiveRegionId,
-    genderId,
-    ageBandId,
-    activeYear
-  )
+  const { national, regional, loading } = useDashboardData({
+    atcCode: activeDrug?.atcCode ?? null,
+    region: effectiveRegionId,
+    gender: genderId,
+    ageGroup: ageBandId,
+    year: activeYear
+  })
 
   const regionName = useMemo(
     () => regions.find((r) => r.id === effectiveRegionId)?.regionName ?? null,
@@ -87,31 +87,13 @@ export function useDashboard() {
 
   // ── Chart data ───────────────────────────────────────────────────────────────
 
-  const natGenderSplit = useMemo(() => {
-    const split = national?.genderSplit ?? []
-    if (genderId == null) return split
-    return split.filter((pt) => pt.genderId === genderId)
-  }, [national?.genderSplit, genderId])
+  // GenderGap chart always shows both genders — ignore the gender filter
+  const natGenderSplit = national?.genderSplit ?? []
+  const regGenderSplit = regional?.genderSplit
 
-  const regGenderSplit = useMemo(() => {
-    const split = regional?.genderSplit
-    if (!split) return undefined
-    if (genderId == null) return split
-    return split.filter((pt) => pt.genderId === genderId)
-  }, [regional?.genderSplit, genderId])
-
-  // Heatmap always shows all age bands — only apply gender filter
-  const filteredNatGrid = useMemo(() => {
-    const grid = national?.demographicGrid ?? []
-    if (genderId == null) return grid
-    return grid.filter((cell) => cell.genderId === genderId)
-  }, [national?.demographicGrid, genderId])
-
-  const filteredRegGrid = useMemo(() => {
-    const grid = regional?.demographicGrid ?? []
-    if (genderId == null) return grid
-    return grid.filter((cell) => cell.genderId === genderId)
-  }, [regional?.demographicGrid, genderId])
+  // DemographicHeatmap chart always shows both genders — ignore the gender filter
+  const nationalGrid = national?.demographicGrid ?? []
+  const regionalGrid = regional?.demographicGrid ?? []
 
   const natAgeSplit = national?.ageSplit ?? []
   const regAgeSplit = regional?.ageSplit ?? []
@@ -148,8 +130,8 @@ export function useDashboard() {
     effectiveRegTrend,
     natAgeSplit,
     regAgeSplit,
-    filteredNatGrid,
-    filteredRegGrid,
+    nationalGrid,
+    regionalGrid,
     natGenderSplit,
     regGenderSplit,
     mapRegions,

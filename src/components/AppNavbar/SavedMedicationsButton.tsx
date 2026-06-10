@@ -7,32 +7,63 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import MedicationRow from '../MedicationList/MedicationRow'
 import type { Drug, UserMedication } from '../../types'
+import { TEXT_MUTED } from '../../theme'
 
-interface Props {
+export interface SavedMeds {
   medications: UserMedication[]
-  loading: boolean
-  activeDrugAtcCode: string | null
-  onSelect: (drug: Drug) => void
+  error: boolean
   onRemove: (atcCode: string) => void
 }
 
-const SKELETON_COUNT = 3
+interface Props {
+  savedMeds: SavedMeds
+  activeDrugAtcCode: string | null
+  onSelect: (drug: Drug) => void
+}
 
 export default function SavedMedicationsButton({
-  medications,
-  loading,
+  savedMeds,
   activeDrugAtcCode,
-  onSelect,
-  onRemove
+  onSelect
 }: Props) {
+  const { medications, error, onRemove } = savedMeds
   const [open, setOpen] = useState(false)
 
   function handleSelect(drug: Drug) {
     onSelect(drug)
     setOpen(false)
+  }
+
+  function renderMedications() {
+    if (error) {
+      return (
+        <li className={`px-3 py-6 text-center text-xs ${TEXT_MUTED}`}>
+          Couldn't load your saved medications at this moment. Please try again
+          later.
+        </li>
+      )
+    }
+
+    if (medications.length === 0) {
+      return (
+        <li className={`px-3 py-6 text-center text-xs ${TEXT_MUTED}`}>
+          No saved medications yet. Search for a drug and save it from the
+          filter chip.
+        </li>
+      )
+    }
+
+    return medications.map((med) => (
+      <MedicationRow
+        key={med.drugData.atcCode}
+        medication={med}
+        active={med.drugData.atcCode === activeDrugAtcCode}
+        onSelect={handleSelect}
+        onRemove={onRemove}
+      />
+    ))
   }
 
   return (
@@ -49,7 +80,7 @@ export default function SavedMedicationsButton({
           {medications.length > 0 && (
             <Badge
               variant="secondary"
-              className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full px-1 text-[10px] font-semibold tabular-nums"
+              className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full px-1 text-xs font-semibold tabular-nums"
             >
               {medications.length}
             </Badge>
@@ -59,35 +90,15 @@ export default function SavedMedicationsButton({
 
       <PopoverContent align="end" className="w-80 p-0">
         <div className="px-3 pt-3 pb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <h2
+            className={`text-xs font-semibold uppercase tracking-wider ${TEXT_MUTED}`}
+          >
             Saved medications
           </h2>
         </div>
 
         <ul className="max-h-80 overflow-y-auto px-2 pb-2 flex flex-col gap-1">
-          {loading ? (
-            Array.from({ length: SKELETON_COUNT }).map((_, i) => (
-              <li key={i} className="p-3 flex flex-col gap-2">
-                <Skeleton className="h-3 w-1/3 rounded" />
-                <Skeleton className="h-4 w-2/3 rounded" />
-              </li>
-            ))
-          ) : medications.length === 0 ? (
-            <li className="px-3 py-6 text-center text-xs text-gray-400">
-              No saved medications yet. Search for a drug and save it from the
-              filter chip.
-            </li>
-          ) : (
-            medications.map((med) => (
-              <MedicationRow
-                key={med.drugData.atcCode}
-                medication={med}
-                active={med.drugData.atcCode === activeDrugAtcCode}
-                onSelect={handleSelect}
-                onRemove={onRemove}
-              />
-            ))
-          )}
+          {renderMedications()}
         </ul>
       </PopoverContent>
     </Popover>

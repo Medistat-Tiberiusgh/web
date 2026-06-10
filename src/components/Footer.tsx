@@ -1,12 +1,16 @@
+import { TEXT_SECONDARY, TEXT_BODY_HOVER } from '../theme'
+
 export default function Footer({ className = '' }: { className?: string }) {
   return (
-    <footer className={`text-center text-xs text-gray-500 px-4 ${className}`}>
+    <footer
+      className={`text-center text-xs px-4 ${TEXT_SECONDARY} ${className}`}
+    >
       Made by{' '}
       <a
         href="https://www.linkedin.com/in/tiberius-gh/"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline hover:text-gray-700"
+        className={`underline ${TEXT_BODY_HOVER}`}
       >
         Tiberius Gherac
       </a>{' '}
@@ -15,7 +19,7 @@ export default function Footer({ className = '' }: { className?: string }) {
         href="https://github.com/Medistat-Tiberiusgh"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline hover:text-gray-700"
+        className={`underline ${TEXT_BODY_HOVER}`}
       >
         GitHub
       </a>

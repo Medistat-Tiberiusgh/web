@@ -1,4 +1,5 @@
 import type { Drug, UserMedication } from '../../types'
+import { TEXT_HEADING, TEXT_DANGER, SURFACE_MUTED_HOVER } from '../../theme'
 
 interface Props {
   medication: UserMedication
@@ -37,19 +38,19 @@ export default function MedicationRow({
     <li
       onClick={() => onSelect(drugData)}
       className={`group px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-        active ? 'bg-indigo-100' : 'hover:bg-gray-50'
+        active ? 'bg-indigo-100' : SURFACE_MUTED_HOVER
       }`}
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span
           className={`font-semibold text-sm truncate flex-1 ${
-            active ? 'text-indigo-800' : 'text-gray-900'
+            active ? 'text-indigo-800' : TEXT_HEADING
           }`}
         >
           {drugData.name}
         </span>
         {drugData.narcoticClass && (
-          <span className="text-xs font-bold text-red-600 shrink-0">
+          <span className={`text-xs font-bold shrink-0 ${TEXT_DANGER}`}>
             N{drugData.narcoticClass}
           </span>
         )}
