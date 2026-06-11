@@ -1,4 +1,3 @@
-import { Skeleton } from '@/components/ui/skeleton'
 import YearlyTrend from './YearlyTrend'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
@@ -7,7 +6,6 @@ import type { TrendPoint } from '../../../types'
 import type { AgeBand } from '../../../types'
 
 export default function YearlyTrendCard({
-  loading,
   gender,
   ageBand,
   regionName,
@@ -17,7 +15,6 @@ export default function YearlyTrendCard({
   onYearChange,
   className
 }: {
-  loading: boolean
   gender: string | null
   ageBand: AgeBand | null
   regionName: string | null
@@ -40,17 +37,13 @@ export default function YearlyTrendCard({
       description="per 1,000 inhabitants"
       legend={<NationalRegionalLegend regionName={regionName} />}
     >
-      {loading ? (
-        <Skeleton className="h-48 m-4 rounded" />
-      ) : (
-        <YearlyTrend
-          nationalData={nationalData}
-          regionalData={regionalData}
-          regionName={regionName}
-          selectedYear={selectedYear}
-          onYearChange={onYearChange}
-        />
-      )}
+      <YearlyTrend
+        nationalData={nationalData}
+        regionalData={regionalData}
+        regionName={regionName}
+        selectedYear={selectedYear}
+        onYearChange={onYearChange}
+      />
     </ChartCard>
   )
 }

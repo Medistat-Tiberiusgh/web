@@ -45,13 +45,17 @@ export function useDashboard() {
 
   // Single GraphQL request fetches every chart's data — field-level args mean
   // each section gets its own filter shape without needing separate queries.
-  const { national, regional, loading, error } = useDashboardData({
+  const { national, regional, error } = useDashboardData({
     atcCode: activeDrug?.atcCode ?? null,
     region: effectiveRegionId,
     gender: genderId,
     ageGroup: ageBandId,
     year: activeYear
   })
+
+  // We never clear `national`, so once the first fetch lands this stays true —
+  // later filter/drug changes swap data without flashing back to a loader.
+  const hasData = national !== null
 
   const regionName = useMemo(
     () => regions.find((r) => r.id === effectiveRegionId)?.regionName ?? null,
@@ -122,7 +126,7 @@ export function useDashboard() {
     availableAgeBands,
     demographicLabel,
     // Loading
-    loading,
+    hasData,
     error,
     // KPI values
     ...kpis,

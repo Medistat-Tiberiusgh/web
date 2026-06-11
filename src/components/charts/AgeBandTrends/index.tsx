@@ -1,4 +1,3 @@
-import { Skeleton } from '@/components/ui/skeleton'
 import AgeBandTrends from './AgeBandTrends'
 import ChartFilterLabel from '../../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
@@ -7,7 +6,6 @@ import type { AgeSplitPoint } from '../../../types'
 import type { AgeBand } from '../../../types'
 
 export default function AgeBandTrendsCard({
-  loading,
   selectedYear,
   latestTrendYear,
   gender,
@@ -17,7 +15,6 @@ export default function AgeBandTrendsCard({
   regionalData,
   className
 }: {
-  loading: boolean
   selectedYear: number | null
   latestTrendYear: number | null
   gender: string | null
@@ -47,22 +44,14 @@ export default function AgeBandTrendsCard({
         regionName ? <NationalRegionalLegend regionName={regionName} /> : undefined
       }
     >
-      {loading ? (
-        <div className="flex flex-col gap-2 p-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-7 rounded" />
-          ))}
-        </div>
-      ) : (
-        <AgeBandTrends
-          data={nationalData}
-          regionalData={regionalData.length > 0 ? regionalData : undefined}
-          latestYear={latestYear}
-          selectedYear={selectedYear}
-          regionName={regionName}
-          filterAgeBand={ageBand?.name ?? null}
-        />
-      )}
+      <AgeBandTrends
+        data={nationalData}
+        regionalData={regionalData.length > 0 ? regionalData : undefined}
+        latestYear={latestYear}
+        selectedYear={selectedYear}
+        regionName={regionName}
+        filterAgeBand={ageBand?.name ?? null}
+      />
     </ChartCard>
   )
 }

@@ -1,26 +1,8 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
 import KpiCard from '../KpiCard'
 import { fmtPer1000, fmtPer1000Delta, fmtDelta } from '../../lib/format'
 import type { Db } from '../../hooks/dashboard/useDashboard'
 
 export default function KpiSection({ db }: { db: Db }) {
-  if (db.loading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="py-0 gap-0">
-            <CardContent className="p-4 flex flex-col gap-2">
-              <Skeleton className="h-3 w-1/3 rounded" />
-              <Skeleton className="h-8 w-1/2 rounded" />
-              <Skeleton className="h-3 w-2/3 rounded" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <KpiCard
