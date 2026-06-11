@@ -109,7 +109,7 @@ export const FONT_ROW = 12
 /** National/regional series legend label text */
 export const COLOR_LEGEND_TEXT = '#6b7280' // gray-500
 /** "Below average" label on the region map scale legend */
-export const COLOR_LEGEND_BELOW = '#475569' // slate-600
+export const COLOR_LEGEND_BELOW = '#4b5563' // gray-600
 /** National/regional series legend font size (px) */
 export const FONT_LEGEND = 12
 /** Region map scale legend font size (px) */
@@ -179,7 +179,7 @@ export const SURFACE_MUTED_HOVER = 'hover:bg-gray-50'
 // cmdk marks its active row with `data-selected`; the variant is baked in so
 // the literal lives here (same reasoning as the `hover:`/`placeholder:` tokens).
 /** Keyboard-focused search result row (cmdk active item) */
-export const SURFACE_SELECTED = 'data-selected:bg-blue-50'
+export const SURFACE_SELECTED = 'data-selected:bg-teal-50'
 /** Card and surface border */
 export const BORDER_DEFAULT = 'border-gray-200'
 /** Subtle divider — list separators, footers */
@@ -208,7 +208,7 @@ export const TEXT_DRUG = 'text-indigo-500'
 /** Gender accent (matches COLOR_GENDER) */
 export const TEXT_GENDER = 'text-rose-500'
 /** Age band accent (matches COLOR_AGE_BAND) */
-export const TEXT_AGE = 'text-amber-500'
+export const TEXT_AGE = 'text-amber-600'
 
 // ── Filter chips ──────────────────────────────────────────────────────────────
 // Each active-filter pill. The badge token sets fill + text; the *_CLOSE token
