@@ -5,6 +5,7 @@ import Footer from '../Footer'
 import KpiSection from './KpiSection'
 import ChartsSection from './ChartsSection'
 import { useDashboard, type Db } from '../../hooks/dashboard/useDashboard'
+import { useUser } from '../../context/UserContext'
 import { TEXT_MUTED, SURFACE_MUTED } from '../../theme'
 
 function MessageCard({ children }: { children: ReactNode }) {
@@ -20,10 +21,12 @@ function MessageCard({ children }: { children: ReactNode }) {
 }
 
 function NoDrugSelectedCard() {
+  const user = useUser()
   return (
     <MessageCard>
-      Search for a medication or pick one from your saved list to explore
-      dispensing data
+      {user
+        ? 'Search for a medication or pick one from your saved list to explore dispensing data'
+        : 'Search for a medication to explore dispensing data'}
     </MessageCard>
   )
 }
