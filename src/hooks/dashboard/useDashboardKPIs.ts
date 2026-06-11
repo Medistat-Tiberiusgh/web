@@ -11,30 +11,30 @@ export function useDashboardKPIs(
   activeYear: number | null
 ) {
   return useMemo(() => {
-    const natTrend = national?.trend ?? []
-    const regTrend = regional?.trend ?? []
+    const nationalTrend = national?.trend ?? []
+    const regionalTrend = regional?.trend ?? []
 
-    const natLatestPoint = activeYear
-      ? (natTrend.find((t) => t.year === activeYear) ?? null)
-      : (natTrend.at(-1) ?? null)
-    const natPrevPoint = activeYear
-      ? (natTrend.find((t) => t.year === activeYear - 1) ?? null)
-      : (natTrend.at(-2) ?? null)
-    const regLatestPoint = activeYear
-      ? (regTrend.find((t) => t.year === activeYear) ?? null)
-      : (regTrend.at(-1) ?? null)
-    const regPrevPoint = activeYear
-      ? (regTrend.find((t) => t.year === activeYear - 1) ?? null)
-      : (regTrend.at(-2) ?? null)
+    const nationalLatestPoint = activeYear
+      ? (nationalTrend.find((t) => t.year === activeYear) ?? null)
+      : (nationalTrend.at(-1) ?? null)
+    const nationalPreviousPoint = activeYear
+      ? (nationalTrend.find((t) => t.year === activeYear - 1) ?? null)
+      : (nationalTrend.at(-2) ?? null)
+    const regionalLatestPoint = activeYear
+      ? (regionalTrend.find((t) => t.year === activeYear) ?? null)
+      : (regionalTrend.at(-1) ?? null)
+    const regionalPreviousPoint = activeYear
+      ? (regionalTrend.find((t) => t.year === activeYear - 1) ?? null)
+      : (regionalTrend.at(-2) ?? null)
 
     // Only use rows with real patient data (demographic-split rows have 0 patients)
-    const natLatest = natLatestPoint?.totalPatients ? natLatestPoint : null
-    const natPrev = natPrevPoint?.totalPatients ? natPrevPoint : null
-    const regLatest = regLatestPoint?.totalPatients ? regLatestPoint : null
-    const regPrev = regPrevPoint?.totalPatients ? regPrevPoint : null
+    const nationalLatest = nationalLatestPoint?.totalPatients ? nationalLatestPoint : null
+    const nationalPrevious = nationalPreviousPoint?.totalPatients ? nationalPreviousPoint : null
+    const regionalLatest = regionalLatestPoint?.totalPatients ? regionalLatestPoint : null
+    const regionalPrevious = regionalPreviousPoint?.totalPatients ? regionalPreviousPoint : null
 
-    const latestTrend = regLatest ?? natLatest
-    const prevTrend = regPrev ?? natPrev
+    const latestTrend = regionalLatest ?? nationalLatest
+    const previousTrend = regionalPrevious ?? nationalPrevious
 
     const chronicUseRatio =
       latestTrend && latestTrend.totalPatients > 0
@@ -42,49 +42,49 @@ export function useDashboardKPIs(
         : null
 
     const patientsPct =
-      latestTrend && prevTrend && prevTrend.totalPatients > 0
-        ? ((latestTrend.totalPatients - prevTrend.totalPatients) /
-            prevTrend.totalPatients) *
+      latestTrend && previousTrend && previousTrend.totalPatients > 0
+        ? ((latestTrend.totalPatients - previousTrend.totalPatients) /
+            previousTrend.totalPatients) *
           100
         : null
 
     const per1000Diff =
-      latestTrend && prevTrend ? latestTrend.per1000 - prevTrend.per1000 : null
+      latestTrend && previousTrend ? latestTrend.per1000 - previousTrend.per1000 : null
 
     const ratioDiff =
-      chronicUseRatio != null && prevTrend && prevTrend.totalPatients > 0
+      chronicUseRatio != null && previousTrend && previousTrend.totalPatients > 0
         ? chronicUseRatio -
-          prevTrend.totalPrescriptions / prevTrend.totalPatients
+          previousTrend.totalPrescriptions / previousTrend.totalPatients
         : null
 
-    const natChronicRatio =
-      natLatest && natLatest.totalPatients > 0
-        ? natLatest.totalPrescriptions / natLatest.totalPatients
+    const nationalChronicRatio =
+      nationalLatest && nationalLatest.totalPatients > 0
+        ? nationalLatest.totalPrescriptions / nationalLatest.totalPatients
         : null
 
     const per1000DeltaVsNat =
-      regLatest && natLatest && natLatest.per1000 > 0
-        ? ((regLatest.per1000 - natLatest.per1000) / natLatest.per1000) * 100
+      regionalLatest && nationalLatest && nationalLatest.per1000 > 0
+        ? ((regionalLatest.per1000 - nationalLatest.per1000) / nationalLatest.per1000) * 100
         : null
 
     const ratioDeltaVsNat =
-      regLatest != null &&
+      regionalLatest != null &&
       chronicUseRatio != null &&
-      natChronicRatio != null &&
-      natChronicRatio > 0
-        ? ((chronicUseRatio - natChronicRatio) / natChronicRatio) * 100
+      nationalChronicRatio != null &&
+      nationalChronicRatio > 0
+        ? ((chronicUseRatio - nationalChronicRatio) / nationalChronicRatio) * 100
         : null
 
     return {
       latestTrend,
-      prevTrend,
-      natLatest,
-      regLatest,
+      previousTrend,
+      nationalLatest,
+      regionalLatest,
       chronicUseRatio,
       patientsPct,
       per1000Diff,
       ratioDiff,
-      natChronicRatio,
+      nationalChronicRatio,
       per1000DeltaVsNat,
       ratioDeltaVsNat
     }

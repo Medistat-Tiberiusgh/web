@@ -16,12 +16,11 @@ export default function ChartsSection({ db }: { db: Db }) {
     <div className="grid grid-cols-12 gap-3">
       <YearlyTrendCard
         className="col-span-8"
-        loading={db.loading}
         gender={db.activeGender}
         ageBand={db.activeAgeBand}
         regionName={db.regionName}
-        nationalData={db.effectiveNatTrend}
-        regionalData={db.effectiveRegTrend}
+        nationalData={db.effectiveNationalTrend}
+        regionalData={db.effectiveRegionalTrend}
         selectedYear={db.activeYear}
         onYearChange={db.setActiveYear}
       />
@@ -30,19 +29,17 @@ export default function ChartsSection({ db }: { db: Db }) {
 
       <AgeBandTrendsCard
         className="col-span-4"
-        loading={db.loading}
         selectedYear={db.activeYear}
         latestTrendYear={db.latestTrend?.year ?? null}
         gender={db.activeGender}
         ageBand={db.activeAgeBand}
         regionName={db.regionName}
-        nationalData={db.natAgeSplit}
-        regionalData={db.regAgeSplit}
+        nationalData={db.nationalAgeSplit}
+        regionalData={db.regionalAgeSplit}
       />
 
       <DemographicHeatmapCard
         className="col-span-4"
-        loading={db.loading}
         year={db.activeYear}
         regionName={db.regionName}
         highlightAgeBand={db.activeAgeBand?.id ?? null}
@@ -52,11 +49,10 @@ export default function ChartsSection({ db }: { db: Db }) {
 
       <GenderGapCard
         className="col-span-4"
-        loading={db.loading}
         regionName={db.regionName}
         ageBand={db.activeAgeBand}
-        nationalData={db.natGenderSplit}
-        regionalData={db.regGenderSplit}
+        nationalData={db.nationalGenderSplit}
+        regionalData={db.regionalGenderSplit}
       />
 
       <ByRegionCard

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { AGE_BANDS } from '../../types'
 import { useUser } from '../../context/UserContext'
 import { useFilters } from './useFilters'
 import { useDashboardData } from './useDashboardData'
@@ -29,10 +30,10 @@ export function useDashboard() {
 
   const {
     medications,
-    loading: medsLoading,
+    error: medicationsError,
     addMedication,
     removeMedication
-  } = useMedications()
+  } = useMedications(user)
   const { regions } = useRegions()
 
   // Effective region: explicit filter → user's home region → none
@@ -45,7 +46,7 @@ export function useDashboard() {
 
   // Single GraphQL request fetches every chart's data — field-level args mean
   // each section gets its own filter shape without needing separate queries.
-  const { national, regional, loading } = useDashboardData({
+  const { national, regional, error } = useDashboardData({
     atcCode: activeDrug?.atcCode ?? null,
     region: effectiveRegionId,
     gender: genderId,
@@ -53,19 +54,18 @@ export function useDashboard() {
     year: activeYear
   })
 
+  // We never clear `national`, so once the first fetch lands this stays true —
+  // later filter/drug changes swap data without flashing back to a loader.
+  const hasData = national !== null
+
   const regionName = useMemo(
     () => regions.find((r) => r.id === effectiveRegionId)?.regionName ?? null,
     [regions, effectiveRegionId]
   )
 
-  // Always-complete list for the age band dropdown — ageSplit is never filtered by ageGroup
-  const availableAgeBands = useMemo(() => {
-    const seen = new Set<number>()
-    return [...(national?.ageSplit ?? [])]
-      .sort((a, b) => a.ageGroupId - b.ageGroupId)
-      .filter((pt) => !seen.has(pt.ageGroupId) && seen.add(pt.ageGroupId))
-      .map((pt) => ({ name: pt.ageGroupName, id: pt.ageGroupId }))
-  }, [national?.ageSplit])
+  // Bands are a fixed national standard, so we hardcode them rather than fetch
+  // them — fewer moving parts, and the dropdown works before any drug is loaded.
+  const availableAgeBands = AGE_BANDS
 
   const demographicLabel =
     activeGender === 'men'
@@ -78,8 +78,8 @@ export function useDashboard() {
 
   // ── Trend arrays ────────────────────────────────────────────────────────────
 
-  const effectiveNatTrend = national?.trend ?? []
-  const effectiveRegTrend = regional?.trend
+  const effectiveNationalTrend = national?.trend ?? []
+  const effectiveRegionalTrend = regional?.trend
 
   // ── KPI values (delegated to useDashboardKPIs) ───────────────────────────────
 
@@ -88,17 +88,17 @@ export function useDashboard() {
   // ── Chart data ───────────────────────────────────────────────────────────────
 
   // GenderGap chart always shows both genders — ignore the gender filter
-  const natGenderSplit = national?.genderSplit ?? []
-  const regGenderSplit = regional?.genderSplit
+  const nationalGenderSplit = national?.genderSplit ?? []
+  const regionalGenderSplit = regional?.genderSplit
 
   // DemographicHeatmap chart always shows both genders — ignore the gender filter
   const nationalGrid = national?.demographicGrid ?? []
   const regionalGrid = regional?.demographicGrid ?? []
 
-  const natAgeSplit = national?.ageSplit ?? []
-  const regAgeSplit = regional?.ageSplit ?? []
+  const nationalAgeSplit = national?.ageSplit ?? []
+  const regionalAgeSplit = regional?.ageSplit ?? []
   const mapRegions = national?.regionalPopularity ?? []
-  const nationalAverage = kpis.natLatest?.per1000 ?? null
+  const nationalAverage = kpis.nationalLatest?.per1000 ?? null
 
   return {
     // Filters
@@ -114,7 +114,7 @@ export function useDashboard() {
     setActiveAgeBand,
     // Medications sidebar
     medications,
-    medsLoading,
+    medicationsError,
     addMedication,
     removeMedication,
     // Derived filters
@@ -122,21 +122,24 @@ export function useDashboard() {
     availableAgeBands,
     demographicLabel,
     // Loading
-    loading,
+    hasData,
+    error,
     // KPI values
     ...kpis,
     // Chart data
-    effectiveNatTrend,
-    effectiveRegTrend,
-    natAgeSplit,
-    regAgeSplit,
+    effectiveNationalTrend,
+    effectiveRegionalTrend,
+    nationalAgeSplit,
+    regionalAgeSplit,
     nationalGrid,
     regionalGrid,
-    natGenderSplit,
-    regGenderSplit,
+    nationalGenderSplit,
+    regionalGenderSplit,
     mapRegions,
     nationalAverage,
     // User
     user
   }
 }
+
+export type Db = ReturnType<typeof useDashboard>

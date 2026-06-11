@@ -1,16 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { gqlFetch } from '../../lib/graphql'
-import { SEARCH_DRUGS_QUERY } from '../../lib/queries'
-import SearchResultList, {
-  buildSearchResults,
-  buildFlatActions
-} from './SearchResultList'
-import type { SearchHandlers } from './SearchResultList'
-import type { AgeBand, Drug, Region } from '../../types'
+import { useEffect } from 'react'
+import {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList
+} from '@/components/ui/command'
+import SearchResultList from './SearchResultList'
+import { buildSearchResults } from '../../lib/searchResults'
+import type { SearchHandlers } from '../../lib/searchResults'
+import { useDrugSearch } from '../../hooks/useDrugSearch'
+import type { AgeBand, Region } from '../../types'
 import {
   TEXT_MUTED,
-  TEXT_MUTED_HOVER,
-  PLACEHOLDER_MUTED,
   SURFACE_CARD,
   SURFACE_MUTED,
   BORDER_DEFAULT,
@@ -32,52 +33,12 @@ export default function CommandPalette({
   availableAgeBands,
   regions
 }: Props) {
-  const [query, setQuery] = useState('')
-  const [drugResults, setDrugResults] = useState<Drug[]>([])
-  const [searching, setSearching] = useState(false)
-  const [focusedIndex, setFocusedIndex] = useState(-1)
+  const { query, setQuery, drugResults, searching, reset } = useDrugSearch()
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const searchDrugs = useCallback(async (q: string) => {
-    setSearching(true)
-    try {
-      const data = await gqlFetch<{ searchDrugs: Drug[] }>(SEARCH_DRUGS_QUERY, {
-        query: q
-      })
-      setDrugResults(data.searchDrugs)
-    } catch {
-      setDrugResults([])
-    } finally {
-      setSearching(false)
-    }
-  }, [])
-
+  // Start each opening from a clean slate.
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.length < 2) {
-      setDrugResults([])
-      return
-    }
-    debounceRef.current = setTimeout(() => searchDrugs(query), 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [query, searchDrugs])
-
-  useEffect(() => {
-    setFocusedIndex(-1)
-  }, [query])
-
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50)
-    else {
-      setQuery('')
-      setDrugResults([])
-      setFocusedIndex(-1)
-    }
-  }, [open])
+    if (!open) reset()
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const results = buildSearchResults(
     query,
@@ -87,93 +48,22 @@ export default function CommandPalette({
     regions
   )
 
-  function handleClose() {
-    onClose()
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    const actions = buildFlatActions(results, searchHandlers, handleClose)
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setFocusedIndex((i) => Math.min(i + 1, actions.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setFocusedIndex((i) => Math.max(i - 1, -1))
-    } else if (e.key === 'Enter' && focusedIndex >= 0) {
-      e.preventDefault()
-      actions[focusedIndex]?.()
-      setFocusedIndex(-1)
-    }
-  }
-
-  if (!open) return null
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose()
+    <CommandDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose()
       }}
+      title="Search"
+      description="Search medications, regions, gender, and age bands"
     >
-      <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-
-      <div
-        className={`relative w-full max-w-xl rounded-2xl shadow-2xl border overflow-hidden flex flex-col max-h-[70vh] ${SURFACE_CARD} ${BORDER_DEFAULT}`}
-      >
-        <div
-          className={`flex items-center gap-3 px-4 py-3 border-b ${BORDER_SUBTLE}`}
-        >
-          <svg
-            className={`w-5 h-5 shrink-0 ${TEXT_MUTED}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
-          </svg>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Search medications, regions, gender, age band…"
-            className={`flex-1 bg-transparent outline-none text-base text-gray-800 ${PLACEHOLDER_MUTED}`}
-          />
-          {query && (
-            <button
-              onClick={() => {
-                setQuery('')
-                setDrugResults([])
-              }}
-              className={`${TEXT_MUTED} ${TEXT_MUTED_HOVER}`}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
-        </div>
-
-        <div className="overflow-y-auto flex-1">
+      <Command shouldFilter={false}>
+        <CommandInput
+          value={query}
+          onValueChange={setQuery}
+          placeholder="Search medications, regions, gender, age band…"
+        />
+        <CommandList>
           {query.length === 0 ? (
             <div className={`px-4 py-6 text-center text-sm ${TEXT_MUTED}`}>
               Start typing to search medications, regions, and more…
@@ -182,11 +72,10 @@ export default function CommandPalette({
             <SearchResultList
               results={results}
               handlers={searchHandlers}
-              onClose={handleClose}
-              focusedIndex={focusedIndex}
+              onClose={onClose}
             />
           )}
-        </div>
+        </CommandList>
 
         <div
           className={`px-4 py-2 border-t flex items-center gap-4 text-xs ${BORDER_SUBTLE} ${SURFACE_MUTED} ${TEXT_MUTED}`}
@@ -209,7 +98,7 @@ export default function CommandPalette({
           </span>
           <span className="ml-auto">⌘K to toggle</span>
         </div>
-      </div>
-    </div>
+      </Command>
+    </CommandDialog>
   )
 }

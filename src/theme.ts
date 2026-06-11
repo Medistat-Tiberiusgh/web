@@ -35,7 +35,7 @@ export const COLOR_GRID = '#f3f4f6' // gray-100
 /** SVG chart axis lines */
 export const COLOR_AXIS = '#e5e7eb' // gray-200
 /** SVG axis tick label text */
-export const COLOR_AXIS_LABEL = '#9ca3af' // gray-400
+export const COLOR_AXIS_LABEL = '#6b7280' // gray-500
 /** Age band row label in the demographic heatmap */
 export const COLOR_AGE_LABEL = '#6b7280' // gray-500
 /** Demographic heatmap men cell — lowest rate */
@@ -54,6 +54,8 @@ export const COLOR_HEATMAP_TEXT_LIGHT = '#ffffff'
 export const COLOR_HEATMAP_TEXT_DARK = '#374151' // gray-700
 /** Demographic heatmap label font size — axis labels and cell values */
 export const FONT_HEATMAP = 11
+/** "Men" / "Women" column header — shared by the heatmap and gender gap */
+export const FONT_GENDER_HEADER = 11
 
 // ── Intensity map diverging scale ─────────────────────────────────────────────
 // Region fill interpolates from the light "low" endpoint (at the national
@@ -100,6 +102,19 @@ export const COLOR_ROW_FOOTER = '#9ca3af' // gray-400
 /** Ranking row name/value font size (px) */
 export const FONT_ROW = 12
 
+// ── Card legend (HTML) ────────────────────────────────────────────────────────
+// Legends rendered as HTML inside chart card headers (not SVG). Applied via
+// inline style, not Tailwind classes.
+
+/** National/regional series legend label text */
+export const COLOR_LEGEND_TEXT = '#6b7280' // gray-500
+/** "Below average" label on the region map scale legend */
+export const COLOR_LEGEND_BELOW = '#4b5563' // gray-600
+/** National/regional series legend font size (px) */
+export const FONT_LEGEND = 12
+/** Region map scale legend font size (px) */
+export const FONT_LEGEND_SCALE = 10
+
 // ── SVG font sizes (px) ───────────────────────────────────────────────────────
 // Use in fontSize={} on SVG <text> elements. Do NOT use Tailwind classes there.
 
@@ -125,3 +140,99 @@ export const FONT_TOOLTIP = 12
 export const COLOR_TOOLTIP_NOTE = '#9ca3af' // gray-400
 /** Font size for tooltip note text (px) */
 export const FONT_TOOLTIP_NOTE = 11
+
+// ── UI class tokens (Tailwind) ────────────────────────────────────────────────
+// The constants above are raw values for SVG/ECharts (JS contexts). The ones
+// below are Tailwind class strings for DOM `className`, so a color used across
+// the app UI can be retuned in one place. Compose them in a template literal:
+//   className={`text-xs uppercase ${TEXT_MUTED}`}
+// (The type scale — text-xs/sm/base, font weights — stays as plain Tailwind;
+// resize it via @theme in index.css, not here.)
+
+/** Primary text — headings, KPI values, names */
+export const TEXT_HEADING = 'text-gray-900'
+/** Body copy — paragraphs, list item titles */
+export const TEXT_BODY = 'text-gray-700'
+/** Secondary text — supporting copy, captions next to body */
+export const TEXT_SECONDARY = 'text-gray-500'
+/** Muted text — section labels, placeholders, inactive/meta text, icons */
+export const TEXT_MUTED = 'text-gray-400'
+/** Danger / narcotic flag, error messages */
+export const TEXT_DANGER = 'text-red-600'
+
+// Hover targets for interactive text. The `hover:` prefix is baked in so the
+// full class literal lives here; pair with a base token, e.g.
+//   `${TEXT_MUTED} ${TEXT_MUTED_HOVER}`
+/** Muted text darkens slightly on hover — icon buttons */
+export const TEXT_MUTED_HOVER = 'hover:text-gray-600'
+/** Muted text darkens to body shade on hover — links, "clear" actions */
+export const TEXT_BODY_HOVER = 'hover:text-gray-700'
+/** Input placeholder — muted (own class because of the `placeholder:` prefix) */
+export const PLACEHOLDER_MUTED = 'placeholder-gray-400'
+
+/** Card / popover / palette surface */
+export const SURFACE_CARD = 'bg-white'
+/** App background, section headers */
+export const SURFACE_MUTED = 'bg-gray-50'
+/** Row / item highlights on hover */
+export const SURFACE_MUTED_HOVER = 'hover:bg-gray-50'
+// cmdk marks its active row with `data-selected`; the variant is baked in so
+// the literal lives here (same reasoning as the `hover:`/`placeholder:` tokens).
+/** Keyboard-focused search result row (cmdk active item) */
+export const SURFACE_SELECTED = 'data-selected:bg-teal-50'
+/** Card and surface border */
+export const BORDER_DEFAULT = 'border-gray-200'
+/** Subtle divider — list separators, footers */
+export const BORDER_SUBTLE = 'border-gray-100'
+/** Interactive control outline — buttons, inputs (rests darker than a card) */
+export const BORDER_CONTROL = 'border-gray-300'
+/** Control outline darkens on hover */
+export const BORDER_CONTROL_HOVER = 'hover:border-gray-500'
+
+/** Inline hyperlink — brand teal (matches COLOR_BRAND) */
+export const TEXT_LINK = 'text-teal-600'
+
+// Caution callout — e.g. the drug "Precautions" panel.
+/** Caution panel background */
+export const SURFACE_WARNING = 'bg-amber-50'
+/** Caution panel left border */
+export const BORDER_WARNING = 'border-amber-300'
+/** Caution heading text */
+export const TEXT_WARNING = 'text-amber-600'
+
+// Filter-accent text — mirrors the chart COLOR_* roles for each dimension.
+/** Region accent (matches COLOR_REGIONAL) */
+export const TEXT_REGION = 'text-teal-600'
+/** Drug accent */
+export const TEXT_DRUG = 'text-indigo-500'
+/** Gender accent (matches COLOR_GENDER) */
+export const TEXT_GENDER = 'text-rose-500'
+/** Age band accent (matches COLOR_AGE_BAND) */
+export const TEXT_AGE = 'text-amber-600'
+
+// ── Filter chips ──────────────────────────────────────────────────────────────
+// Each active-filter pill. The badge token sets fill + text; the *_CLOSE token
+// colors the "×" button (resting + hover). One pair per filter dimension.
+
+/** Drug chip badge */
+export const CHIP_DRUG = 'bg-indigo-100 text-indigo-800'
+/** Drug chip "×" button */
+export const CHIP_DRUG_CLOSE = 'text-indigo-400 hover:text-indigo-800'
+/** Region chip badge — solid, the only filled-accent chip */
+export const CHIP_REGION = 'bg-teal-600 text-white'
+/** Region chip "×" button */
+export const CHIP_REGION_CLOSE = 'text-teal-200 hover:text-white'
+/** Gender chip badge */
+export const CHIP_GENDER = 'bg-rose-100 text-rose-800'
+/** Gender chip "×" button */
+export const CHIP_GENDER_CLOSE = 'text-rose-400 hover:text-rose-800'
+/** Age band chip badge */
+export const CHIP_AGE = 'bg-amber-100 text-amber-800'
+/** Age band chip "×" button */
+export const CHIP_AGE_CLOSE = 'text-amber-500 hover:text-amber-800'
+/** Year chip badge — active */
+export const CHIP_YEAR = 'bg-violet-100 text-violet-800 hover:bg-violet-200'
+/** Year chip "×" button */
+export const CHIP_YEAR_CLOSE = 'text-violet-400 hover:text-violet-800'
+/** Year chip badge — inactive (no year selected) */
+export const CHIP_INACTIVE = 'bg-gray-100 text-gray-500 hover:bg-gray-200'

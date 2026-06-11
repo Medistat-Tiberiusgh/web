@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react'
-import type { AgeBand, Drug, Region } from '../../types'
+import { Command as CommandPrimitive } from 'cmdk'
+import type { SearchHandlers, SearchResults } from '../../lib/searchResults'
 import {
   TEXT_HEADING,
   TEXT_MUTED,
@@ -9,114 +9,25 @@ import {
   TEXT_GENDER,
   TEXT_AGE,
   SURFACE_MUTED,
-  SURFACE_MUTED_HOVER,
+  SURFACE_SELECTED,
   BORDER_SUBTLE
 } from '../../theme'
 
-export const GENDER_OPTIONS = [
-  { key: 'men', label: 'Men' },
-  { key: 'women', label: 'Women' }
-]
+const HEADING_CLASS = `px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`
 
-export interface SearchHandlers {
-  activeDrug: Drug | null
-  activeRegion: Region | null
-  activeGender: string | null
-  activeAgeBand: AgeBand | null
-  onDrugChange: (d: Drug | null) => void
-  onRegionChange: (r: Region | null) => void
-  onGenderChange: (g: string | null) => void
-  onAgeBandChange: (ab: AgeBand | null) => void
-}
-
-export interface SearchResults {
-  regionResults: Region[]
-  drugResults: Drug[]
-  genderResults: typeof GENDER_OPTIONS
-  ageBandResults: AgeBand[]
-  searching: boolean
-  query: string
-}
-
-export function buildSearchResults(
-  q: string,
-  drugs: Drug[],
-  isSearching: boolean,
-  abands: AgeBand[],
-  regions: Region[]
-): SearchResults {
-  return {
-    regionResults:
-      q.length >= 2
-        ? regions
-            .filter((r) => r.regionName.toLowerCase().includes(q.toLowerCase()))
-            .slice(0, 5)
-        : [],
-    drugResults: drugs,
-    genderResults:
-      q.length >= 1
-        ? GENDER_OPTIONS.filter(
-            (g) =>
-              g.label.toLowerCase().startsWith(q.toLowerCase()) ||
-              g.key.startsWith(q.toLowerCase())
-          )
-        : [],
-    ageBandResults:
-      q.length >= 1 && abands.length > 0
-        ? abands
-            .filter((ab) => ab.name.toLowerCase().includes(q.toLowerCase()))
-            .slice(0, 8)
-        : [],
-    searching: isSearching,
-    query: q
-  }
-}
-
-export function buildFlatActions(
-  results: SearchResults,
-  handlers: SearchHandlers,
-  closeFn: () => void
-): (() => void)[] {
-  const actions: (() => void)[] = []
-  results.regionResults.forEach((r) =>
-    actions.push(() => {
-      handlers.onRegionChange(r)
-      closeFn()
-    })
-  )
-  results.drugResults.forEach((d) =>
-    actions.push(() => {
-      handlers.onDrugChange(d)
-      closeFn()
-    })
-  )
-  results.genderResults.forEach((g) =>
-    actions.push(() => {
-      handlers.onGenderChange(g.key)
-      closeFn()
-    })
-  )
-  results.ageBandResults.forEach((ab) =>
-    actions.push(() => {
-      handlers.onAgeBandChange(ab)
-      closeFn()
-    })
-  )
-  return actions
+function itemClass(extra = '') {
+  return `flex items-center gap-3 px-4 cursor-pointer transition-colors ${SURFACE_SELECTED} ${extra}`
 }
 
 export default function SearchResultList({
   results,
   handlers,
-  onClose,
-  focusedIndex = -1
+  onClose
 }: {
   results: SearchResults
   handlers: SearchHandlers
   onClose: () => void
-  focusedIndex?: number
 }) {
-  const listRef = useRef<HTMLDivElement>(null)
   const {
     regionResults,
     drugResults,
@@ -127,17 +38,10 @@ export default function SearchResultList({
   } = results
   const { activeDrug, activeRegion, activeGender, activeAgeBand } = handlers
 
-  useEffect(() => {
-    if (focusedIndex < 0 || !listRef.current) return
-    const el = listRef.current.querySelector(
-      '[data-focused="true"]'
-    ) as HTMLElement | null
-    el?.scrollIntoView({ block: 'nearest' })
-  }, [focusedIndex])
-
-  function select(fn: () => void) {
-    fn()
-    onClose()
+  // Keep the pointer-down from blurring the inline search input before the
+  // item's onSelect fires.
+  function keepFocus(e: React.MouseEvent) {
+    e.preventDefault()
   }
 
   const hasResults =
@@ -155,37 +59,21 @@ export default function SearchResultList({
     )
   }
 
-  let fi = 0
-  const rBase = fi
-  fi += regionResults.length
-  const dBase = fi
-  fi += drugResults.length
-  const gBase = fi
-  fi += genderResults.length
-  const aBase = fi
-
-  function itemClass(flatIdx: number, extra = '') {
-    return `w-full text-left px-4 flex items-center gap-3 transition-colors ${
-      flatIdx === focusedIndex ? 'bg-blue-50' : SURFACE_MUTED_HOVER
-    } ${extra}`
-  }
-
   return (
-    <div ref={listRef}>
+    <>
       {regionResults.length > 0 && (
         <>
-          <div
-            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
-          >
-            Regions
-          </div>
-          {regionResults.map((region, i) => (
-            <button
+          <div className={HEADING_CLASS}>Regions</div>
+          {regionResults.map((region) => (
+            <CommandPrimitive.Item
               key={region.id}
-              data-focused={rBase + i === focusedIndex ? 'true' : undefined}
-              className={itemClass(rBase + i, 'py-2.5')}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => select(() => handlers.onRegionChange(region))}
+              value={`region-${region.id}`}
+              className={itemClass('py-2.5')}
+              onMouseDown={keepFocus}
+              onSelect={() => {
+                handlers.onRegionChange(region)
+                onClose()
+              }}
             >
               <svg
                 className={`w-3.5 h-3.5 shrink-0 ${TEXT_REGION}`}
@@ -213,36 +101,33 @@ export default function SearchResultList({
                   active
                 </span>
               )}
-            </button>
+            </CommandPrimitive.Item>
           ))}
         </>
       )}
 
       {(drugResults.length > 0 || searching) && (
         <>
-          <div
-            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
-          >
-            Medications
-          </div>
+          <div className={HEADING_CLASS}>Medications</div>
           {searching && drugResults.length === 0 ? (
             <div className={`px-4 py-3 text-base ${TEXT_MUTED}`}>Searching…</div>
           ) : (
-            drugResults.map((drug, i) => (
-              <button
+            drugResults.map((drug) => (
+              <CommandPrimitive.Item
                 key={drug.atcCode}
-                data-focused={dBase + i === focusedIndex ? 'true' : undefined}
-                className={itemClass(dBase + i, 'py-3 justify-between')}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => select(() => handlers.onDrugChange(drug))}
+                value={`drug-${drug.atcCode}`}
+                className={itemClass('py-3 justify-between')}
+                onMouseDown={keepFocus}
+                onSelect={() => {
+                  handlers.onDrugChange(drug)
+                  onClose()
+                }}
               >
                 <div className="flex flex-col min-w-0">
                   <span className={`text-base truncate ${TEXT_HEADING}`}>
                     {drug.name}
                   </span>
-                  <span className={`text-sm ${TEXT_MUTED}`}>
-                    {drug.atcCode}
-                  </span>
+                  <span className={`text-sm ${TEXT_MUTED}`}>{drug.atcCode}</span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {drug.narcoticClass && (
@@ -256,7 +141,7 @@ export default function SearchResultList({
                     </span>
                   )}
                 </div>
-              </button>
+              </CommandPrimitive.Item>
             ))
           )}
         </>
@@ -264,9 +149,7 @@ export default function SearchResultList({
 
       {genderResults.length > 0 && (
         <>
-          <div
-            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
-          >
+          <div className={HEADING_CLASS}>
             Gender
             {activeAgeBand && (
               <span className={`ml-2 normal-case font-normal ${TEXT_AGE}`}>
@@ -274,13 +157,16 @@ export default function SearchResultList({
               </span>
             )}
           </div>
-          {genderResults.map((g, i) => (
-            <button
+          {genderResults.map((g) => (
+            <CommandPrimitive.Item
               key={g.key}
-              data-focused={gBase + i === focusedIndex ? 'true' : undefined}
-              className={itemClass(gBase + i, 'py-3')}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => select(() => handlers.onGenderChange(g.key))}
+              value={`gender-${g.key}`}
+              className={itemClass('py-3')}
+              onMouseDown={keepFocus}
+              onSelect={() => {
+                handlers.onGenderChange(g.key)
+                onClose()
+              }}
             >
               <svg
                 className="w-4 h-4 text-rose-400 shrink-0"
@@ -301,16 +187,14 @@ export default function SearchResultList({
                   active
                 </span>
               )}
-            </button>
+            </CommandPrimitive.Item>
           ))}
         </>
       )}
 
       {ageBandResults.length > 0 && (
         <>
-          <div
-            className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wider border-b ${TEXT_MUTED} ${SURFACE_MUTED} ${BORDER_SUBTLE}`}
-          >
+          <div className={HEADING_CLASS}>
             Age Band
             {activeGender && (
               <span className={`ml-2 normal-case font-normal ${TEXT_GENDER}`}>
@@ -318,13 +202,16 @@ export default function SearchResultList({
               </span>
             )}
           </div>
-          {ageBandResults.map((ab, i) => (
-            <button
+          {ageBandResults.map((ab) => (
+            <CommandPrimitive.Item
               key={ab.id}
-              data-focused={aBase + i === focusedIndex ? 'true' : undefined}
-              className={itemClass(aBase + i, 'py-3')}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => select(() => handlers.onAgeBandChange(ab))}
+              value={`age-${ab.id}`}
+              className={itemClass('py-3')}
+              onMouseDown={keepFocus}
+              onSelect={() => {
+                handlers.onAgeBandChange(ab)
+                onClose()
+              }}
             >
               <svg
                 className={`w-4 h-4 shrink-0 ${TEXT_AGE}`}
@@ -347,10 +234,10 @@ export default function SearchResultList({
                   active
                 </span>
               )}
-            </button>
+            </CommandPrimitive.Item>
           ))}
         </>
       )}
-    </div>
+    </>
   )
 }

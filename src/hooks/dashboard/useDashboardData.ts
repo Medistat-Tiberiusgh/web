@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import type {
   AgeSplitPoint,
   DemographicCell,
@@ -41,23 +41,10 @@ export function useDashboardData(filters: DashboardFilters) {
   const { atcCode, region, gender, ageGroup, year } = filters
   const [national, setNational] = useState<NationalInsights | null>(null)
   const [regional, setRegional] = useState<RegionalInsights | null>(null)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Only show the skeleton on the first fetch — subsequent filter changes
-  // should swap data without flashing the loading state.
-  const hasDataRef = useRef(false)
 
   useEffect(() => {
-    if (!atcCode) {
-      setNational(null)
-      setRegional(null)
-      hasDataRef.current = false
-      setLoading(false)
-      return
-    }
-
-    if (!hasDataRef.current) setLoading(true)
-    setError(null)
+    if (!atcCode) return
 
     const controller = new AbortController()
     // Only forward variables that have a value — sending `null` would trigger
@@ -78,13 +65,11 @@ export function useDashboardData(filters: DashboardFilters) {
           variables,
           controller.signal
         )
-        hasDataRef.current = true
         setNational(data.nat)
         setRegional(data.reg ?? null)
+        setError(null)
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setError((e as Error).message)
-      } finally {
-        setLoading(false)
       }
     }
     load()
@@ -92,5 +77,5 @@ export function useDashboardData(filters: DashboardFilters) {
     return () => controller.abort()
   }, [atcCode, region, gender, ageGroup, year])
 
-  return { national, regional, loading, error }
+  return { national, regional, error }
 }

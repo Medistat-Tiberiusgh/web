@@ -11,24 +11,24 @@ import MedicationRow from '../MedicationList/MedicationRow'
 import type { Drug, UserMedication } from '../../types'
 import { TEXT_MUTED } from '../../theme'
 
-export interface SavedMeds {
+export interface SavedMedications {
   medications: UserMedication[]
   error: boolean
   onRemove: (atcCode: string) => void
 }
 
 interface Props {
-  savedMeds: SavedMeds
+  savedMedications: SavedMedications
   activeDrugAtcCode: string | null
   onSelect: (drug: Drug) => void
 }
 
 export default function SavedMedicationsButton({
-  savedMeds,
+  savedMedications,
   activeDrugAtcCode,
   onSelect
 }: Props) {
-  const { medications, error, onRemove } = savedMeds
+  const { medications, error, onRemove } = savedMedications
   const [open, setOpen] = useState(false)
 
   function handleSelect(drug: Drug) {
