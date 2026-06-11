@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { AGE_BANDS } from '../../types'
 import { useUser } from '../../context/UserContext'
 import { useFilters } from './useFilters'
 import { useDashboardData } from './useDashboardData'
@@ -62,14 +63,9 @@ export function useDashboard() {
     [regions, effectiveRegionId]
   )
 
-  // Always-complete list for the age band dropdown — ageSplit is never filtered by ageGroup
-  const availableAgeBands = useMemo(() => {
-    const seen = new Set<number>()
-    return [...(national?.ageSplit ?? [])]
-      .sort((a, b) => a.ageGroupId - b.ageGroupId)
-      .filter((pt) => !seen.has(pt.ageGroupId) && seen.add(pt.ageGroupId))
-      .map((pt) => ({ name: pt.ageGroupName, id: pt.ageGroupId }))
-  }, [national?.ageSplit])
+  // Bands are a fixed national standard, so we hardcode them rather than fetch
+  // them — fewer moving parts, and the dropdown works before any drug is loaded.
+  const availableAgeBands = AGE_BANDS
 
   const demographicLabel =
     activeGender === 'men'
