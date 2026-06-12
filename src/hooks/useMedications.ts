@@ -34,28 +34,28 @@ function deleteMedication(atcCode: string) {
 
 export function useMedications(user: User | null) {
   const [medications, setMedications] = useState<UserMedication[]>([])
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Reload whenever the logged-in identity changes — logging in updates the
   // user in place (no remount), so this is what reloads the list after OAuth.
   useEffect(() => {
     if (!user) {
       setMedications([])
-      setError(false)
+      setError(null)
       return
     }
 
     let cancelled = false
-    setError(false)
+    setError(null)
 
     fetchSavedMedications()
       .then((saved) => {
         if (!cancelled) setMedications(saved)
       })
-      .catch(() => {
+      .catch((e) => {
         if (cancelled) return
         setMedications([])
-        setError(true)
+        setError((e as Error).message)
       })
 
     return () => {

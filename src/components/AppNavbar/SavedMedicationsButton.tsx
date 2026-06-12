@@ -13,7 +13,7 @@ import { TEXT_MUTED } from '../../theme'
 
 export interface SavedMedications {
   medications: UserMedication[]
-  error: boolean
+  error: string | null
   onRemove: (atcCode: string) => void
 }
 

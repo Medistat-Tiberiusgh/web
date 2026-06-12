@@ -146,20 +146,6 @@ export const ADD_MEDICATION_MUTATION = `
   }
 `
 
-export const UPDATE_MEDICATION_MUTATION = `
-  mutation UpdateMedication($atc: String!, $notes: String) {
-    updateMedication(atc: $atc, notes: $notes) {
-      notes
-      addedAt
-      drugData {
-        atcCode
-        name
-        narcoticClass
-      }
-    }
-  }
-`
-
 export const REMOVE_MEDICATION_MUTATION = `
   mutation RemoveMedication($atc: String!) {
     removeMedication(atc: $atc) {
