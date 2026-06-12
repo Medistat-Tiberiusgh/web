@@ -13,7 +13,6 @@ import {
   BORDER_DEFAULT
 } from '../../theme'
 import { useUser } from '../../context/UserContext'
-import { useRegions } from '../../hooks/useRegions'
 import { startGithubLogin } from '../../lib/oauth'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
@@ -34,6 +33,7 @@ interface Props {
   activeGender: string | null
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
+  regions: Region[]
   savedAtcCodes: Set<string>
   savedMedications: SavedMedications
   onDrugChange: (drug: Drug | null) => void
@@ -52,6 +52,7 @@ export default function AppNavbar({
   activeGender,
   activeAgeBand,
   availableAgeBands,
+  regions,
   savedAtcCodes,
   savedMedications,
   onDrugChange,
@@ -62,8 +63,6 @@ export default function AppNavbar({
   onSaveDrug
 }: Props) {
   const user = useUser()
-  const { regions } = useRegions()
-
   const { query, setQuery, drugResults, searching, reset } = useDrugSearch()
   const [open, setOpen] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)

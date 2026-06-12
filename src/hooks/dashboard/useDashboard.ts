@@ -118,6 +118,7 @@ export function useDashboard() {
     addMedication,
     removeMedication,
     // Derived filters
+    regions,
     regionName,
     availableAgeBands,
     demographicLabel,
