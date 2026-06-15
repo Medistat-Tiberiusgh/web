@@ -1,5 +1,5 @@
 import YearlyTrend from './YearlyTrend'
-import ChartFilterLabel from '../../ChartFilterLabel'
+import ChartFilterLabel from '../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import { NationalRegionalLegend } from '../NationalRegionalLegend'
 import type { TrendPoint } from '../../../types'

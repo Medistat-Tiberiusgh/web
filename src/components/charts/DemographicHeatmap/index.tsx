@@ -1,5 +1,5 @@
 import DemographicHeatmap from './DemographicHeatmap'
-import ChartFilterLabel from '../../ChartFilterLabel'
+import ChartFilterLabel from '../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import type { DemographicCell } from '../../../types'
 

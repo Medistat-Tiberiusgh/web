@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import type {
   AgeSplitPoint,
   DemographicCell,
@@ -6,7 +5,7 @@ import type {
   RegionalStat,
   TrendPoint
 } from '../../types'
-import { gqlFetch } from '../../lib/graphql'
+import { useGqlQuery } from '../../lib/useGqlQuery'
 import { DASHBOARD_QUERY } from '../../lib/queries'
 
 export interface NationalInsights {
@@ -39,43 +38,27 @@ interface DashboardResponse {
 
 export function useDashboardData(filters: DashboardFilters) {
   const { atcCode, region, gender, ageGroup, year } = filters
-  const [national, setNational] = useState<NationalInsights | null>(null)
-  const [regional, setRegional] = useState<RegionalInsights | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!atcCode) return
+  // Only forward variables that have a value — sending `null` would trigger
+  // the API's validators on a non-existent id.
+  const variables: Record<string, unknown> = {
+    atcCode,
+    hasRegion: region != null
+  }
+  if (region != null) variables.region = region
+  if (gender != null) variables.gender = gender
+  if (ageGroup != null) variables.ageGroup = ageGroup
+  if (year != null) variables.year = year
 
-    const controller = new AbortController()
-    // Only forward variables that have a value — sending `null` would trigger
-    // the API's validators on a non-existent id.
-    const variables: Record<string, unknown> = {
-      atcCode,
-      hasRegion: region != null
-    }
-    if (region != null) variables.region = region
-    if (gender != null) variables.gender = gender
-    if (ageGroup != null) variables.ageGroup = ageGroup
-    if (year != null) variables.year = year
+  const { data, error } = useGqlQuery<DashboardResponse | null>(
+    DASHBOARD_QUERY,
+    variables,
+    { initialData: null, enabled: !!atcCode }
+  )
 
-    async function load() {
-      try {
-        const data = await gqlFetch<DashboardResponse>(
-          DASHBOARD_QUERY,
-          variables,
-          controller.signal
-        )
-        setNational(data.nat)
-        setRegional(data.reg ?? null)
-        setError(null)
-      } catch (e) {
-        if ((e as Error).name !== 'AbortError') setError((e as Error).message)
-      }
-    }
-    load()
-
-    return () => controller.abort()
-  }, [atcCode, region, gender, ageGroup, year])
-
-  return { national, regional, error }
+  return {
+    national: data?.nat ?? null,
+    regional: data?.reg ?? null,
+    error
+  }
 }

@@ -1,10 +1,10 @@
-import type { AgeBand } from '../types'
+import type { AgeBand } from '../../types'
 import {
   COLOR_YEAR,
   COLOR_REGIONAL,
   COLOR_GENDER,
   COLOR_AGE_BAND
-} from '../theme'
+} from '../../theme'
 
 interface Props {
   year?: number | null

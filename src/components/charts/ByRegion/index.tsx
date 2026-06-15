@@ -1,5 +1,5 @@
 import ByRegion from './ByRegion'
-import ChartFilterLabel from '../../ChartFilterLabel'
+import ChartFilterLabel from '../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import type { RegionalStat, AgeBand } from '../../../types'
 

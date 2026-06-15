@@ -53,19 +53,27 @@ function DashboardContent({ db }: { db: Db }) {
   )
 }
 
-export default function Dashboard({ onLogout }: { onLogout: () => void }) {
+export default function Dashboard({
+  onLogout,
+  authError
+}: {
+  onLogout: () => void
+  authError: boolean
+}) {
   const db = useDashboard()
 
   return (
     <div className={`h-screen flex flex-col ${SURFACE_MUTED}`}>
       <AppNavbar
         onLogout={onLogout}
+        authError={authError}
         activeDrug={db.activeDrug}
         activeRegion={db.activeRegion}
         activeYear={db.activeYear}
         activeGender={db.activeGender}
         activeAgeBand={db.activeAgeBand}
         availableAgeBands={db.availableAgeBands}
+        regions={db.regions}
         savedAtcCodes={new Set(db.medications.map((m) => m.drugData.atcCode))}
         savedMedications={{
           medications: db.medications,
@@ -80,7 +88,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         onSaveDrug={(drug) => db.addMedication(drug.atcCode)}
       />
 
-      <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full">
+      <main className="no-scrollbar flex-1 overflow-y-auto p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full">
         <DashboardContent db={db} />
 
         <Footer className="mt-auto pt-4 pb-2" />

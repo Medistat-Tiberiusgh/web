@@ -1,4 +1,4 @@
-import KpiCard from '../KpiCard'
+import KpiCard from './KpiCard'
 import { fmtPer1000, fmtPer1000Delta, fmtDelta } from '../../lib/format'
 import type { Db } from '../../hooks/dashboard/useDashboard'
 
