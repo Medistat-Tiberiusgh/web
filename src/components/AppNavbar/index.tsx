@@ -2,23 +2,22 @@ import { useState, useRef, useEffect } from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
 import {
   COLOR_BRAND,
-  TEXT_HEADING,
   TEXT_BODY,
   TEXT_MUTED,
   TEXT_MUTED_HOVER,
-  TEXT_BODY_HOVER,
   PLACEHOLDER_MUTED,
   SURFACE_CARD,
   SURFACE_MUTED,
   BORDER_DEFAULT
 } from '../../theme'
 import { useUser } from '../../context/UserContext'
-import { startGithubLogin } from '../../lib/oauth'
 import FilterChips from './FilterChips'
 import CommandPalette from './CommandPalette'
 import SavedMedicationsButton, {
   type SavedMedications
 } from './SavedMedicationsButton'
+import SignInControl from './SignInControl'
+import UserMenu from './UserMenu'
 import SearchResultList from './SearchResultList'
 import { buildSearchResults } from '../../lib/searchResults'
 import type { SearchHandlers } from '../../lib/searchResults'
@@ -27,6 +26,7 @@ import type { AgeBand, Drug, Region } from '../../types'
 
 interface Props {
   onLogout: () => void
+  authError: boolean
   activeDrug: Drug | null
   activeRegion: Region | null
   activeYear: number | null
@@ -46,6 +46,7 @@ interface Props {
 
 export default function AppNavbar({
   onLogout,
+  authError,
   activeDrug,
   activeRegion,
   activeYear,
@@ -226,47 +227,14 @@ export default function AppNavbar({
                   activeDrugAtcCode={activeDrug?.atcCode ?? null}
                   onSelect={onDrugChange}
                 />
-                {user.avatarUrl ? (
-                  <img
-                    src={user.avatarUrl}
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                    {user.username[0]?.toUpperCase() ?? '?'}
-                  </div>
-                )}
-                <span className={`text-base font-semibold ${TEXT_HEADING}`}>
-                  {user.username}
-                </span>
-                <button
-                  title="Log out"
-                  onClick={onLogout}
-                  className={`p-1.5 rounded-md hover:bg-gray-100 transition-colors ${TEXT_MUTED} ${TEXT_BODY_HOVER}`}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
-                    />
-                  </svg>
-                </button>
+                <UserMenu
+                  username={user.username}
+                  avatarUrl={user.avatarUrl}
+                  onLogout={onLogout}
+                />
               </>
             ) : (
-              <button
-                onClick={startGithubLogin}
-                className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
-              >
-                Sign in
-              </button>
+              <SignInControl authError={authError} />
             )}
           </div>
         </div>

@@ -3,10 +3,10 @@ import { useGqlQuery } from '../lib/useGqlQuery'
 import { REGIONS_QUERY } from '../lib/queries'
 
 export function useRegions() {
-  const { data: regions } = useGqlQuery<Region[]>(
+  const { data } = useGqlQuery<{ regions: Region[] }>(
     REGIONS_QUERY,
     {},
-    { initialData: [] }
+    { initialData: { regions: [] } }
   )
-  return { regions }
+  return { regions: data.regions }
 }

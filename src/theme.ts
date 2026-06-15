@@ -197,6 +197,12 @@ export const TEXT_LINK = 'text-teal-600'
 export const SURFACE_WARNING = 'bg-amber-50'
 /** Caution panel left border */
 export const BORDER_WARNING = 'border-amber-300'
+
+// Danger callout — e.g. the sign-in-failed banner. Pairs with TEXT_DANGER.
+/** Danger banner background */
+export const SURFACE_DANGER = 'bg-red-50'
+/** Danger banner border */
+export const BORDER_DANGER = 'border-red-300'
 /** Caution heading text */
 export const TEXT_WARNING = 'text-amber-600'
 
