@@ -1,5 +1,5 @@
 import GenderGap from './GenderGap'
-import ChartFilterLabel from '../../ChartFilterLabel'
+import ChartFilterLabel from '../ChartFilterLabel'
 import { ChartCard } from '../ChartCard'
 import type { GenderSplitPoint } from '../../../types'
 import type { AgeBand } from '../../../types'

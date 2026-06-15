@@ -1,5 +1,5 @@
 import YearlyTrendCard from '../charts/YearlyTrend'
-import DrugCard from '../DrugCard'
+import DrugCard from '../drug/DrugCard'
 import AgeBandTrendsCard from '../charts/AgeBandTrends'
 import DemographicHeatmapCard from '../charts/DemographicHeatmap'
 import GenderGapCard from '../charts/GenderGap'

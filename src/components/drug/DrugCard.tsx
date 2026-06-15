@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import DrugInfoCard from './DrugInfoCard'
-import type { Drug } from '../types'
+import type { Drug } from '../../types'
 
 // The absolute layer lets the card clamp to its slot instead of growing to fit
 // all the drug text, so DrugInfoCard keeps its "Read more" behaviour.

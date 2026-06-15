@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import MedicationRow from '../MedicationList/MedicationRow'
+import MedicationRow from './MedicationRow'
 import type { Drug, UserMedication } from '../../types'
 import { TEXT_MUTED } from '../../theme'
 

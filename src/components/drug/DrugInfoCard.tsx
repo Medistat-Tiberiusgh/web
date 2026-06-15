@@ -8,7 +8,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useDrugInfo } from '../hooks/useDrugInfo'
+import { useDrugInfo } from '../../hooks/useDrugInfo'
 import {
   TEXT_HEADING,
   TEXT_BODY,
@@ -97,7 +97,7 @@ function ModalContent({
   narcoticClass?: string | null
   atcCode: string
   data: NonNullable<
-    ReturnType<typeof import('../hooks/useDrugInfo').useDrugInfo>['data']
+    ReturnType<typeof import('../../hooks/useDrugInfo').useDrugInfo>['data']
   >
 }) {
   const cachedDate = data.cachedAt
