@@ -57,6 +57,14 @@ export const FONT_HEATMAP = 11
 /** "Men" / "Women" column header — shared by the heatmap and gender gap */
 export const FONT_GENDER_HEADER = 11
 
+// ── Console welcome banner ────────────────────────────────────────────────────
+// Styled console.log banner printed on app boot (src/lib/consoleWelcome.ts).
+
+/** Banner headline ("Welcome to Medistat!") font size (px) */
+export const FONT_CONSOLE_TITLE = 16
+/** Banner body copy and link lines font size (px) */
+export const FONT_CONSOLE_BODY = 12
+
 // ── Intensity map diverging scale ─────────────────────────────────────────────
 // Region fill interpolates from the light "low" endpoint (at the national
 // average) to the dark "high" endpoint (at the min/max extreme).
