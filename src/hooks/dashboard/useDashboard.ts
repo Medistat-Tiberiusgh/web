@@ -6,6 +6,7 @@ import { useDashboardData } from './useDashboardData'
 import { useDashboardKPIs } from './useDashboardKPIs'
 import { useMedications } from '../useMedications'
 import { useRegions } from '../useRegions'
+import { useYears } from '../useYears'
 
 /**
  * Central data hook for the dashboard. Owns all fetching, derived values, and
@@ -35,6 +36,7 @@ export function useDashboard() {
     removeMedication
   } = useMedications(user)
   const { regions } = useRegions()
+  const { years, earliestYear, latestYear } = useYears()
 
   // Effective region: explicit filter → user's home region → none
   const effectiveRegionId = activeRegion?.id ?? user?.regionId ?? null
@@ -119,6 +121,9 @@ export function useDashboard() {
     removeMedication,
     // Derived filters
     regions,
+    years,
+    earliestYear,
+    latestYear,
     regionName,
     availableAgeBands,
     demographicLabel,

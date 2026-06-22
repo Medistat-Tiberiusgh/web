@@ -19,14 +19,13 @@ import {
   CHIP_INACTIVE
 } from '../../theme'
 
-const YEARS = Array.from({ length: 19 }, (_, i) => 2024 - i)
-
 interface Props {
   activeDrug: Drug | null
   activeRegion: Region | null
   activeYear: number | null
   activeGender: string | null
   activeAgeBand: AgeBand | null
+  years: number[]
   savedAtcCodes: Set<string>
   onDrugChange: (drug: Drug | null) => void
   onRegionChange: (region: Region | null) => void
@@ -42,6 +41,7 @@ export default function FilterChips({
   activeYear,
   activeGender,
   activeAgeBand,
+  years,
   savedAtcCodes,
   onDrugChange,
   onRegionChange,
@@ -254,7 +254,7 @@ export default function FilterChips({
               Year
             </option>
           )}
-          {YEARS.map((y) => (
+          {years.map((y) => (
             <option key={y} value={y}>
               {y}
             </option>

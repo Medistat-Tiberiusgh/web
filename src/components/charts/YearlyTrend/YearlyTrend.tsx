@@ -114,7 +114,6 @@ function prepareTrendData(
     nationalValues,
     regionalValues,
     hasRegional: !!regionalValues,
-    lastIndex: years.length - 1,
     effectiveSelectedYear: pickValidYear(selectedYear, years)
   }
 }
@@ -210,7 +209,7 @@ function buildOption(
       axisLabel: {
         color: COLOR_AXIS_LABEL,
         fontSize: FONT_TICK,
-        interval: (idx: number) => idx % 3 === 0 || idx === prep.lastIndex,
+        interval: 0,
         margin: 10
       }
     },

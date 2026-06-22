@@ -13,6 +13,8 @@ export default function YearlyTrendCard({
   regionalData,
   selectedYear,
   onYearChange,
+  earliestYear,
+  latestYear,
   className
 }: {
   gender: string | null
@@ -22,6 +24,8 @@ export default function YearlyTrendCard({
   regionalData?: TrendPoint[]
   selectedYear: number | null
   onYearChange: (year: number | null) => void
+  earliestYear: number
+  latestYear: number
   className?: string
 }) {
   return (
@@ -30,7 +34,7 @@ export default function YearlyTrendCard({
       contentClassName="min-h-72"
       title={
         <>
-          Yearly Trend · 2006–2024
+          Yearly Trend · {earliestYear}–{latestYear}
           <ChartFilterLabel gender={gender} ageBand={ageBand} />
         </>
       }
