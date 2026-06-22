@@ -27,6 +27,15 @@ export const REGIONS_QUERY = `
   }
 `
 
+export const DATA_YEARS_QUERY = `
+  query DataYears {
+    dataYearRange {
+      earliest
+      latest
+    }
+  }
+`
+
 export const MY_MEDICATIONS_QUERY = `
   query Me {
     me {

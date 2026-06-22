@@ -23,6 +23,8 @@ export default function ChartsSection({ db }: { db: Db }) {
         regionalData={db.effectiveRegionalTrend}
         selectedYear={db.activeYear}
         onYearChange={db.setActiveYear}
+        earliestYear={db.earliestYear}
+        latestYear={db.latestYear}
       />
 
       <DrugCard className="col-span-4" drug={db.activeDrug!} />

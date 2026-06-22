@@ -221,7 +221,7 @@ function buildOption(
       type: 'category',
       data: prep.years.map(String),
       inverse: true,
-      axisLabel: { color: COLOR_AXIS_LABEL, fontSize: FONT_TICK },
+      axisLabel: { color: COLOR_AXIS_LABEL, fontSize: FONT_TICK, interval: 0 },
       axisLine: { lineStyle: { color: COLOR_AXIS } },
       axisTick: { show: false }
     },

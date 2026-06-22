@@ -20,6 +20,7 @@ interface Props {
   activeAgeBand: AgeBand | null
   availableAgeBands: AgeBand[]
   regions: Region[]
+  years: number[]
   savedAtcCodes: Set<string>
   savedMedications: SavedMedications
   onDrugChange: (drug: Drug | null) => void
@@ -40,6 +41,7 @@ export default function AppNavbar({
   activeAgeBand,
   availableAgeBands,
   regions,
+  years,
   savedAtcCodes,
   savedMedications,
   onDrugChange,
@@ -111,6 +113,7 @@ export default function AppNavbar({
           activeYear={activeYear}
           activeGender={activeGender}
           activeAgeBand={activeAgeBand}
+          years={years}
           savedAtcCodes={savedAtcCodes}
           onDrugChange={onDrugChange}
           onRegionChange={onRegionChange}

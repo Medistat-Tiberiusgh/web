@@ -74,6 +74,7 @@ export default function Dashboard({
         activeAgeBand={db.activeAgeBand}
         availableAgeBands={db.availableAgeBands}
         regions={db.regions}
+        years={db.years}
         savedAtcCodes={new Set(db.medications.map((m) => m.drugData.atcCode))}
         savedMedications={{
           medications: db.medications,
