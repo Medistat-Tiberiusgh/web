@@ -71,7 +71,6 @@ export const AGE_BANDS: AgeBand[] = [
 ]
 
 export interface UserMedication {
-  notes: string | null
   addedAt: string
   drugData: Drug
 }
