@@ -40,7 +40,6 @@ export const MY_MEDICATIONS_QUERY = `
   query Me {
     me {
       medications {
-        notes
         addedAt
         drugData {
           atcCode
@@ -142,9 +141,8 @@ export const DRUG_INFO_QUERY = `
 `
 
 export const ADD_MEDICATION_MUTATION = `
-  mutation AddMedication($atc: String!, $notes: String) {
-    addMedication(atc: $atc, notes: $notes) {
-      notes
+  mutation AddMedication($atc: String!) {
+    addMedication(atc: $atc) {
       addedAt
       drugData {
         atcCode

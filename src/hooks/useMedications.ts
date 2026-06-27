@@ -18,10 +18,10 @@ async function fetchSavedMedications() {
   return data.me.medications
 }
 
-async function saveMedication(atcCode: string, notes?: string) {
+async function saveMedication(atcCode: string) {
   const data = await gqlFetch<{ addMedication: UserMedication }>(
     ADD_MEDICATION_MUTATION,
-    { atc: atcCode, notes }
+    { atc: atcCode }
   )
   return data.addMedication
 }
@@ -63,8 +63,8 @@ export function useMedications(user: User | null) {
     }
   }, [user?.sub])
 
-  async function addMedication(atcCode: string, notes?: string) {
-    const saved = await saveMedication(atcCode, notes)
+  async function addMedication(atcCode: string) {
+    const saved = await saveMedication(atcCode)
     setMedications((current) => [...current, saved])
   }
 
