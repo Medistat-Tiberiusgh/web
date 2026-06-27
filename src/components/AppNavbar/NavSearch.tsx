@@ -23,7 +23,7 @@ type Props = {
   availableAgeBands: AgeBand[]
   regions: Region[]
   chips?: ReactNode
-  onClearFilters: () => void
+  onClearFilters?: () => void
 }
 
 export default function NavSearch({
@@ -156,13 +156,13 @@ function TrailingControl({
   isSearching: boolean
   hasChips: boolean
   onClearSearch: () => void
-  onClearFilters: () => void
+  onClearFilters?: () => void
   onOpenCommandPalette: () => void
 }) {
   if (isSearching) {
     return <ClearSearchButton onClick={onClearSearch} />
   }
-  if (hasChips) {
+  if (hasChips && onClearFilters) {
     return <ClearFiltersButton onClick={onClearFilters} />
   }
   return <CommandPaletteHint onOpen={onOpenCommandPalette} />
