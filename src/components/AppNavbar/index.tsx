@@ -1,11 +1,18 @@
-import { COLOR_BRAND, SURFACE_CARD, BORDER_DEFAULT } from '../../theme'
+import {
+  COLOR_BRAND,
+  SURFACE_CARD,
+  BORDER_DEFAULT,
+  BORDER_SUBTLE
+} from '../../theme'
 import { useUser } from '../../context/UserContext'
+import PortfolioLink from '../PortfolioLink'
+import SocialLinks from '../SocialLinks'
 import FilterChips from './FilterChips'
 import NavSearch from './NavSearch'
 import SavedMedicationsButton, {
   type SavedMedications
 } from './SavedMedicationsButton'
-import SignInControl from './SignInControl'
+import AuthButtons from './AuthButtons'
 import UserMenu from './UserMenu'
 import type { SearchHandlers } from '../../lib/searchResults'
 import type { AgeBand, Drug, Region } from '../../types'
@@ -71,19 +78,32 @@ export default function AppNavbar({
     !!activeAgeBand ||
     activeYear !== null
 
+  function clearAllFilters() {
+    onDrugChange(null)
+    onRegionChange(null)
+    onGenderChange(null)
+    onAgeBandChange(null)
+    onYearChange(null)
+  }
+
   return (
     <nav className={`border-b shrink-0 ${BORDER_DEFAULT} ${SURFACE_CARD}`}>
-      {/* Row 1: Logo / Search / User */}
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-6 px-8 py-3">
-        <span className="text-3xl font-bold" style={{ color: COLOR_BRAND }}>
-          Medistat
-        </span>
+      {/* Row 1: Breadcrumb back to the portfolio */}
+      <div className="px-8 pt-3 pb-4">
+        <PortfolioLink />
+      </div>
 
-        <NavSearch
-          searchHandlers={searchHandlers}
-          availableAgeBands={availableAgeBands}
-          regions={regions}
-        />
+      {/* Row 2: Brand + socials / account */}
+      <div className="flex items-center justify-between gap-6 px-8 py-4">
+        <div className="flex items-center gap-5">
+          <span
+            className="text-4xl font-bold tracking-tight"
+            style={{ color: COLOR_BRAND }}
+          >
+            Medistat
+          </span>
+          <SocialLinks />
+        </div>
 
         <div className="flex items-center justify-end gap-3">
           {user ? (
@@ -100,29 +120,39 @@ export default function AppNavbar({
               />
             </>
           ) : (
-            <SignInControl authError={authError} />
+            <AuthButtons authError={authError} />
           )}
         </div>
       </div>
 
-      {/* Row 2: Active filter chips */}
-      {hasActiveFilters && (
-        <FilterChips
-          activeDrug={activeDrug}
-          activeRegion={activeRegion}
-          activeYear={activeYear}
-          activeGender={activeGender}
-          activeAgeBand={activeAgeBand}
-          years={years}
-          savedAtcCodes={savedAtcCodes}
-          onDrugChange={onDrugChange}
-          onRegionChange={onRegionChange}
-          onYearChange={onYearChange}
-          onGenderChange={onGenderChange}
-          onAgeBandChange={onAgeBandChange}
-          onSaveDrug={onSaveDrug}
+      {/* Row 3: Search, with active filters shown as chips inside it */}
+      <div className={`flex justify-center px-8 py-2.5 border-t ${BORDER_SUBTLE}`}>
+        <NavSearch
+          searchHandlers={searchHandlers}
+          availableAgeBands={availableAgeBands}
+          regions={regions}
+          onClearFilters={clearAllFilters}
+          chips={
+            hasActiveFilters ? (
+              <FilterChips
+                activeDrug={activeDrug}
+                activeRegion={activeRegion}
+                activeYear={activeYear}
+                activeGender={activeGender}
+                activeAgeBand={activeAgeBand}
+                years={years}
+                savedAtcCodes={savedAtcCodes}
+                onDrugChange={onDrugChange}
+                onRegionChange={onRegionChange}
+                onYearChange={onYearChange}
+                onGenderChange={onGenderChange}
+                onAgeBandChange={onAgeBandChange}
+                onSaveDrug={onSaveDrug}
+              />
+            ) : undefined
+          }
         />
-      )}
+      </div>
     </nav>
   )
 }
