@@ -52,10 +52,11 @@ export function loadCurrentUser(): User | null {
 }
 
 export async function exchangeCodeForToken(
+  provider: string,
   code: string,
   codeVerifier: string
 ): Promise<string | null> {
-  const res = await fetch(`${API_URL}/auth/github/exchange`, {
+  const res = await fetch(`${API_URL}/auth/${provider}/exchange`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code, codeVerifier, redirectUri: redirectUri() })
@@ -67,7 +68,11 @@ export async function exchangeCodeForToken(
 export async function completeLogin(): Promise<User | null> {
   const params = claimCallback()
   if (!params) return null
-  const token = await exchangeCodeForToken(params.code, params.verifier)
+  const token = await exchangeCodeForToken(
+    params.provider,
+    params.code,
+    params.verifier
+  )
   if (!token) return null
   saveToken(token)
   return decodeToken(token)
