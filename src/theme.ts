@@ -178,6 +178,8 @@ export const TEXT_BODY_HOVER = 'hover:text-gray-700'
 /** Input placeholder — muted (own class because of the `placeholder:` prefix) */
 export const PLACEHOLDER_MUTED = 'placeholder-gray-400'
 
+/** Avatar fallback fill — user initial when there's no uploaded avatar (brand teal) */
+export const SURFACE_AVATAR = 'bg-teal-600 text-white'
 /** Card / popover / palette surface */
 export const SURFACE_CARD = 'bg-white'
 /** App background, section headers */

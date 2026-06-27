@@ -33,10 +33,12 @@ export function decodeToken(token: string): User | null {
     return {
       sub: decoded.sub,
       username: decoded.username,
+      email: decoded.email,
       regionId: decoded.regionId,
       genderId: decoded.genderId,
       ageGroupId: decoded.ageGroupId,
-      avatarUrl: decoded.avatarUrl ?? null
+      avatarUrl: decoded.avatarUrl ?? null,
+      provider: decoded.provider ?? null
     }
   } catch {
     return null
