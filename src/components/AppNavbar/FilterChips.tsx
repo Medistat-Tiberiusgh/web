@@ -2,10 +2,8 @@ import { GENDER_OPTIONS } from '../../lib/searchResults'
 import type { AgeBand, Drug, Region } from '../../types'
 import {
   TEXT_MUTED,
-  TEXT_BODY_HOVER,
   TEXT_DANGER,
   TEXT_DRUG,
-  BORDER_SUBTLE,
   CHIP_DRUG,
   CHIP_DRUG_CLOSE,
   CHIP_REGION,
@@ -54,9 +52,7 @@ export default function FilterChips({
     GENDER_OPTIONS.find((g) => g.key === key)?.label ?? key
 
   return (
-    <div
-      className={`px-8 py-2.5 flex flex-wrap items-center justify-center gap-2 border-t ${BORDER_SUBTLE}`}
-    >
+    <div className="flex flex-wrap items-center gap-2">
       {activeDrug && (
         <span
           className={`inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-full ${CHIP_DRUG}`}
@@ -78,8 +74,9 @@ export default function FilterChips({
           {!savedAtcCodes.has(activeDrug.atcCode) && (
             <button
               onClick={() => onSaveDrug(activeDrug)}
-              className="shrink-0 flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-900 border border-indigo-400 hover:border-indigo-700 hover:bg-indigo-200 rounded-full px-2 py-0.5 transition-colors"
+              className="shrink-0 flex items-center text-indigo-600 hover:text-indigo-900 border border-indigo-400 hover:border-indigo-700 hover:bg-indigo-200 rounded-full p-1 transition-colors"
               title="Save to list"
+              aria-label="Save to list"
             >
               <svg
                 className="w-3 h-3"
@@ -94,7 +91,6 @@ export default function FilterChips({
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Save
             </button>
           )}
           <button
@@ -261,19 +257,6 @@ export default function FilterChips({
           ))}
         </select>
       </span>
-
-      <button
-        onClick={() => {
-          onDrugChange(null)
-          onRegionChange(null)
-          onGenderChange(null)
-          onAgeBandChange(null)
-          onYearChange(null)
-        }}
-        className={`text-xs ml-1 transition-colors ${TEXT_MUTED} ${TEXT_BODY_HOVER}`}
-      >
-        Clear all
-      </button>
     </div>
   )
 }
