@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button'
 import { GoogleMark, GitHubMark } from './ProviderMarks'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
+import { useProfile } from '../../hooks/useProfile'
 import { AGE_BANDS } from '../../types'
+import { startGoogleLogin, startGithubLogin } from '../../lib/oauth'
 import {
   TEXT_HEADING,
   TEXT_BODY,
@@ -17,6 +19,7 @@ import {
 
 export default function ProfilePanel({ onLogout }: { onLogout: () => void }) {
   const user = useUser()
+  const profile = useProfile()
   if (!user) return null
 
   return (
@@ -27,11 +30,11 @@ export default function ProfilePanel({ onLogout }: { onLogout: () => void }) {
         avatarUrl={user.avatarUrl}
       />
       <Demographics
-        regionId={user.regionId}
-        genderId={user.genderId}
-        ageGroupId={user.ageGroupId}
+        regionId={profile.regionId}
+        genderId={profile.genderId}
+        ageGroupId={profile.ageGroupId}
       />
-      <ConnectedAccounts provider={user.provider} />
+      <ConnectedAccounts providers={profile.providers} />
       <Security />
       <LogoutFooter onLogout={onLogout} />
     </div>
@@ -159,19 +162,21 @@ function SelectRow({
   )
 }
 
-function ConnectedAccounts({ provider }: { provider: string | null }) {
+function ConnectedAccounts({ providers }: { providers: string[] }) {
   return (
     <Section label="Connected accounts">
       <div className="flex flex-col gap-2">
         <ProviderRow
           icon={<GoogleMark className="w-5 h-5" />}
           name="Google"
-          connected={provider === 'google'}
+          connected={providers.includes('google')}
+          onConnect={startGoogleLogin}
         />
         <ProviderRow
           icon={<GitHubMark className="w-5 h-5" />}
           name="GitHub"
-          connected={provider === 'github'}
+          connected={providers.includes('github')}
+          onConnect={startGithubLogin}
         />
       </div>
       <p className={`text-xs leading-relaxed ${TEXT_MUTED}`}>
@@ -185,11 +190,13 @@ function ConnectedAccounts({ provider }: { provider: string | null }) {
 function ProviderRow({
   icon,
   name,
-  connected
+  connected,
+  onConnect
 }: {
   icon: ReactNode
   name: string
   connected: boolean
+  onConnect: () => void
 }) {
   return (
     <div
@@ -209,7 +216,7 @@ function ProviderRow({
           Connected
         </Button>
       ) : (
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={onConnect}>
           Connect
         </Button>
       )}

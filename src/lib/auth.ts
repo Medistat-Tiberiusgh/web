@@ -1,5 +1,6 @@
 import type { User } from '../context/UserContext'
 import { redirectUri, claimCallback } from './oauth'
+import { LINK_PROVIDER_MUTATION } from './queries'
 
 const TOKEN_KEY = 'medistat_token'
 const API_URL = import.meta.env.VITE_API_URL as string
@@ -34,11 +35,7 @@ export function decodeToken(token: string): User | null {
       sub: decoded.sub,
       username: decoded.username,
       email: decoded.email,
-      regionId: decoded.regionId,
-      genderId: decoded.genderId,
-      ageGroupId: decoded.ageGroupId,
-      avatarUrl: decoded.avatarUrl ?? null,
-      provider: decoded.provider ?? null
+      avatarUrl: decoded.avatarUrl ?? null
     }
   } catch {
     return null
@@ -70,12 +67,41 @@ export async function exchangeCodeForToken(
 export async function completeLogin(): Promise<User | null> {
   const params = claimCallback()
   if (!params) return null
-  const token = await exchangeCodeForToken(
-    params.provider,
-    params.code,
-    params.verifier
-  )
+  const alreadySignedIn = getToken() !== null
+  if (alreadySignedIn) {
+    return linkProviderToAccount(params.provider, params.code, params.verifier)
+  }
+  return signInWithCode(params.provider, params.code, params.verifier)
+}
+
+async function signInWithCode(
+  provider: string,
+  code: string,
+  codeVerifier: string
+): Promise<User | null> {
+  const token = await exchangeCodeForToken(provider, code, codeVerifier)
   if (!token) return null
   saveToken(token)
   return decodeToken(token)
+}
+
+async function linkProviderToAccount(
+  provider: string,
+  code: string,
+  codeVerifier: string
+): Promise<User | null> {
+  const response = await fetch(`${API_URL}/graphql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`
+    },
+    body: JSON.stringify({
+      query: LINK_PROVIDER_MUTATION,
+      variables: { provider, code, codeVerifier, redirectUri: redirectUri() }
+    })
+  })
+  const result = await response.json()
+  if (result.errors?.length) throw new Error(result.errors[0].message)
+  return loadCurrentUser()
 }

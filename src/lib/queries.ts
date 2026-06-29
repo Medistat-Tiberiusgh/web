@@ -51,6 +51,33 @@ export const MY_MEDICATIONS_QUERY = `
   }
 `
 
+export const PROFILE_QUERY = `
+  query Profile {
+    me {
+      providers
+      regionId
+      genderId
+      ageGroupId
+    }
+  }
+`
+
+export const LINK_PROVIDER_MUTATION = `
+  mutation LinkProvider(
+    $provider: String!
+    $code: String!
+    $codeVerifier: String!
+    $redirectUri: String!
+  ) {
+    linkProvider(
+      provider: $provider
+      code: $code
+      codeVerifier: $codeVerifier
+      redirectUri: $redirectUri
+    )
+  }
+`
+
 // Single query that drives the entire dashboard. The `reg` alias is only
 // requested when a region filter is active (see $hasRegion @include directive).
 export const DASHBOARD_QUERY = `
