@@ -14,7 +14,7 @@ export default function Footer({ className = '' }: { className?: string }) {
       >
         Tiberius Gherac
       </a>{' '}
-      for course 1DV027 at Linnaeus University · Source code on{' '}
+      · Source code on{' '}
       <a
         href="https://github.com/Medistat-Tiberiusgh"
         target="_blank"
