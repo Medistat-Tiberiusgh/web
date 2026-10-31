@@ -10,13 +10,19 @@ import {
 import { Button } from '@/components/ui/button'
 import { GoogleMark, GitHubMark } from './ProviderMarks'
 import { startGithubLogin, startGoogleLogin } from '../../lib/oauth'
+import InfoPopover, { InfoIcon } from '../InfoPopover'
 import {
   SURFACE_DANGER,
   BORDER_DANGER,
+  BORDER_SUBTLE,
   TEXT_DANGER,
   TEXT_MUTED,
-  TEXT_MUTED_HOVER
+  TEXT_MUTED_HOVER,
+  TEXT_SECONDARY
 } from '../../theme'
+
+const AUTH_EXPLANATION =
+  'User authentication is handled by Google and GitHub through OAuth 2.0. I implemented the Authorization Code flow with PKCE without an auth library, mainly to learn the protocol.'
 
 export default function AuthButtons({ authError }: { authError: boolean }) {
   const [dismissed, setDismissed] = useState(false)
@@ -35,7 +41,12 @@ export default function AuthButtons({ authError }: { authError: boolean }) {
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Continue to Medistat</DialogTitle>
+            <div className="flex items-center gap-2">
+              <DialogTitle>Continue to Medistat</DialogTitle>
+              <span className="hidden sm:inline-flex">
+                <InfoPopover>{AUTH_EXPLANATION}</InfoPopover>
+              </span>
+            </div>
             <DialogDescription>
               Sign in or create your account. New accounts are created
               automatically on your first sign-in.
@@ -57,6 +68,13 @@ export default function AuthButtons({ authError }: { authError: boolean }) {
             >
               <GitHubMark /> Continue with GitHub
             </Button>
+          </div>
+
+          <div
+            className={`flex sm:hidden items-start gap-2 pt-3 border-t text-xs leading-relaxed ${BORDER_SUBTLE} ${TEXT_SECONDARY}`}
+          >
+            <InfoIcon />
+            <p>{AUTH_EXPLANATION}</p>
           </div>
         </DialogContent>
       </Dialog>
