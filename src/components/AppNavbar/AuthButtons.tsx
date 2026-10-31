@@ -22,7 +22,7 @@ import {
 } from '../../theme'
 
 const AUTH_EXPLANATION =
-  'User authentication is handled by Google and GitHub through OAuth 2.0. I implemented the Authorization Code flow with PKCE without an auth library, mainly to learn the protocol.'
+  'User authentication is handled by Google and GitHub through OAuth 2.0. I implemented the Authorization Code flow with PKCE without an auth library, mainly to learn the protocol. After sign-in, the API issues its own signed JWT (HS256, valid for 2 hours) that authenticates every GraphQL request.'
 
 export default function AuthButtons({ authError }: { authError: boolean }) {
   const [dismissed, setDismissed] = useState(false)

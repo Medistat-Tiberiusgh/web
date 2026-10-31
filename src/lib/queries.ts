@@ -167,6 +167,16 @@ export const DRUG_INFO_QUERY = `
   }
 `
 
+export const UPDATE_PROFILE_MUTATION = `
+  mutation UpdateProfile($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      regionId
+      genderId
+      ageGroupId
+    }
+  }
+`
+
 export const ADD_MEDICATION_MUTATION = `
   mutation AddMedication($atc: String!) {
     addMedication(atc: $atc) {

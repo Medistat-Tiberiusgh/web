@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button'
 import { GoogleMark, GitHubMark } from './ProviderMarks'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
-import { useProfile } from '../../hooks/useProfile'
+import { useProfile, type Demographics } from '../../context/ProfileContext'
 import { AGE_BANDS } from '../../types'
 import { startGoogleLogin, startGithubLogin } from '../../lib/oauth'
 import {
   TEXT_HEADING,
   TEXT_BODY,
+  TEXT_DANGER,
   TEXT_MUTED,
   BORDER_SUBTLE,
   BORDER_CONTROL,
@@ -29,10 +30,15 @@ export default function ProfilePanel({ onLogout }: { onLogout: () => void }) {
         email={user.email}
         avatarUrl={user.avatarUrl}
       />
-      <Demographics
-        regionId={profile.regionId}
-        genderId={profile.genderId}
-        ageGroupId={profile.ageGroupId}
+      {/* Keyed on the saved values so the form's draft resets when they load or change */}
+      <DemographicsForm
+        key={`${profile.regionId}-${profile.genderId}-${profile.ageGroupId}`}
+        saved={{
+          regionId: profile.regionId,
+          genderId: profile.genderId,
+          ageGroupId: profile.ageGroupId
+        }}
+        onSave={profile.saveDemographics}
       />
       <ConnectedAccounts providers={profile.providers} />
       <Security />
@@ -66,7 +72,9 @@ function ProfileHeader({
         </div>
       )}
       <div className="flex flex-col gap-0.5 min-w-0">
-        <DialogTitle className={`text-lg font-semibold leading-tight ${TEXT_HEADING}`}>
+        <DialogTitle
+          className={`text-lg font-semibold leading-tight ${TEXT_HEADING}`}
+        >
           {username}
         </DialogTitle>
         <p className={`text-xs truncate ${TEXT_MUTED}`}>{email}</p>
@@ -75,22 +83,34 @@ function ProfileHeader({
   )
 }
 
-function Demographics({
-  regionId,
-  genderId,
-  ageGroupId
+function DemographicsForm({
+  saved,
+  onSave
 }: {
-  regionId: number | null
-  genderId: number | null
-  ageGroupId: number | null
+  saved: Demographics
+  onSave: (demographics: Demographics) => Promise<void>
 }) {
   const { regions } = useRegions()
-  const [draft, setDraft] = useState({ regionId, genderId, ageGroupId })
+  const [draft, setDraft] = useState(saved)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const dirty =
-    draft.regionId !== regionId ||
-    draft.genderId !== genderId ||
-    draft.ageGroupId !== ageGroupId
+    draft.regionId !== saved.regionId ||
+    draft.genderId !== saved.genderId ||
+    draft.ageGroupId !== saved.ageGroupId
+
+  async function save() {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      await onSave(draft)
+    } catch (e) {
+      setSaveError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Section label="Profile">
@@ -121,9 +141,12 @@ function Demographics({
         These details will be used to surface data curated for your demographic
         in a future release. This feature is still in development.
       </p>
+      {saveError && (
+        <p className={`text-xs ${TEXT_DANGER}`}>Couldn’t save: {saveError}</p>
+      )}
       {dirty && (
-        <Button size="sm" className="self-end">
-          Save changes
+        <Button size="sm" className="self-end" onClick={save} disabled={saving}>
+          {saving ? 'Saving…' : 'Save changes'}
         </Button>
       )}
     </Section>
@@ -256,8 +279,12 @@ function LogoutFooter({ onLogout }: { onLogout: () => void }) {
 
 function Section({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <section className={`flex flex-col gap-3 px-6 py-5 border-t ${BORDER_SUBTLE}`}>
-      <p className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}>
+    <section
+      className={`flex flex-col gap-3 px-6 py-5 border-t ${BORDER_SUBTLE}`}
+    >
+      <p
+        className={`text-xs font-bold uppercase tracking-widest ${TEXT_MUTED}`}
+      >
         {label}
       </p>
       {children}
