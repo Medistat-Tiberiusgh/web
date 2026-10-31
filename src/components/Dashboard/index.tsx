@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import AppNavbar from '../AppNavbar'
 import Hero from '../Hero'
 import Footer from '../Footer'
+import PortfolioLink from '../PortfolioLink'
 import KpiSection from './KpiSection'
 import ChartsSection from './ChartsSection'
 import { useDashboard, type Db } from '../../hooks/dashboard/useDashboard'
@@ -76,7 +77,11 @@ export default function Dashboard({
   }
 
   return (
-    <div className={`h-screen flex flex-col ${SURFACE_MUTED}`}>
+    <div className={`min-h-screen flex flex-col ${SURFACE_MUTED}`}>
+      <div className="px-8 py-3 shrink-0">
+        <PortfolioLink />
+      </div>
+
       <AppNavbar
         onLogout={onLogout}
         authError={authError}
@@ -102,7 +107,7 @@ export default function Dashboard({
         onSaveDrug={(drug) => db.addMedication(drug.atcCode)}
       />
 
-      <main className="no-scrollbar flex-1 overflow-y-auto p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full animate-in fade-in-0 duration-300">
+      <main className="flex-1 p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full animate-in fade-in-0 duration-300">
         <DashboardContent db={db} />
 
         <Footer className="mt-auto pt-4 pb-2" />
