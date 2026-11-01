@@ -199,6 +199,16 @@ export const BORDER_CONTROL = 'border-gray-300'
 /** Control outline darkens on hover */
 export const BORDER_CONTROL_HOVER = 'hover:border-gray-500'
 
+/** Horizontal bar background — the empty part of a ranking bar */
+export const SURFACE_BAR_TRACK = 'bg-gray-100'
+/** Horizontal bar fill — the value part of a ranking bar (brand teal) */
+export const SURFACE_BAR_FILL = 'bg-teal-600'
+
+/** Highlight panel background — pale brand tint wrapping the For you page */
+export const SURFACE_HIGHLIGHT = 'bg-teal-50'
+/** Highlight panel border — pairs with SURFACE_HIGHLIGHT */
+export const BORDER_HIGHLIGHT = 'border-teal-100'
+
 /** Inline hyperlink — brand teal (matches COLOR_BRAND) */
 export const TEXT_LINK = 'text-teal-600'
 

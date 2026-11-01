@@ -1,11 +1,15 @@
 import { type ReactNode, useState } from 'react'
-import { KeyRound, LogOut } from 'lucide-react'
-import { DialogTitle } from '@/components/ui/dialog'
+import { KeyRound, LogOut, UserRound } from 'lucide-react'
+import { DialogClose, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { GoogleMark, GitHubMark } from './ProviderMarks'
 import { useUser } from '../../context/UserContext'
 import { useRegions } from '../../hooks/useRegions'
-import { useProfile, type Demographics } from '../../context/ProfileContext'
+import {
+  hasDemographics,
+  useProfile,
+  type Demographics
+} from '../../context/ProfileContext'
 import { AGE_BANDS } from '../../types'
 import { startGoogleLogin, startGithubLogin } from '../../lib/oauth'
 import {
@@ -18,7 +22,13 @@ import {
   SURFACE_AVATAR
 } from '../../theme'
 
-export default function ProfilePanel({ onLogout }: { onLogout: () => void }) {
+export default function ProfilePanel({
+  onLogout,
+  onOpenForYou
+}: {
+  onLogout: () => void
+  onOpenForYou: () => void
+}) {
   const user = useUser()
   const profile = useProfile()
   if (!user) return null
@@ -39,6 +49,7 @@ export default function ProfilePanel({ onLogout }: { onLogout: () => void }) {
           ageGroupId: profile.ageGroupId
         }}
         onSave={profile.saveDemographics}
+        onOpenForYou={onOpenForYou}
       />
       <ConnectedAccounts providers={profile.providers} />
       <Security />
@@ -85,10 +96,12 @@ function ProfileHeader({
 
 function DemographicsForm({
   saved,
-  onSave
+  onSave,
+  onOpenForYou
 }: {
   saved: Demographics
   onSave: (demographics: Demographics) => Promise<void>
+  onOpenForYou: () => void
 }) {
   const { regions } = useRegions()
   const [draft, setDraft] = useState(saved)
@@ -138,16 +151,27 @@ function DemographicsForm({
         />
       </div>
       <p className={`text-xs leading-relaxed ${TEXT_MUTED}`}>
-        These details will be used to surface data curated for your demographic
-        in a future release. This feature is still in development.
+        Save any of these to see what stands out for your group on the For you
+        page.
       </p>
       {saveError && (
         <p className={`text-xs ${TEXT_DANGER}`}>Couldn’t save: {saveError}</p>
       )}
-      {dirty && (
-        <Button size="sm" className="self-end" onClick={save} disabled={saving}>
-          {saving ? 'Saving…' : 'Save changes'}
-        </Button>
+      {(hasDemographics(saved) || dirty) && (
+        <div className="flex justify-end gap-2">
+          {hasDemographics(saved) && (
+            <DialogClose asChild>
+              <Button size="sm" variant="outline" onClick={onOpenForYou}>
+                <UserRound /> For you
+              </Button>
+            </DialogClose>
+          )}
+          {dirty && (
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save changes'}
+            </Button>
+          )}
+        </div>
       )}
     </Section>
   )

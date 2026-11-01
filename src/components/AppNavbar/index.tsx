@@ -30,6 +30,7 @@ interface Props {
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: AgeBand | null) => void
   onSaveDrug: (drug: Drug) => void
+  onOpenForYou: () => void
 }
 
 export default function AppNavbar({
@@ -50,7 +51,8 @@ export default function AppNavbar({
   onYearChange,
   onGenderChange,
   onAgeBandChange,
-  onSaveDrug
+  onSaveDrug,
+  onOpenForYou
 }: Props) {
   const user = useUser()
 
@@ -134,6 +136,7 @@ export default function AppNavbar({
                 username={user.username}
                 avatarUrl={user.avatarUrl}
                 onLogout={onLogout}
+                onOpenForYou={onOpenForYou}
               />
             </>
           ) : (

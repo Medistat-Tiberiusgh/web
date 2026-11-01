@@ -167,6 +167,29 @@ export const DRUG_INFO_QUERY = `
   }
 `
 
+export const FOR_YOU_QUERY = `
+  query ForYou($region: Int, $gender: Int, $ageGroup: Int) {
+    forYou(region: $region, gender: $gender, ageGroup: $ageGroup) {
+      comparedWith { regionId genderId ageGroupId }
+      latestYear
+      trendStartYear
+      standsOut {
+        drug { atcCode name narcoticClass }
+        ratio
+      }
+      mostDispensed {
+        drug { atcCode name narcoticClass }
+        per1000
+      }
+      rising {
+        drug { atcCode name narcoticClass }
+        growth
+        trend { year per1000 }
+      }
+    }
+  }
+`
+
 export const UPDATE_PROFILE_MUTATION = `
   mutation UpdateProfile($input: UpdateProfileInput!) {
     updateProfile(input: $input) {

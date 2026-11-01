@@ -14,6 +14,14 @@ interface ProfileContextValue extends Profile {
   saveDemographics: (demographics: Demographics) => Promise<void>
 }
 
+export function hasDemographics(demographics: Demographics) {
+  return (
+    demographics.regionId !== null ||
+    demographics.genderId !== null ||
+    demographics.ageGroupId !== null
+  )
+}
+
 export const EMPTY_PROFILE: Profile = {
   providers: [],
   regionId: null,
