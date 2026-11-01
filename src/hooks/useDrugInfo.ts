@@ -13,6 +13,17 @@ export interface DrugInfo {
   cachedAt: string
 }
 
+export function hasDrugInfoContent(info: DrugInfo) {
+  return Boolean(
+    info.indication ||
+    info.howToUse ||
+    info.otherUses ||
+    info.precautions ||
+    info.sideEffects ||
+    info.otherInfo
+  )
+}
+
 export function useDrugInfo(atcCode: string | null) {
   const { data, loading, error } = useGqlQuery<{ drugInfo: DrugInfo | null }>(
     DRUG_INFO_QUERY,
