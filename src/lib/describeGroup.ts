@@ -1,5 +1,5 @@
-import { AGE_BANDS } from '../../types'
-import type { Demographics } from '../../context/ProfileContext'
+import { AGE_BANDS } from '../types'
+import type { Demographics } from '../context/ProfileContext'
 
 const GENDER_NAMES: Record<number, string> = { 1: 'men', 2: 'women' }
 
@@ -32,6 +32,19 @@ export function describeAudience(
   const forPeople = people ? `for ${people}` : null
   const inRegion = regionName ? `in ${regionName}` : null
   return [forPeople, inRegion].filter(Boolean).join(' ')
+}
+
+/** "Stockholms län vs Sweden" with a region, otherwise "Women 45-49 vs Sweden overall" */
+export function comparisonTitle(
+  group: Demographics,
+  regionName: string | null
+) {
+  if (regionName) return `${regionName} vs Sweden`
+  return `${capitalize(describePeople(group) ?? 'your group')} vs Sweden overall`
+}
+
+export function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 /** "women 45-49 in all of Sweden", "everyone in Stockholms län", "Sweden overall" */

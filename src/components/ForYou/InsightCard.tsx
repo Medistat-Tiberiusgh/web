@@ -1,122 +1,184 @@
 import type { ReactNode } from 'react'
 import { ChartCard } from '../charts/ChartCard'
+import { ratioLabel, ratioTone, type Tone } from '../../lib/formatInsight'
 import type { Drug } from '../../types'
 import {
-  COLOR_BRAND,
   TEXT_HEADING,
-  TEXT_BODY,
+  TEXT_SECONDARY,
   TEXT_MUTED,
-  TEXT_LINK,
   BORDER_SUBTLE,
   SURFACE_MUTED_HOVER,
   SURFACE_BAR_TRACK,
-  SURFACE_BAR_FILL
+  SURFACE_BAR_FILL,
+  SURFACE_MARKER,
+  SURFACE_UP,
+  BORDER_UP,
+  TEXT_UP,
+  PILL_UP,
+  SURFACE_DOWN,
+  BORDER_DOWN,
+  TEXT_DOWN,
+  PILL_DOWN,
+  PILL_EVEN
 } from '../../theme'
+
+type Direction = 'up' | 'down'
 
 export default function InsightCard({
   title,
   description,
-  isEmpty,
+  action,
   children
 }: {
   title: string
   description: string
-  isEmpty: boolean
+  action?: ReactNode
   children: ReactNode
 }) {
   return (
     <ChartCard
       title={title}
       description={description}
-      contentClassName="px-4 pt-3 pb-3"
+      legend={action}
+      contentClassName="px-4 pt-3 pb-4 flex flex-col gap-3"
     >
-      {isEmpty ? (
-        <p className={`text-sm ${TEXT_MUTED}`}>
-          Not enough data for this group yet.
-        </p>
-      ) : (
-        <ul className="flex flex-col">{children}</ul>
-      )}
+      {children}
     </ChartCard>
   )
 }
 
-export function BarRow({
+/** A tinted "up" or "down" block holding one list, e.g. "↑ Rising". */
+export function DirectionSection({
+  direction,
+  title,
+  isEmpty,
+  children
+}: {
+  direction: Direction
+  title: string
+  isEmpty: boolean
+  children: ReactNode
+}) {
+  const colors =
+    direction === 'up'
+      ? `${SURFACE_UP} ${BORDER_UP}`
+      : `${SURFACE_DOWN} ${BORDER_DOWN}`
+  const headingColor = direction === 'up' ? TEXT_UP : TEXT_DOWN
+  const arrow = direction === 'up' ? '↑' : '↓'
+
+  return (
+    <section className={`rounded-lg border px-3 pt-2.5 pb-1 ${colors}`}>
+      <h3
+        className={`text-xs font-bold uppercase tracking-wider ${headingColor}`}
+      >
+        {arrow} {title}
+      </h3>
+      <DrugList isEmpty={isEmpty}>{children}</DrugList>
+    </section>
+  )
+}
+
+export function DrugList({
+  isEmpty,
+  children
+}: {
+  isEmpty: boolean
+  children: ReactNode
+}) {
+  if (isEmpty) {
+    return (
+      <p className={`py-2 text-sm ${TEXT_MUTED}`}>
+        Not enough data for this group yet.
+      </p>
+    )
+  }
+  return <ul className="flex flex-col">{children}</ul>
+}
+
+/** One clickable drug: name, "ATC · detail" underneath, and an optional value on the right. */
+export function DrugRow({
   drug,
-  label,
-  fraction,
-  onOpen
+  detail,
+  trailing,
+  onOpen,
+  children
 }: {
   drug: Drug
-  label: string
-  fraction: number
+  detail: string
+  trailing: ReactNode
   onOpen: (drug: Drug) => void
+  children?: ReactNode
 }) {
   return (
-    <li className={`border-t ${BORDER_SUBTLE}`}>
+    <li className={`border-t first:border-t-0 ${BORDER_SUBTLE}`}>
       <button
         type="button"
         onClick={() => onOpen(drug)}
         className={`w-full flex flex-col gap-1.5 py-2 px-1 text-left rounded-md ${SURFACE_MUTED_HOVER}`}
       >
-        <span className="flex items-start justify-between gap-3">
-          <DrugName drug={drug} />
-          <span className={`text-sm font-semibold shrink-0 ${TEXT_BODY}`}>
-            {label}
+        <span className="flex items-center justify-between gap-3">
+          <span className="flex flex-col min-w-0">
+            <span className={`text-sm font-semibold truncate ${TEXT_HEADING}`}>
+              {drug.name}
+            </span>
+            <span className={`text-xs ${TEXT_SECONDARY}`}>
+              {drug.atcCode} · {detail}
+            </span>
           </span>
+          <span className="flex items-center gap-2.5 shrink-0">{trailing}</span>
         </span>
-        <span className={`h-1.5 rounded-full ${SURFACE_BAR_TRACK}`}>
-          <span
-            className={`block h-1.5 rounded-full ${SURFACE_BAR_FILL}`}
-            style={{ width: `${Math.max(fraction, 0.04) * 100}%` }}
-          />
-        </span>
+        {children}
       </button>
     </li>
   )
 }
 
-export function TrendRow({
-  drug,
-  label,
-  values,
-  onOpen
-}: {
-  drug: Drug
-  label: string
-  values: number[]
-  onOpen: (drug: Drug) => void
-}) {
+export function Pill({ tone, children }: { tone: Tone; children: ReactNode }) {
+  const colors = { up: PILL_UP, down: PILL_DOWN, even: PILL_EVEN }[tone]
   return (
-    <li className={`border-t ${BORDER_SUBTLE}`}>
-      <button
-        type="button"
-        onClick={() => onOpen(drug)}
-        className={`w-full flex items-center justify-between gap-3 py-2 px-1 text-left rounded-md ${SURFACE_MUTED_HOVER}`}
-      >
-        <DrugName drug={drug} />
-        <span className="flex items-center gap-2.5 shrink-0">
-          <Sparkline values={values} />
-          <span className={`text-sm font-semibold ${TEXT_LINK}`}>{label}</span>
-        </span>
-      </button>
-    </li>
-  )
-}
-
-function DrugName({ drug }: { drug: Drug }) {
-  return (
-    <span className="flex flex-col min-w-0">
-      <span className={`text-sm font-semibold truncate ${TEXT_HEADING}`}>
-        {drug.name}
-      </span>
-      <span className={`text-xs ${TEXT_MUTED}`}>{drug.atcCode}</span>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colors}`}>
+      {children}
     </span>
   )
 }
 
-function Sparkline({ values }: { values: number[] }) {
-  const width = 72
+/** "↑ 3.0×" in teal, "↓ 0.18×" in amber, "≈ 0.96×" in grey */
+export function RatioPill({ ratio }: { ratio: number }) {
+  return <Pill tone={ratioTone(ratio)}>{ratioLabel(ratio)}</Pill>
+}
+
+/** A rate bar with a thin marker for the comparison group's rate. */
+export function RateBar({
+  fraction,
+  markerFraction
+}: {
+  fraction: number
+  markerFraction: number | null
+}) {
+  return (
+    <span className={`relative block h-1.5 rounded-full ${SURFACE_BAR_TRACK}`}>
+      <span
+        className={`block h-1.5 rounded-full ${SURFACE_BAR_FILL}`}
+        style={{ width: `${Math.max(fraction, 0.04) * 100}%` }}
+      />
+      {markerFraction !== null && (
+        <span
+          className={`absolute -top-0.75 h-3 w-0.5 ${SURFACE_MARKER}`}
+          style={{ left: `${markerFraction * 100}%` }}
+        />
+      )}
+    </span>
+  )
+}
+
+export function Sparkline({
+  values,
+  color
+}: {
+  values: number[]
+  color: string
+}) {
+  const width = 64
   const height = 24
   return (
     <svg
@@ -128,7 +190,7 @@ function Sparkline({ values }: { values: number[] }) {
       <path
         d={sparklinePath(values, width, height)}
         fill="none"
-        stroke={COLOR_BRAND}
+        stroke={color}
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"

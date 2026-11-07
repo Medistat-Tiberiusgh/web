@@ -131,7 +131,12 @@ export default function Dashboard({
 
       <main className="flex-1 p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full animate-in fade-in-0 duration-300">
         {forYouVisible ? (
-          <ForYou regions={db.regions} onClose={closeForYou} />
+          // Keyed on the saved demographics so saving new ones refetches the page
+          <ForYou
+            key={`${profile.regionId}-${profile.genderId}-${profile.ageGroupId}`}
+            regions={db.regions}
+            onClose={closeForYou}
+          />
         ) : (
           <DashboardContent db={db} />
         )}

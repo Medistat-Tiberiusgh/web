@@ -168,23 +168,50 @@ export const DRUG_INFO_QUERY = `
 `
 
 export const FOR_YOU_QUERY = `
-  query ForYou($region: Int, $gender: Int, $ageGroup: Int) {
-    forYou(region: $region, gender: $gender, ageGroup: $ageGroup) {
-      comparedWith { regionId genderId ageGroupId }
-      latestYear
-      trendStartYear
-      standsOut {
-        drug { atcCode name narcoticClass }
-        ratio
+  query ForYou {
+    me {
+      forYou {
+        comparedWith { regionId genderId ageGroupId }
+        latestYear
+        moreCommon {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+          ratio
+        }
+        lessCommon {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+          ratio
+        }
+        mostDispensed {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+        }
       }
-      mostDispensed {
-        drug { atcCode name narcoticClass }
-        per1000
-      }
-      rising {
-        drug { atcCode name narcoticClass }
-        growth
-        trend { year per1000 }
+    }
+  }
+`
+
+export const FOR_YOU_CHANGES_QUERY = `
+  query ForYouChanges($years: Int!) {
+    me {
+      forYou {
+        changes(years: $years) {
+          startYear
+          rising {
+            drug { atcCode name narcoticClass }
+            growth
+            trend { year per1000 }
+          }
+          declining {
+            drug { atcCode name narcoticClass }
+            growth
+            trend { year per1000 }
+          }
+        }
       }
     }
   }

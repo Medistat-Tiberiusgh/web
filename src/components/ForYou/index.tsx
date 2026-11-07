@@ -2,13 +2,17 @@ import { useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DrugInfoDialog from '../drug/DrugInfoDialog'
-import InsightCard, { BarRow, TrendRow } from './InsightCard'
+import ComparisonCard from './ComparisonCard'
+import ChangesCard from './ChangesCard'
+import MostDispensedCard from './MostDispensedCard'
 import {
   ageBandName,
+  capitalize,
+  comparisonTitle,
   describeAudience,
   describeComparison,
   genderName
-} from './describeGroup'
+} from '../../lib/describeGroup'
 import { useProfile, type Demographics } from '../../context/ProfileContext'
 import { useForYou, type ForYouData } from '../../hooks/useForYou'
 import { useDrugInfo } from '../../hooks/useDrugInfo'
@@ -39,6 +43,12 @@ export default function ForYou({ regions, onClose }: Props) {
   }
 
   const regionName = regionNameFor(profile.regionId)
+  const comparisonLabel = forYou
+    ? describeComparison(
+        forYou.comparedWith,
+        regionNameFor(forYou.comparedWith.regionId)
+      )
+    : ''
 
   return (
     <div className="flex flex-col gap-2 animate-in fade-in-0 duration-300">
@@ -63,12 +73,7 @@ export default function ForYou({ regions, onClose }: Props) {
           </div>
           {forYou && (
             <p className={`text-sm ${TEXT_SECONDARY}`}>
-              Compared with{' '}
-              {describeComparison(
-                forYou.comparedWith,
-                regionNameFor(forYou.comparedWith.regionId)
-              )}{' '}
-              · {forYou.latestYear}
+              Compared with {comparisonLabel} · {forYou.latestYear}
             </p>
           )}
         </header>
@@ -76,7 +81,10 @@ export default function ForYou({ regions, onClose }: Props) {
         <ForYouContent
           forYou={forYou}
           error={error}
+          demographics={profile}
+          title={comparisonTitle(profile, regionName)}
           audience={describeAudience(profile, regionName)}
+          comparisonLabel={comparisonLabel}
           onOpenDrug={setSelectedDrug}
         />
 
@@ -119,12 +127,18 @@ function MedicationDialog({
 function ForYouContent({
   forYou,
   error,
+  demographics,
+  title,
   audience,
+  comparisonLabel,
   onOpenDrug
 }: {
   forYou: ForYouData | null
   error: string | null
+  demographics: Demographics
+  title: string
   audience: string
+  comparisonLabel: string
   onOpenDrug: (drug: Drug) => void
 }) {
   if (error) {
@@ -138,58 +152,28 @@ function ForYouContent({
     return <p className={`text-sm ${TEXT_MUTED}`}>Loading your highlights…</p>
   }
 
-  const highestRatio = forYou.standsOut[0]?.ratio ?? 1
-  const highestRate = forYou.mostDispensed[0]?.per1000 ?? 1
-
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <InsightCard
-        title={`Stands out ${audience}`}
-        description="Dispensed more often here than in the comparison group"
-        isEmpty={forYou.standsOut.length === 0}
-      >
-        {forYou.standsOut.map((item) => (
-          <BarRow
-            key={item.drug.atcCode}
-            drug={item.drug}
-            label={`${item.ratio.toFixed(1)}×`}
-            fraction={item.ratio / highestRatio}
-            onOpen={onOpenDrug}
-          />
-        ))}
-      </InsightCard>
-
-      <InsightCard
+    <div className="grid gap-4 items-start lg:grid-cols-3">
+      <ComparisonCard
+        title={title}
+        description="Patients per 1,000 · your group vs the national average"
+        moreCommon={forYou.moreCommon}
+        lessCommon={forYou.lessCommon}
+        onOpenDrug={onOpenDrug}
+      />
+      <ChangesCard
+        demographics={demographics}
+        audience={audience}
+        latestYear={forYou.latestYear}
+        onOpenDrug={onOpenDrug}
+      />
+      <MostDispensedCard
         title={`Most dispensed ${audience}`}
         description="Highest rate per 1,000 people in this group"
-        isEmpty={forYou.mostDispensed.length === 0}
-      >
-        {forYou.mostDispensed.map((item) => (
-          <BarRow
-            key={item.drug.atcCode}
-            drug={item.drug}
-            label={`${Math.round(item.per1000)} per 1,000`}
-            fraction={item.per1000 / highestRate}
-            onOpen={onOpenDrug}
-          />
-        ))}
-      </InsightCard>
-
-      <InsightCard
-        title={`Rising ${audience}`}
-        description={`Biggest growth since ${forYou.trendStartYear}`}
-        isEmpty={forYou.rising.length === 0}
-      >
-        {forYou.rising.map((item) => (
-          <TrendRow
-            key={item.drug.atcCode}
-            drug={item.drug}
-            label={`×${item.growth.toFixed(1)}`}
-            values={item.trend.map((point) => point.per1000)}
-            onOpen={onOpenDrug}
-          />
-        ))}
-      </InsightCard>
+        comparisonLabel={capitalize(comparisonLabel)}
+        items={forYou.mostDispensed}
+        onOpenDrug={onOpenDrug}
+      />
     </div>
   )
 }
@@ -230,8 +214,4 @@ function Chip({
       {children}
     </span>
   )
-}
-
-function capitalize(text: string) {
-  return text.charAt(0).toUpperCase() + text.slice(1)
 }

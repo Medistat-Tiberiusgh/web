@@ -22,6 +22,8 @@ export const COLOR_AGE_BAND = '#d97706' // amber-600
 export const COLOR_GENDER = '#f43f5e' // rose-500
 /** Selected year band / annotation */
 export const COLOR_YEAR = '#7c3aed' // violet-700
+/** Declining trend sparkline — the "down" direction (matches TEXT_DOWN) */
+export const COLOR_DECLINE = '#d97706' // amber-600
 /** Trend sparkline — growing (mirrors map "above average" orange-red scale) */
 export const COLOR_TREND_UP = '#c2410c' // orange-700
 /** Trend sparkline — shrinking */
@@ -208,6 +210,36 @@ export const SURFACE_BAR_FILL = 'bg-teal-600'
 export const SURFACE_HIGHLIGHT = 'bg-teal-50'
 /** Highlight panel border — pairs with SURFACE_HIGHLIGHT */
 export const BORDER_HIGHLIGHT = 'border-teal-100'
+/** Comparison marker on a bar — e.g. the national average tick */
+export const SURFACE_MARKER = 'bg-gray-900'
+
+// Direction accents — "more / rising" vs "less / declining" lists (For you).
+/** "Up" list block background */
+export const SURFACE_UP = 'bg-teal-50'
+/** "Up" list block border */
+export const BORDER_UP = 'border-teal-200'
+/** "Up" list heading */
+export const TEXT_UP = 'text-teal-700'
+/** "Up" value pill */
+export const PILL_UP = 'bg-teal-100 text-teal-800'
+/** "Down" list block background */
+export const SURFACE_DOWN = 'bg-amber-50'
+/** "Down" list block border */
+export const BORDER_DOWN = 'border-amber-200'
+/** "Down" list heading */
+export const TEXT_DOWN = 'text-amber-700'
+/** "Down" value pill */
+export const PILL_DOWN = 'bg-amber-100 text-amber-800'
+/** Value pill for "about the same" as the comparison */
+export const PILL_EVEN = 'bg-gray-100 text-gray-700'
+
+// Segmented switch — e.g. the 3 y / 5 y / 10 y interval picker.
+/** Segmented switch track */
+export const SURFACE_SEGMENTED = 'bg-gray-100'
+/** Selected segment */
+export const SEGMENT_ACTIVE = 'bg-white text-gray-900'
+/** Unselected segment, darkens on hover */
+export const SEGMENT_IDLE = 'text-gray-600 hover:text-gray-900'
 
 /** Inline hyperlink — brand teal (matches COLOR_BRAND) */
 export const TEXT_LINK = 'text-teal-600'
