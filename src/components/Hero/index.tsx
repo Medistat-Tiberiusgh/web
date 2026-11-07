@@ -16,6 +16,7 @@ type Props = {
   onRegionChange: (region: Region | null) => void
   onGenderChange: (gender: string | null) => void
   onAgeBandChange: (ageBand: AgeBand | null) => void
+  onOpenForYou: () => void
 }
 
 // Landing screen shown while no medication is selected.
@@ -28,7 +29,8 @@ export default function Hero({
   onDrugChange,
   onRegionChange,
   onGenderChange,
-  onAgeBandChange
+  onAgeBandChange,
+  onOpenForYou
 }: Props) {
   return (
     <div className={`min-h-screen flex flex-col ${SURFACE_MUTED}`}>
@@ -39,6 +41,7 @@ export default function Hero({
           onLogout={onLogout}
           savedMedications={savedMedications}
           onSelectDrug={onDrugChange}
+          onOpenForYou={onOpenForYou}
         />
       </header>
 

@@ -7,7 +7,7 @@ import { useDashboardKPIs } from './useDashboardKPIs'
 import { useMedications } from '../useMedications'
 import { useRegions } from '../useRegions'
 import { useYears } from '../useYears'
-import { useProfile } from '../useProfile'
+import { useProfile } from '../../context/ProfileContext'
 
 /**
  * Central data hook for the dashboard. Owns all fetching, derived values, and

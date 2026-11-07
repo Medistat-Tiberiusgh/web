@@ -1,22 +1,20 @@
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent
-} from '@/components/ui/dialog'
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog'
 import ProfilePanel from './ProfilePanel'
-import {
-  TEXT_HEADING,
-  SURFACE_AVATAR,
-  SURFACE_MUTED_HOVER
-} from '../../theme'
+import { TEXT_HEADING, SURFACE_AVATAR, SURFACE_MUTED_HOVER } from '../../theme'
 
 type Props = {
   username: string
   avatarUrl: string | null
   onLogout: () => void
+  onOpenForYou: () => void
 }
 
-export default function UserMenu({ username, avatarUrl, onLogout }: Props) {
+export default function UserMenu({
+  username,
+  avatarUrl,
+  onLogout,
+  onOpenForYou
+}: Props) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -44,7 +42,7 @@ export default function UserMenu({ username, avatarUrl, onLogout }: Props) {
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md p-0 gap-0">
-        <ProfilePanel onLogout={onLogout} />
+        <ProfilePanel onLogout={onLogout} onOpenForYou={onOpenForYou} />
       </DialogContent>
     </Dialog>
   )

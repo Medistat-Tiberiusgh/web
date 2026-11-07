@@ -1,17 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover'
-import {
-  TEXT_HEADING,
-  TEXT_SECONDARY,
-  TEXT_MUTED,
-  TEXT_MUTED_HOVER,
-  BORDER_CONTROL,
-  BORDER_CONTROL_HOVER
-} from '@/theme'
+import InfoPopover from '../InfoPopover'
+import { TEXT_HEADING, TEXT_SECONDARY, TEXT_MUTED } from '@/theme'
 
 interface Props {
   label: string
@@ -47,20 +36,7 @@ export default function KpiCard({
             >
               {label}
             </span>
-            <Popover>
-              <PopoverTrigger asChild aria-label="More information">
-                <button
-                  className={`w-5 h-5 rounded-full border ${BORDER_CONTROL} ${BORDER_CONTROL_HOVER} ${TEXT_MUTED} ${TEXT_MUTED_HOVER} text-xs font-bold leading-none flex items-center justify-center transition-colors`}
-                >
-                  i
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="max-w-64">
-                <div className={`text-xs leading-relaxed ${TEXT_SECONDARY}`}>
-                  {info}
-                </div>
-              </PopoverContent>
-            </Popover>
+            <InfoPopover>{info}</InfoPopover>
           </div>
 
           <div className="flex items-start justify-between gap-2">

@@ -178,7 +178,7 @@ function formatTooltip(params: unknown): string {
   })
 }
 
-function yearAtClick(
+function yearAtPointer(
   chart: EChartsType,
   event: { offsetX: number; offsetY: number },
   nationalData: TrendChartPoint[]
@@ -255,13 +255,24 @@ export default function YearlyTrend({
     if (!chart) return
     const zrender = chart.getZr()
     const handler = (event: { offsetX: number; offsetY: number }) => {
-      const year = yearAtClick(chart, event, nationalData)
+      const year = yearAtPointer(chart, event, nationalData)
       if (year === null) return
       onYearChange?.(selectedYear === year ? null : year)
     }
     zrender.on('click', handler)
     return () => zrender.off('click', handler)
   }, [chart, nationalData, selectedYear, onYearChange])
+
+  useEffect(() => {
+    if (!chart || !onYearChange) return
+    const zrender = chart.getZr()
+    const handler = (event: { offsetX: number; offsetY: number }) => {
+      if (yearAtPointer(chart, event, nationalData) === null) return
+      zrender.setCursorStyle('pointer')
+    }
+    zrender.on('mousemove', handler)
+    return () => zrender.off('mousemove', handler)
+  }, [chart, nationalData, onYearChange])
 
   if (nationalData.length === 0) {
     return <EmptyChartState message="No trend data available" />

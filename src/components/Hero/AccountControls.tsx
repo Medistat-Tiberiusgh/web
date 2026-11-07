@@ -11,6 +11,7 @@ type Props = {
   onLogout: () => void
   savedMedications: SavedMedications
   onSelectDrug: (drug: Drug) => void
+  onOpenForYou: () => void
 }
 
 /** Saved medications + user menu when signed in, otherwise the sign-in button. */
@@ -18,7 +19,8 @@ export default function AccountControls({
   authError,
   onLogout,
   savedMedications,
-  onSelectDrug
+  onSelectDrug,
+  onOpenForYou
 }: Props) {
   const user = useUser()
   if (!user) return <AuthButtons authError={authError} />
@@ -33,6 +35,7 @@ export default function AccountControls({
         username={user.username}
         avatarUrl={user.avatarUrl}
         onLogout={onLogout}
+        onOpenForYou={onOpenForYou}
       />
     </div>
   )

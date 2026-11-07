@@ -1,11 +1,15 @@
-import { type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import AppNavbar from '../AppNavbar'
 import Hero from '../Hero'
+import ForYou from '../ForYou'
 import Footer from '../Footer'
+import PortfolioLink from '../PortfolioLink'
 import KpiSection from './KpiSection'
 import ChartsSection from './ChartsSection'
 import { useDashboard, type Db } from '../../hooks/dashboard/useDashboard'
+import { hasDemographics, useProfile } from '../../context/ProfileContext'
+import type { Drug } from '../../types'
 import { TEXT_MUTED, SURFACE_MUTED } from '../../theme'
 
 function MessageCard({ children }: { children: ReactNode }) {
@@ -53,9 +57,26 @@ export default function Dashboard({
   authError: boolean
 }) {
   const db = useDashboard()
+  const profile = useProfile()
+  const [showingForYou, setShowingForYou] = useState(false)
+  // Clearing the profile while the page is open falls back to the normal view
+  const forYouVisible = showingForYou && hasDemographics(profile)
+
+  function selectDrug(drug: Drug | null) {
+    setShowingForYou(false)
+    db.setActiveDrug(drug)
+  }
+
+  function openForYou() {
+    setShowingForYou(true)
+  }
+
+  function closeForYou() {
+    setShowingForYou(false)
+  }
 
   // No medication selected → show the hero (clearing a drug returns here)
-  if (db.activeDrug === null) {
+  if (db.activeDrug === null && !forYouVisible) {
     return (
       <Hero
         authError={authError}
@@ -67,16 +88,21 @@ export default function Dashboard({
           error: db.medicationsError,
           onRemove: db.removeMedication
         }}
-        onDrugChange={db.setActiveDrug}
+        onDrugChange={selectDrug}
         onRegionChange={db.setActiveRegion}
         onGenderChange={db.setActiveGender}
         onAgeBandChange={db.setActiveAgeBand}
+        onOpenForYou={openForYou}
       />
     )
   }
 
   return (
-    <div className={`h-screen flex flex-col ${SURFACE_MUTED}`}>
+    <div className={`min-h-screen flex flex-col ${SURFACE_MUTED}`}>
+      <div className="px-8 py-3 shrink-0">
+        <PortfolioLink />
+      </div>
+
       <AppNavbar
         onLogout={onLogout}
         authError={authError}
@@ -94,16 +120,26 @@ export default function Dashboard({
           error: db.medicationsError,
           onRemove: db.removeMedication
         }}
-        onDrugChange={db.setActiveDrug}
+        onDrugChange={selectDrug}
         onRegionChange={db.setActiveRegion}
         onYearChange={db.setActiveYear}
         onGenderChange={db.setActiveGender}
         onAgeBandChange={db.setActiveAgeBand}
         onSaveDrug={(drug) => db.addMedication(drug.atcCode)}
+        onOpenForYou={openForYou}
       />
 
-      <main className="no-scrollbar flex-1 overflow-y-auto p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full animate-in fade-in-0 duration-300">
-        <DashboardContent db={db} />
+      <main className="flex-1 p-4 flex flex-col gap-3 max-w-screen-2xl mx-auto w-full animate-in fade-in-0 duration-300">
+        {forYouVisible ? (
+          // Keyed on the saved demographics so saving new ones refetches the page
+          <ForYou
+            key={`${profile.regionId}-${profile.genderId}-${profile.ageGroupId}`}
+            regions={db.regions}
+            onClose={closeForYou}
+          />
+        ) : (
+          <DashboardContent db={db} />
+        )}
 
         <Footer className="mt-auto pt-4 pb-2" />
       </main>

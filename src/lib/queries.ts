@@ -167,6 +167,66 @@ export const DRUG_INFO_QUERY = `
   }
 `
 
+export const FOR_YOU_QUERY = `
+  query ForYou($group: ForYouGroupInput) {
+    me {
+      forYou(group: $group) {
+        comparedWith { regionId genderId ageGroupId }
+        latestYear
+        moreCommon {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+          ratio
+        }
+        lessCommon {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+          ratio
+        }
+        mostDispensed {
+          drug { atcCode name narcoticClass }
+          per1000
+          baselinePer1000
+        }
+      }
+    }
+  }
+`
+
+export const FOR_YOU_CHANGES_QUERY = `
+  query ForYouChanges($group: ForYouGroupInput, $years: Int!) {
+    me {
+      forYou(group: $group) {
+        changes(years: $years) {
+          startYear
+          rising {
+            drug { atcCode name narcoticClass }
+            growth
+            trend { year per1000 }
+          }
+          declining {
+            drug { atcCode name narcoticClass }
+            growth
+            trend { year per1000 }
+          }
+        }
+      }
+    }
+  }
+`
+
+export const UPDATE_PROFILE_MUTATION = `
+  mutation UpdateProfile($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      regionId
+      genderId
+      ageGroupId
+    }
+  }
+`
+
 export const ADD_MEDICATION_MUTATION = `
   mutation AddMedication($atc: String!) {
     addMedication(atc: $atc) {
