@@ -24,8 +24,8 @@ export interface GrowthItem {
 }
 
 export interface ForYouData {
-  /** The group every comparison is made against; null means "all" */
-  comparedWith: Demographics
+  /** The group comparisons are made against (null fields mean "all"); null without a region */
+  comparedWith: Demographics | null
   latestYear: number
   moreCommon: ComparisonItem[]
   lessCommon: ComparisonItem[]

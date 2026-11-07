@@ -25,7 +25,7 @@ export default function ForYouContent({
   group: Demographics
   title: string
   audience: string
-  comparisonLabel: string
+  comparisonLabel: string | null
   onOpenDrug: (drug: Drug) => void
 }) {
   if (!hasDemographics(group)) {
@@ -46,28 +46,42 @@ export default function ForYouContent({
     return <p className={`text-sm ${TEXT_MUTED}`}>Loading your highlights…</p>
   }
 
+  // The server only compares when a region is chosen; without one it sends none.
+  const hasComparison = comparisonLabel !== null
+
   return (
-    <div className="grid gap-4 items-start lg:grid-cols-3">
-      <ComparisonCard
-        title={title}
-        description="Per 1,000 inhabitants · your group vs the national average"
-        moreCommon={forYou.moreCommon}
-        lessCommon={forYou.lessCommon}
-        onOpenDrug={onOpenDrug}
-      />
-      <ChangesCard
-        demographics={group}
-        audience={audience}
-        latestYear={forYou.latestYear}
-        onOpenDrug={onOpenDrug}
-      />
-      <MostDispensedCard
-        title={`Most dispensed ${audience}`}
-        description="Highest rate per 1,000 inhabitants in this group"
-        comparisonLabel={capitalize(comparisonLabel)}
-        items={forYou.mostDispensed}
-        onOpenDrug={onOpenDrug}
-      />
+    <div className="flex flex-col gap-4">
+      {!hasComparison && (
+        <p className={`text-sm ${TEXT_SECONDARY}`}>
+          Add a region to compare your group with the rest of Sweden.
+        </p>
+      )}
+      <div
+        className={`grid gap-4 items-start ${hasComparison ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}
+      >
+        {hasComparison && (
+          <ComparisonCard
+            title={title}
+            description="Per 1,000 inhabitants · your group vs the national average"
+            moreCommon={forYou.moreCommon}
+            lessCommon={forYou.lessCommon}
+            onOpenDrug={onOpenDrug}
+          />
+        )}
+        <ChangesCard
+          demographics={group}
+          audience={audience}
+          latestYear={forYou.latestYear}
+          onOpenDrug={onOpenDrug}
+        />
+        <MostDispensedCard
+          title={`Most dispensed ${audience}`}
+          description="Highest rate per 1,000 inhabitants in this group"
+          comparisonLabel={comparisonLabel && capitalize(comparisonLabel)}
+          items={forYou.mostDispensed}
+          onOpenDrug={onOpenDrug}
+        />
+      </div>
     </div>
   )
 }

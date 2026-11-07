@@ -9,7 +9,7 @@ import type { MostDispensedItem } from '../../hooks/useForYou'
 import type { Drug } from '../../types'
 import { TEXT_SECONDARY, SURFACE_BAR_FILL, SURFACE_MARKER } from '../../theme'
 
-/** The group's most dispensed drugs, each with the comparison rate marked on its bar. */
+/** The group's most dispensed drugs; with a comparison group, its rate is marked on each bar. */
 export default function MostDispensedCard({
   title,
   description,
@@ -19,7 +19,7 @@ export default function MostDispensedCard({
 }: {
   title: string
   description: string
-  comparisonLabel: string
+  comparisonLabel: string | null
   items: MostDispensedItem[]
   onOpenDrug: (drug: Drug) => void
 }) {
@@ -30,7 +30,7 @@ export default function MostDispensedCard({
 
   return (
     <InsightCard title={title} description={description}>
-      <Legend comparisonLabel={comparisonLabel} />
+      {comparisonLabel !== null && <Legend comparisonLabel={comparisonLabel} />}
       <DrugList isEmpty={items.length === 0}>
         {items.map((item) => (
           <DrugRow

@@ -44,12 +44,10 @@ export default function ForYou({ regions, onClose }: Props) {
   }
 
   const regionName = regionNameFor(group.regionId)
-  const comparisonLabel = forYou
-    ? describeComparison(
-        forYou.comparedWith,
-        regionNameFor(forYou.comparedWith.regionId)
-      )
-    : ''
+  const comparedWith = forYou?.comparedWith ?? null
+  const comparisonLabel =
+    comparedWith &&
+    describeComparison(comparedWith, regionNameFor(comparedWith.regionId))
 
   return (
     <div className="flex flex-col gap-2 animate-in fade-in-0 duration-300">
@@ -74,7 +72,9 @@ export default function ForYou({ regions, onClose }: Props) {
           </div>
           {forYou && hasDemographics(group) && (
             <p className={`text-sm ${TEXT_SECONDARY}`}>
-              Compared with {comparisonLabel} · {forYou.latestYear}
+              {comparisonLabel
+                ? `Compared with ${comparisonLabel} · ${forYou.latestYear}`
+                : `Data from ${forYou.latestYear}`}
             </p>
           )}
         </header>
