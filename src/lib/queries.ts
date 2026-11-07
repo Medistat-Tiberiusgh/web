@@ -168,9 +168,9 @@ export const DRUG_INFO_QUERY = `
 `
 
 export const FOR_YOU_QUERY = `
-  query ForYou {
+  query ForYou($group: ForYouGroupInput) {
     me {
-      forYou {
+      forYou(group: $group) {
         comparedWith { regionId genderId ageGroupId }
         latestYear
         moreCommon {
@@ -196,9 +196,9 @@ export const FOR_YOU_QUERY = `
 `
 
 export const FOR_YOU_CHANGES_QUERY = `
-  query ForYouChanges($years: Int!) {
+  query ForYouChanges($group: ForYouGroupInput, $years: Int!) {
     me {
-      forYou {
+      forYou(group: $group) {
         changes(years: $years) {
           startYear
           rising {

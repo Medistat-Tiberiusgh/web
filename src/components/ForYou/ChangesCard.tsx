@@ -40,7 +40,7 @@ export default function ChangesCard({
   return (
     <InsightCard
       title={`Changing since ${startYear}`}
-      description={`Patients per 1,000 ${audience}, ${startYear} → ${latestYear}`}
+      description={`Per 1,000 inhabitants ${audience}, ${startYear} → ${latestYear}`}
       action={<IntervalSwitch selected={years} onSelect={setYears} />}
     >
       <ChangesContent

@@ -1,31 +1,26 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import DrugInfoDialog from '../drug/DrugInfoDialog'
-import ComparisonCard from './ComparisonCard'
-import ChangesCard from './ChangesCard'
-import MostDispensedCard from './MostDispensedCard'
+import GroupChips from './GroupChips'
+import ForYouContent from './ForYouContent'
+import MedicationDialog from './MedicationDialog'
 import {
-  ageBandName,
-  capitalize,
   comparisonTitle,
   describeAudience,
-  describeComparison,
-  genderName
+  describeComparison
 } from '../../lib/describeGroup'
-import { useProfile, type Demographics } from '../../context/ProfileContext'
-import { useForYou, type ForYouData } from '../../hooks/useForYou'
-import { useDrugInfo } from '../../hooks/useDrugInfo'
+import {
+  hasDemographics,
+  useProfile,
+  type Demographics
+} from '../../context/ProfileContext'
+import { useForYou } from '../../hooks/useForYou'
 import type { Drug, Region } from '../../types'
 import {
   TEXT_HEADING,
   TEXT_SECONDARY,
-  TEXT_MUTED,
   SURFACE_HIGHLIGHT,
-  BORDER_HIGHLIGHT,
-  CHIP_REGION,
-  CHIP_GENDER,
-  CHIP_AGE
+  BORDER_HIGHLIGHT
 } from '../../theme'
 
 type Props = {
@@ -35,14 +30,20 @@ type Props = {
 
 export default function ForYou({ regions, onClose }: Props) {
   const profile = useProfile()
-  const { forYou, error } = useForYou(profile)
+  // Starts as the saved profile; the chips change it without saving anything.
+  const [group, setGroup] = useState<Demographics>({
+    regionId: profile.regionId,
+    genderId: profile.genderId,
+    ageGroupId: profile.ageGroupId
+  })
+  const { forYou, error } = useForYou(group)
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null)
 
   function regionNameFor(regionId: number | null) {
     return regions.find((region) => region.id === regionId)?.regionName ?? null
   }
 
-  const regionName = regionNameFor(profile.regionId)
+  const regionName = regionNameFor(group.regionId)
   const comparisonLabel = forYou
     ? describeComparison(
         forYou.comparedWith,
@@ -69,9 +70,9 @@ export default function ForYou({ regions, onClose }: Props) {
             <h1 className={`text-3xl font-bold tracking-tight ${TEXT_HEADING}`}>
               For you
             </h1>
-            <ProfileChips profile={profile} regionName={regionName} />
+            <GroupChips group={group} regions={regions} onChange={setGroup} />
           </div>
-          {forYou && (
+          {forYou && hasDemographics(group) && (
             <p className={`text-sm ${TEXT_SECONDARY}`}>
               Compared with {comparisonLabel} · {forYou.latestYear}
             </p>
@@ -81,9 +82,9 @@ export default function ForYou({ regions, onClose }: Props) {
         <ForYouContent
           forYou={forYou}
           error={error}
-          demographics={profile}
-          title={comparisonTitle(profile, regionName)}
-          audience={describeAudience(profile, regionName)}
+          group={group}
+          title={comparisonTitle(group, regionName)}
+          audience={describeAudience(group, regionName)}
           comparisonLabel={comparisonLabel}
           onOpenDrug={setSelectedDrug}
         />
@@ -100,118 +101,5 @@ export default function ForYou({ regions, onClose }: Props) {
         />
       )}
     </div>
-  )
-}
-
-function MedicationDialog({
-  drug,
-  onClose
-}: {
-  drug: Drug
-  onClose: () => void
-}) {
-  const { data, loading } = useDrugInfo(drug.atcCode)
-  return (
-    <DrugInfoDialog
-      atcCode={drug.atcCode}
-      drugName={drug.name}
-      narcoticClass={drug.narcoticClass}
-      info={data}
-      loading={loading}
-      open
-      onOpenChange={(open) => !open && onClose()}
-    />
-  )
-}
-
-function ForYouContent({
-  forYou,
-  error,
-  demographics,
-  title,
-  audience,
-  comparisonLabel,
-  onOpenDrug
-}: {
-  forYou: ForYouData | null
-  error: string | null
-  demographics: Demographics
-  title: string
-  audience: string
-  comparisonLabel: string
-  onOpenDrug: (drug: Drug) => void
-}) {
-  if (error) {
-    return (
-      <p className={`text-sm ${TEXT_SECONDARY}`}>
-        Couldn’t load your highlights.
-      </p>
-    )
-  }
-  if (!forYou) {
-    return <p className={`text-sm ${TEXT_MUTED}`}>Loading your highlights…</p>
-  }
-
-  return (
-    <div className="grid gap-4 items-start lg:grid-cols-3">
-      <ComparisonCard
-        title={title}
-        description="Patients per 1,000 · your group vs the national average"
-        moreCommon={forYou.moreCommon}
-        lessCommon={forYou.lessCommon}
-        onOpenDrug={onOpenDrug}
-      />
-      <ChangesCard
-        demographics={demographics}
-        audience={audience}
-        latestYear={forYou.latestYear}
-        onOpenDrug={onOpenDrug}
-      />
-      <MostDispensedCard
-        title={`Most dispensed ${audience}`}
-        description="Highest rate per 1,000 people in this group"
-        comparisonLabel={capitalize(comparisonLabel)}
-        items={forYou.mostDispensed}
-        onOpenDrug={onOpenDrug}
-      />
-    </div>
-  )
-}
-
-function ProfileChips({
-  profile,
-  regionName
-}: {
-  profile: Demographics
-  regionName: string | null
-}) {
-  const gender = genderName(profile.genderId)
-  const age = ageBandName(profile.ageGroupId)
-
-  return (
-    <div
-      className={`flex flex-wrap items-center gap-2 text-sm ${TEXT_SECONDARY}`}
-    >
-      <span>Based on your profile:</span>
-      {regionName && <Chip className={CHIP_REGION}>{regionName}</Chip>}
-      {gender && <Chip className={CHIP_GENDER}>{capitalize(gender)}</Chip>}
-      {age && <Chip className={CHIP_AGE}>{age}</Chip>}
-    </div>
-  )
-}
-
-function Chip({
-  className,
-  children
-}: {
-  className: string
-  children: ReactNode
-}) {
-  return (
-    <span
-      className={`px-2.5 py-1 rounded-full text-xs font-semibold ${className}`}
-    >
-      {children}
-    </span>
   )
 }

@@ -38,32 +38,40 @@ export interface ChangesData {
   declining: GrowthItem[]
 }
 
-// The server reads the signed-in user's saved demographics itself; the ones
-// passed here only decide whether there is anything to ask for.
-export function useForYou(demographics: Demographics) {
+// Built with a fixed key order, since useGqlQuery compares variables as JSON.
+function groupVariable(group: Demographics) {
+  return {
+    regionId: group.regionId,
+    genderId: group.genderId,
+    ageGroupId: group.ageGroupId
+  }
+}
+
+/** The For you highlights for `group` — the saved profile or an explored one. */
+export function useForYou(group: Demographics) {
   const { data, loading, error } = useGqlQuery<{
     me: { forYou: ForYouData | null }
   }>(
     FOR_YOU_QUERY,
-    {},
+    { group: groupVariable(group) },
     {
       initialData: { me: { forYou: null } },
-      enabled: hasDemographics(demographics)
+      enabled: hasDemographics(group)
     }
   )
   return { forYou: data.me.forYou, loading, error }
 }
 
-/** Rising and declining drugs over the last `years` (3, 5 or 10). */
-export function useForYouChanges(demographics: Demographics, years: number) {
+/** Rising and declining drugs for `group` over the last `years` (3, 5 or 10). */
+export function useForYouChanges(group: Demographics, years: number) {
   const { data, loading, error } = useGqlQuery<{
     me: { forYou: { changes: ChangesData } | null }
   }>(
     FOR_YOU_CHANGES_QUERY,
-    { years },
+    { group: groupVariable(group), years },
     {
       initialData: { me: { forYou: null } },
-      enabled: hasDemographics(demographics)
+      enabled: hasDemographics(group)
     }
   )
   return { changes: data.me.forYou?.changes ?? null, loading, error }
