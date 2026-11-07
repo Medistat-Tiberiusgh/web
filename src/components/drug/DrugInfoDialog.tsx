@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -60,7 +61,11 @@ function DrugInfoBody({
 }) {
   if (loading) {
     return (
-      <p className={`px-6 py-5 text-xs ${TEXT_MUTED}`}>
+      <p
+        role="status"
+        className={`flex items-center gap-2 px-6 py-5 text-xs ${TEXT_MUTED}`}
+      >
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
         Loading drug information…
       </p>
     )
@@ -68,7 +73,7 @@ function DrugInfoBody({
   if (!info || !hasDrugInfoContent(info)) {
     return (
       <p className={`px-6 py-5 text-xs ${TEXT_MUTED}`}>
-        No information available for this medication.
+        MedlinePlus has no information about this medication.
       </p>
     )
   }

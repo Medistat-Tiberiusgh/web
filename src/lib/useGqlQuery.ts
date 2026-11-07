@@ -64,7 +64,8 @@ export function useGqlQuery<T>(
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setError((e as Error).message)
       } finally {
-        setLoading(false)
+        // A cancelled request was replaced by a newer one that is still loading
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
     load()
